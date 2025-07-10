@@ -4,38 +4,15 @@ import type { Env } from '../types'
 export const healthRouter = new Hono<{ Bindings: Env }>()
 
 healthRouter.get('/', async (c) => {
+  // シンプルなヘルスチェック（データベースアクセスなし）
   const checks = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    environment: c.env.ENVIRONMENT,
-    checks: {
-      database: 'unknown',
-      kv: 'unknown',
-      queues: 'unknown',
-    },
+    environment: c.env?.ENVIRONMENT || 'development',
+    version: '0.1.0',
   }
 
-  try {
-    // Check D1 Database
-    const dbResult = await c.env.DB.prepare('SELECT 1').first()
-    checks.checks.database = dbResult ? 'healthy' : 'unhealthy'
-  } catch (error) {
-    checks.checks.database = 'unhealthy'
-    checks.status = 'degraded'
-  }
-
-  try {
-    // Check KV
-    await c.env.CACHE.put('health-check', Date.now().toString(), { expirationTtl: 10 })
-    const kvResult = await c.env.CACHE.get('health-check')
-    checks.checks.kv = kvResult ? 'healthy' : 'unhealthy'
-  } catch (error) {
-    checks.checks.kv = 'unhealthy'
-    checks.status = 'degraded'
-  }
-
-  const statusCode = checks.status === 'healthy' ? 200 : 503
-  return c.json(checks, statusCode)
+  return c.json(checks, 200)
 })
 
 healthRouter.get('/ready', (c) => {

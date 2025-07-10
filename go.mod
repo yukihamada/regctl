@@ -3,12 +3,11 @@ module github.com/yukihamada/regctl
 go 1.23
 
 require (
-	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.2
 	github.com/fatih/color v1.16.0
 	github.com/olekukonko/tablewriter v0.0.5
+	github.com/spf13/cobra v1.8.0
+	github.com/spf13/viper v1.18.2
 	github.com/zalando/go-keyring v0.2.3
-	golang.org/x/oauth2 v0.17.0
 )
 
 require (

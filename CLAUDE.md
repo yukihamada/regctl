@@ -58,6 +58,15 @@
 - **Edge PoP** = Anycast DNS+CDN micro POP on Fly.io
 - **RBAC** = Role‑based access control (JSON policy)
 
+# Claude Code 7つのルール
+1. まず、問題を徹底的に考え、コードベースで関連ファイルを読み、tasks/todo.mdに計画を書き出します。
+2. 計画には、完了したらチェックマークを付けられるToDo項目のリストを含めます。
+3. 作業を始める前に、私に連絡を取り、計画を確認します。
+4. 次に、ToDo項目に取り組み始め、完了したら完了マークを付けます。
+5. 各ステップごとに、どのような変更を加えたのか、概要を説明してください。
+6. タスクやコード変更はできる限りシンプルにしてください。大規模で複雑な変更は避けたいと考えています。変更はコードへの影響を最小限に抑えるべきです。シンプルさが何よりも重要です。
+7. 最後に、todo.mdファイルにレビューセクションを追加し、変更内容の概要とその他の関連情報を記載してください。
+
 # TODO seed
 - [ ] MVP: VALUE‑DOMAIN domain list → unified `/v1/domains` endpoint
 - [ ] CLI: `regctl login` (Supabase OAuth device flow)
