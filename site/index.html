@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>regctl - CLI-First Multi-Registrar Management Tool</title>
+    <meta name="description" content="統一されたCLIで複数のドメインレジストラを管理。VALUE-DOMAIN、Route 53、Porkbunに対応。">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <meta property="og:title" content="regctl - CLI-First Multi-Registrar Management">
+    <meta property="og:description" content="統一されたCLIで複数のドメインレジストラを管理">
+    <meta property="og:image" content="https://regctl.cloud/img/og-image.png">
+    <meta property="og:url" content="https://regctl.cloud">
+    <meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect x="4" y="4" width="24" height="24" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="16" cy="16" r="6" fill="currentColor"/>
+                </svg>
+                <span>regctl</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#features">機能</a></li>
+                <li><a href="#quickstart">クイックスタート</a></li>
+                <li><a href="#docs">ドキュメント</a></li>
+                <li><a href="https://github.com/yukihamada/regctl" class="github-link">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    GitHub
+                </a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>複数のドメインレジストラを<br>一つのCLIで管理</h1>
+            <p class="hero-subtitle">
+                VALUE-DOMAIN、Route 53、Porkbunを統一インターフェースで操作。<br>
+                ドメイン移管も、DNS設定も、すべてコマンドラインから。
+            </p>
+            <div class="hero-actions">
+                <a href="#quickstart" class="btn btn-primary">今すぐ始める</a>
+                <a href="https://github.com/yukihamada/regctl" class="btn btn-secondary">ソースコードを見る</a>
+            </div>
+            <div class="hero-demo">
+                <pre><code><span class="prompt">$</span> regctl domains list
+<span class="output">
+Domain              Registrar      Status    Expires      Auto-Renew
+example.com         value-domain   <span class="success">active</span>    2025-12-31   Yes
+myproject.dev       porkbun        <span class="success">active</span>    2025-06-15   Yes
+company.co.jp       route53        <span class="success">active</span>    2026-01-20   No
+</span>
+<span class="prompt">$</span> regctl domains transfer example.com --from value-domain --to route53
+<span class="output">✓ Transfer initiated
+Transfer ID: xfr_kyx8m2n4p9q
+Status: pending
+Estimated completion: 2024-01-07</span></code></pre>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <h2>主な機能</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🌐</div>
+                    <h3>マルチレジストラ対応</h3>
+                    <p>VALUE-DOMAIN、AWS Route 53、Porkbunを一つのインターフェースで管理。今後も対応レジストラを拡大予定。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>高速なCLI</h3>
+                    <p>Go言語で実装された軽量・高速なCLIツール。タブ補完対応で効率的な操作が可能。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔄</div>
+                    <h3>簡単なドメイン移管</h3>
+                    <p>レジストラ間のドメイン移管をコマンド一つで実行。認証コードの取得も自動化。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📝</div>
+                    <h3>DNS管理</h3>
+                    <p>すべてのDNSレコードをCLIから管理。ゾーンファイルのインポート/エクスポートにも対応。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔐</div>
+                    <h3>セキュアな認証</h3>
+                    <p>OAuth2.0デバイスフロー対応。認証情報はOSのキーチェーンに安全に保管。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>エッジで動作</h3>
+                    <p>Cloudflare Workersで構築されたAPIは世界中のエッジロケーションから低レイテンシーでアクセス可能。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Quick Start Section -->
+    <section id="quickstart" class="quickstart">
+        <div class="container">
+            <h2>クイックスタート</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>インストール</h3>
+                    <pre><code><span class="comment"># macOS/Linux</span>
+curl -fsSL https://regctl.cloud/install.sh | sh
+
+<span class="comment"># または、Homebrewを使用</span>
+brew install regctl
+
+<span class="comment"># Windows (PowerShell)</span>
+iwr -useb https://regctl.cloud/install.ps1 | iex</code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>認証</h3>
+                    <pre><code><span class="prompt">$</span> regctl login
+<span class="output">To authenticate, visit:
+  https://regctl.cloud/device
+
+And enter code:
+  ABCD-1234
+
+✓ Logged in as user@example.com</span></code></pre>
+                </div>
+
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>ドメイン管理</h3>
+                    <pre><code><span class="comment"># ドメイン一覧を表示</span>
+<span class="prompt">$</span> regctl domains list
+
+<span class="comment"># 新しいドメインを登録</span>
+<span class="prompt">$</span> regctl domains register mynewdomain.com --registrar porkbun
+
+<span class="comment"># DNSレコードを追加</span>
+<span class="prompt">$</span> regctl dns add mynewdomain.com --type A --name @ --content 192.0.2.1
+
+<span class="comment"># ドメインを別のレジストラに移管</span>
+<span class="prompt">$</span> regctl domains transfer example.com --to route53</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="docs" class="documentation">
+        <div class="container">
+            <h2>ドキュメント</h2>
+            <div class="doc-cards">
+                <a href="https://github.com/yukihamada/regctl/blob/main/docs/API.md" class="doc-card">
+                    <h3>API リファレンス</h3>
+                    <p>REST APIの詳細な仕様とエンドポイント一覧</p>
+                </a>
+                <a href="https://github.com/yukihamada/regctl/blob/main/docs/ARCHITECTURE.md" class="doc-card">
+                    <h3>アーキテクチャ</h3>
+                    <p>システム設計とCloudflareインフラストラクチャの詳細</p>
+                </a>
+                <a href="https://github.com/yukihamada/regctl/blob/main/CONTRIBUTING.md" class="doc-card">
+                    <h3>コントリビューション</h3>
+                    <p>開発に参加する方法とコーディング規約</p>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Self-Hosting Section -->
+    <section class="self-hosting">
+        <div class="container">
+            <h2>セルフホスティング</h2>
+            <p>regctlは完全にオープンソースです。自分のインフラで運用することも可能です。</p>
+            <div class="hosting-steps">
+                <pre><code><span class="comment"># リポジトリをクローン</span>
+git clone https://github.com/yukihamada/regctl.git
+cd regctl
+
+<span class="comment"># セットアップスクリプトを実行</span>
+./scripts/setup.sh
+
+<span class="comment"># 環境変数を設定</span>
+cp .env.example .env
+<span class="comment"># .envファイルを編集してAPIキーを設定</span>
+
+<span class="comment"># 開発サーバーを起動</span>
+make dev</code></pre>
+            </div>
+            <p class="hosting-note">
+                詳細なセットアップ手順は<a href="https://github.com/yukihamada/regctl/blob/main/docs/SELF_HOSTING.md">セルフホスティングガイド</a>を参照してください。
+            </p>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>今すぐ始めましょう</h2>
+            <p>ドメイン管理をシンプルに、効率的に。</p>
+            <div class="cta-actions">
+                <a href="https://github.com/yukihamada/regctl" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
+                    </svg>
+                    GitHubで見る
+                </a>
+                <a href="#quickstart" class="btn btn-secondary">インストール手順</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h4>regctl</h4>
+                    <p>CLI-First Multi-Registrar Management Tool</p>
+                    <p class="footer-license">MIT License</p>
+                </div>
+                <div class="footer-section">
+                    <h4>リンク</h4>
+                    <ul>
+                        <li><a href="https://github.com/yukihamada/regctl">GitHub</a></li>
+                        <li><a href="https://github.com/yukihamada/regctl/issues">Issues</a></li>
+                        <li><a href="https://github.com/yukihamada/regctl/discussions">Discussions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>ドキュメント</h4>
+                    <ul>
+                        <li><a href="https://github.com/yukihamada/regctl/blob/main/README.md">README</a></li>
+                        <li><a href="https://github.com/yukihamada/regctl/blob/main/docs/API.md">API Reference</a></li>
+                        <li><a href="https://github.com/yukihamada/regctl/blob/main/CONTRIBUTING.md">Contributing</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 regctl contributors. Built with ❤️ using Cloudflare Workers.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>

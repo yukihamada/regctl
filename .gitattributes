@@ -1,0 +1,53 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force LF line endings
+*.go text eol=lf
+*.mod text eol=lf
+*.sum text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.json text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+.gitignore text eol=lf
+.gitattributes text eol=lf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg text
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Go specific
+go.mod linguist-generated=false
+go.sum linguist-generated=true
+
+# Vendor
+vendor/* linguist-vendored
+
+# Documentation
+docs/* linguist-documentation
+*.md linguist-documentation
+
+# Generated files
+*.pb.go linguist-generated=true
+*_gen.go linguist-generated=true
+
+# GitHub Linguist overrides
+*.html linguist-documentation
+*.css linguist-documentation
+site/* linguist-documentation

@@ -1,0 +1,55 @@
+# Dependencies
+node_modules/
+vendor/
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+regctl
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+*.cover
+*.prof
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Documentation build
+site/_build/
+docs/_build/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml

@@ -1,0 +1,65 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+*.exe
+*.dll
+*.so
+*.dylib
+regctl
+
+# Environment files
+.env
+.env.*
+.envrc
+!.env.example
+
+# Cloudflare
+.wrangler/
+.dev.vars
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test coverage
+coverage/
+*.cover
+*.prof
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Secrets
+*.pem
+*.key
+*.crt
+*.p12
+
+# Go
+go.work
+go.work.sum
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Local development
+.local/

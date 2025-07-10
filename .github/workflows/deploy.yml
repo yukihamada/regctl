@@ -1,0 +1,61 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: edge/workers/package-lock.json
+    
+    - name: Install dependencies
+      working-directory: ./edge/workers
+      run: npm ci
+    
+    - name: Run tests
+      working-directory: ./edge/workers
+      run: npm test
+    
+    - name: Deploy to Cloudflare Workers
+      uses: cloudflare/wrangler-action@v3
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        workingDirectory: ./edge/workers
+        command: deploy
+        secrets: |
+          JWT_SECRET
+          VALUE_DOMAIN_API_KEY
+          AWS_ACCESS_KEY_ID
+          AWS_SECRET_ACCESS_KEY
+          PORKBUN_API_KEY
+          PORKBUN_API_SECRET
+          STRIPE_SECRET_KEY
+      env:
+        JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        VALUE_DOMAIN_API_KEY: ${{ secrets.VALUE_DOMAIN_API_KEY }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        PORKBUN_API_KEY: ${{ secrets.PORKBUN_API_KEY }}
+        PORKBUN_API_SECRET: ${{ secrets.PORKBUN_API_SECRET }}
+        STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+    
+    - name: Deploy site to Cloudflare Pages
+      uses: cloudflare/pages-action@v1
+      with:
+        apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        projectName: regctl-site
+        directory: ./site
+        gitHubToken: ${{ secrets.GITHUB_TOKEN }}

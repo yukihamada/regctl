@@ -1,0 +1,51 @@
+name = "regctl-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# KV Namespaces
+kv_namespaces = [
+  { binding = "SESSIONS", id = "sessions_kv" },
+  { binding = "CACHE", id = "cache_kv" }
+]
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "regctl-db"
+database_id = "regctl-database-id"
+
+# Durable Objects
+[[durable_objects.bindings]]
+name = "RATE_LIMITER"
+class_name = "RateLimiter"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RateLimiter"]
+
+# Queues
+[[queues.producers]]
+binding = "WEBHOOKS"
+queue = "regctl-webhooks"
+
+[[queues.consumers]]
+queue = "regctl-webhooks"
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "production"
+
+# Routes
+routes = [
+  "api.regctl.cloud/*",
+  "regctl.cloud/api/*"
+]
+
+# Development
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+# Staging
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+routes = ["staging-api.regctl.cloud/*"]
