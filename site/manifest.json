@@ -1,0 +1,68 @@
+{
+  "name": "regctl Cloud - AI開発者のためのドメイン管理SaaS",
+  "short_name": "regctl",
+  "description": "Claude Code & AI開発に最適化されたドメイン管理CLI。月額¥10〜の透明料金。バッチ処理・JSON出力対応。",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#3B82F6",
+  "background_color": "#0F172A",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ja",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "img/favicon-16x16.svg",
+      "sizes": "16x16",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "img/favicon-32x32.svg", 
+      "sizes": "32x32",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "img/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/apple-touch-icon.svg",
+      "sizes": "180x180",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["developer", "tools", "productivity"],
+  "shortcuts": [
+    {
+      "name": "ダッシュボード",
+      "short_name": "Dashboard",
+      "description": "regctl Cloudダッシュボードを開く",
+      "url": "https://app.regctl.com",
+      "icons": [
+        {
+          "src": "img/favicon.svg",
+          "sizes": "any",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "料金プラン",
+      "short_name": "Pricing",
+      "description": "料金プランを確認",
+      "url": "/pricing.html",
+      "icons": [
+        {
+          "src": "img/favicon.svg",
+          "sizes": "any", 
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}

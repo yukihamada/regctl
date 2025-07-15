@@ -1,0 +1,64 @@
+<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="appleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+      <stop offset="35%" style="stop-color:#10B981;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#06B6D4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="appleRadial" cx="50%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0);stop-opacity:0" />
+    </radialGradient>
+    <filter id="appleShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+    <filter id="appleGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background with Rounded Corners (iOS Style) -->
+  <rect x="0" y="0" width="180" height="180" rx="38" fill="url(#appleGradient)" filter="url(#appleShadow)"/>
+  
+  <!-- Glass Effect Overlay -->
+  <rect x="0" y="0" width="180" height="180" rx="38" fill="url(#appleRadial)"/>
+  
+  <!-- Main Container -->
+  <rect x="30" y="30" width="120" height="120" rx="25" stroke="white" stroke-width="4" fill="none" opacity="0.9" filter="url(#appleGlow)"/>
+  
+  <!-- Central Command Hub -->
+  <circle cx="90" cy="90" r="22" fill="white" opacity="0.95" filter="url(#appleShadow)"/>
+  
+  <!-- Network Nodes -->
+  <circle cx="65" cy="65" r="9" fill="white" opacity="0.85"/>
+  <circle cx="115" cy="115" r="9" fill="white" opacity="0.85"/>
+  <circle cx="115" cy="65" r="7" fill="white" opacity="0.75"/>
+  <circle cx="65" cy="115" r="7" fill="white" opacity="0.75"/>
+  
+  <!-- Additional Network Points -->
+  <circle cx="90" cy="55" r="5" fill="white" opacity="0.6"/>
+  <circle cx="125" cy="90" r="5" fill="white" opacity="0.6"/>
+  <circle cx="90" cy="125" r="5" fill="white" opacity="0.6"/>
+  <circle cx="55" cy="90" r="5" fill="white" opacity="0.6"/>
+  
+  <!-- Connection Lines -->
+  <line x1="74" y1="74" x2="90" y2="90" stroke="white" stroke-width="3" opacity="0.8"/>
+  <line x1="106" y1="106" x2="90" y2="90" stroke="white" stroke-width="3" opacity="0.8"/>
+  <line x1="106" y1="74" x2="90" y2="90" stroke="white" stroke-width="2.5" opacity="0.7"/>
+  <line x1="74" y1="106" x2="90" y2="90" stroke="white" stroke-width="2.5" opacity="0.7"/>
+  
+  <!-- Radial Connections -->
+  <line x1="90" y1="68" x2="90" y2="90" stroke="white" stroke-width="2" opacity="0.6"/>
+  <line x1="112" y1="90" x2="90" y2="90" stroke="white" stroke-width="2" opacity="0.6"/>
+  <line x1="90" y1="112" x2="90" y2="90" stroke="white" stroke-width="2" opacity="0.6"/>
+  <line x1="68" y1="90" x2="90" y2="90" stroke="white" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Center Core -->
+  <circle cx="90" cy="90" r="8" fill="url(#appleGradient)" opacity="0.8"/>
+  <circle cx="90" cy="90" r="4" fill="white"/>
+</svg>

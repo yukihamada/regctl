@@ -4,18 +4,59 @@ Allow: /
 # Sitemaps
 Sitemap: https://regctl.com/sitemap.xml
 
-# Block crawling of API endpoints
-Disallow: /api/
-Disallow: /_worker.js
-
 # Allow important marketing pages
 Allow: /
-Allow: /pricing
-Allow: /docs
-Allow: /blog
+Allow: /pricing.html
+Allow: /contact.html
+Allow: /terms.html
+Allow: /privacy.html
+Allow: /law.html
+Allow: /status.html
+
+# Allow install scripts
+Allow: /install.sh
+Allow: /quick.sh
+Allow: /install.ps1
+
+# Allow releases
+Allow: /releases/
+
+# Allow static assets
+Allow: /css/
+Allow: /js/
+Allow: /img/
+Allow: *.svg
+Allow: *.css
+Allow: *.js
+
+# Block API endpoints
+Disallow: /api/
+Disallow: /_worker.js
 
 # Block development/test pages
 Disallow: /test/
 Disallow: /dev/
 Disallow: /_next/
-Disallow: /.well-known/
+Disallow: /.git/
+Disallow: /node_modules/
+
+# Block sensitive files
+Disallow: /.env
+Disallow: /package.json
+Disallow: /package-lock.json
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1
+
+# Specific crawler settings
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
+
+User-agent: Slurp
+Allow: /
+Crawl-delay: 2

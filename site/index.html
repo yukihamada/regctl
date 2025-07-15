@@ -3,15 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>regctl - AI開発者のためのドメイン管理SaaS</title>
-    <meta name="description" content="Claude Code & AI開発に最適化されたドメイン管理CLI。月額¥10〜の透明料金。バッチ処理・JSON出力対応。">
-    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- SEO Meta Tags -->
+    <title>regctl Cloud - AI開発者のためのドメイン管理SaaS | 月額¥10から始める透明料金</title>
+    <meta name="description" content="Claude Code & AI開発に最適化されたドメイン管理CLI。月額¥10〜の透明料金でドメイン登録・DNS管理・SSL証明書を一元管理。バッチ処理・JSON出力でCI/CD完全対応。">
+    <meta name="keywords" content="ドメイン管理,DNS管理,AI開発,Claude Code,開発者ツール,SaaS,CLI,API,ドメイン登録,SSL証明書,透明料金,従量課金,CI/CD,自動化,開発効率,ドメイン取得自動化,AI開発者向けドメイン管理,完全自動ドメイン管理,月額10円,原価ドメイン,レジストラー統合,バッチ処理,JSON出力,GitHub Actions,マルチレジストラー">
+    <meta name="author" content="RegiOps株式会社">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta name="googlebot" content="index, follow">
+    <link rel="canonical" href="https://regctl.com/">
+    
+    <!-- Favicon and App Icons -->
     <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
-    <meta property="og:title" content="regctl - AI開発者のためのドメイン管理SaaS">
-    <meta property="og:description" content="Claude Code & AI開発に最適化されたドメイン管理CLI">
-    <meta property="og:image" content="https://regctl.com/img/og-image.png">
-    <meta property="og:url" content="https://regctl.com">
+    <link rel="icon" type="image/svg+xml" sizes="16x16" href="img/favicon-16x16.svg">
+    <link rel="icon" type="image/svg+xml" sizes="32x32" href="img/favicon-32x32.svg">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.svg">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#3B82F6">
+    <meta name="msapplication-TileColor" content="#3B82F6">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://regctl.com/">
+    <meta property="og:title" content="regctl Cloud - AI開発者のためのドメイン管理SaaS">
+    <meta property="og:description" content="Claude Code & AI開発に最適化されたドメイン管理CLI。月額¥10〜の透明料金でドメイン登録・DNS管理を一元管理。">
+    <meta property="og:image" content="https://regctl.com/img/og-image.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="regctl Cloud">
+    <meta property="og:locale" content="ja_JP">
+    
+    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:url" content="https://regctl.com/">
+    <meta name="twitter:title" content="regctl Cloud - AI開発者のためのドメイン管理SaaS">
+    <meta name="twitter:description" content="Claude Code & AI開発に最適化されたドメイン管理CLI。月額¥10〜の透明料金。">
+    <meta name="twitter:image" content="https://regctl.com/img/og-image.svg">
+    <meta name="twitter:creator" content="@yukihamada">
+    <meta name="twitter:site" content="@regctl_cloud">
+    
+    <!-- Additional SEO -->
+    <meta name="format-detection" content="telephone=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="regctl">
+    
+    <!-- Preconnect for Performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://app.regctl.com">
+    
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="css/style.css">
     
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
@@ -24,37 +68,142 @@
     
     <!-- JSON-LD Structured Data for SEO -->
     <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "regctl",
-        "description": "AI開発者のためのドメイン管理SaaS。Claude Code & AI開発に最適化されたドメイン管理CLI。",
-        "url": "https://regctl.com",
-        "applicationCategory": "DeveloperApplication",
-        "operatingSystem": "macOS, Linux, Windows",
-        "offers": {
-            "@type": "Offer",
-            "price": "3000",
-            "priceCurrency": "JPY",
-            "priceValidUntil": "2025-12-31",
-            "description": "スターター: 300ポイント"
-        },
-        "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.9",
-            "reviewCount": "127"
-        },
-        "publisher": {
-            "@type": "Organization",
+    [
+        {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
             "name": "regctl Cloud",
+            "alternateName": "regctl",
+            "description": "AI開発者のためのドメイン管理SaaS。Claude Code & AI開発に最適化されたドメイン管理CLI。月額¥10〜の透明料金でドメイン登録・DNS管理・SSL証明書を一元管理。",
             "url": "https://regctl.com",
-            "logo": "https://regctl.com/img/logo.png"
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": ["macOS", "Linux", "Windows"],
+            "downloadUrl": "https://regctl.com/install.sh",
+            "installUrl": "https://regctl.com/install.sh",
+            "softwareVersion": "1.0.0",
+            "releaseNotes": "初回リリース: VALUE-DOMAIN、Route53、Porkbun対応",
+            "programmingLanguage": ["Go", "TypeScript"],
+            "runtimePlatform": ["CLI", "Web Browser", "REST API"],
+            "featureList": [
+                "ドメイン登録・更新・管理",
+                "DNS設定・管理", 
+                "SSL証明書自動取得",
+                "Claude Code連携",
+                "JSON API対応",
+                "バッチ処理対応",
+                "CI/CD統合"
+            ],
+            "offers": [
+                {
+                    "@type": "Offer",
+                    "name": "ライトプラン",
+                    "price": "1000",
+                    "priceCurrency": "JPY",
+                    "priceValidUntil": "2025-12-31",
+                    "description": "100ポイント - 個人開発者向け",
+                    "eligibleQuantity": {
+                        "@type": "QuantitativeValue",
+                        "value": "1",
+                        "unitText": "ドメイン"
+                    }
+                },
+                {
+                    "@type": "Offer",
+                    "name": "スタンダードプラン", 
+                    "price": "10000",
+                    "priceCurrency": "JPY",
+                    "priceValidUntil": "2025-12-31",
+                    "description": "1,100ポイント (+10%ボーナス) - チーム開発向け",
+                    "eligibleQuantity": {
+                        "@type": "QuantitativeValue",
+                        "value": "11",
+                        "unitText": "ドメイン"
+                    }
+                }
+            ],
+            "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "reviewCount": "127",
+                "bestRating": "5",
+                "worstRating": "1"
+            },
+            "publisher": {
+                "@type": "Organization",
+                "name": "RegiOps株式会社",
+                "alternateName": "regctl Cloud",
+                "url": "https://regctl.com",
+                "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://regctl.com/img/logo.svg",
+                    "width": "120",
+                    "height": "32"
+                },
+                "contactPoint": {
+                    "@type": "ContactPoint",
+                    "contactType": "customer service",
+                    "email": "support@regctl.com",
+                    "url": "https://regctl.com/contact"
+                },
+                "sameAs": [
+                    "https://github.com/yukihamada/regctl",
+                    "https://twitter.com/regctl_cloud"
+                ]
+            },
+            "keywords": "ドメイン管理,DNS管理,AI開発,Claude Code,開発者ツール,SaaS,CLI,API,ドメイン登録,SSL証明書,透明料金,従量課金,CI/CD,自動化",
+            "image": {
+                "@type": "ImageObject", 
+                "url": "https://regctl.com/img/og-image.svg",
+                "width": "1200",
+                "height": "630"
+            }
         },
-        "keywords": "ドメイン管理, DNS, AI開発, Claude Code, 開発者ツール, SaaS, CLI, API",
-        "softwareVersion": "1.0.0",
-        "downloadUrl": "https://regctl.com/install.sh",
-        "installUrl": "https://regctl.com/install.sh"
-    }
+        {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "@id": "https://regctl.com/#organization",
+            "name": "RegiOps株式会社",
+            "alternateName": "regctl Cloud",
+            "url": "https://regctl.com",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "https://regctl.com/img/logo.svg"
+            },
+            "description": "AI開発者のためのドメイン管理SaaS「regctl Cloud」を提供する技術企業",
+            "foundingDate": "2025",
+            "industry": "Software Development",
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "customer service",
+                "email": "support@regctl.com",
+                "url": "https://regctl.com/contact",
+                "availableLanguage": "Japanese"
+            },
+            "address": {
+                "@type": "PostalAddress",
+                "addressCountry": "JP",
+                "addressRegion": "東京都",
+                "addressLocality": "渋谷区"
+            }
+        },
+        {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "@id": "https://regctl.com/#website",
+            "url": "https://regctl.com",
+            "name": "regctl Cloud",
+            "description": "AI開発者のためのドメイン管理SaaS",
+            "publisher": {
+                "@id": "https://regctl.com/#organization"
+            },
+            "inLanguage": "ja",
+            "potentialAction": {
+                "@type": "SearchAction",
+                "target": "https://regctl.com/search?q={search_term_string}",
+                "query-input": "required name=search_term_string"
+            }
+        }
+    ]
     </script>
 </head>
 <body>
@@ -63,10 +212,24 @@
         <nav class="container">
             <div class="logo">
                 <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <rect x="4" y="4" width="24" height="24" stroke="currentColor" stroke-width="2" rx="4"/>
-                    <circle cx="16" cy="16" r="4" fill="currentColor"/>
-                    <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.6"/>
-                    <circle cx="20" cy="20" r="2" fill="currentColor" opacity="0.6"/>
+                    <defs>
+                        <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#10B981;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="4" y="4" width="24" height="24" rx="5" stroke="url(#headerGradient)" stroke-width="2.5" fill="none"/>
+                    <circle cx="16" cy="16" r="4.5" fill="url(#headerGradient)"/>
+                    <circle cx="11.5" cy="11.5" r="1.8" fill="url(#headerGradient)" opacity="0.8"/>
+                    <circle cx="20.5" cy="20.5" r="1.8" fill="url(#headerGradient)" opacity="0.8"/>
+                    <circle cx="20.5" cy="11.5" r="1.3" fill="url(#headerGradient)" opacity="0.6"/>
+                    <circle cx="11.5" cy="20.5" r="1.3" fill="url(#headerGradient)" opacity="0.6"/>
+                    <line x1="13" y1="13" x2="16" y2="16" stroke="white" stroke-width="1.8" opacity="0.9"/>
+                    <line x1="19" y1="19" x2="16" y2="16" stroke="white" stroke-width="1.8" opacity="0.9"/>
+                    <line x1="19" y1="13" x2="16" y2="16" stroke="white" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="13" y1="19" x2="16" y2="16" stroke="white" stroke-width="1.2" opacity="0.7"/>
+                    <circle cx="16" cy="16" r="1.5" fill="white" opacity="0.9"/>
                 </svg>
                 <span>regctl</span>
                 <span class="beta">Cloud</span>
@@ -85,13 +248,38 @@
         <div class="container">
             <div class="hero-content">
                 <div class="hero-badge">
-                    🤖 AI開発者向け
+                    🚀 AI開発を10倍加速
                 </div>
-                <h1>1行でドメイン取得<br><span class="gradient-text">Claude Code連携</span></h1>
+                <h1>AI開発を10倍加速する<br><span class="gradient-text">完全自動ドメイン管理SaaS</span></h1>
                 <p class="hero-subtitle">
-                    AI開発・自動化に最適化されたドメイン管理SaaS。<br>
-                    JSON出力、バッチ処理、確認なし実行で完全自動化。
+                    Claude Code・AI開発に特化した次世代ドメイン管理。<br>
+                    <strong>月額¥10の透明料金</strong>で、コマンド1行からドメイン取得・DNS設定・SSL証明書まで完全自動化。
                 </p>
+                
+                <!-- 特徴の3つのポイント -->
+                <div class="hero-highlights">
+                    <div class="highlight-item">
+                        <div class="highlight-icon">⚡</div>
+                        <div class="highlight-text">
+                            <strong>1行で完了</strong><br>
+                            <span>インストールからドメイン取得まで</span>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">💰</div>
+                        <div class="highlight-text">
+                            <strong>月額¥10</strong><br>
+                            <span>完全透明な従量課金制</span>
+                        </div>
+                    </div>
+                    <div class="highlight-item">
+                        <div class="highlight-icon">🤖</div>
+                        <div class="highlight-text">
+                            <strong>AI最適化</strong><br>
+                            <span>Claude Code完全対応</span>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- 原価提供モデルの説明 -->
                 <div style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 1rem; padding: 1rem 1.5rem; margin: 1.5rem 0; backdrop-filter: blur(10px);">
@@ -207,11 +395,16 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
     <section id="features" class="features">
         <div class="container">
             <h2>🚀 AI開発者が選ぶ理由</h2>
+            <p class="features-subtitle">Claude Code・AI開発に特化した機能で、開発効率を劇的に向上</p>
+            
             <div class="feature-grid">
                 <div class="feature-card">
                     <div class="feature-icon">🤖</div>
-                    <h3>Claude Code 最適化</h3>
+                    <h3>Claude Code完全対応</h3>
                     <p>JSON出力、確認なし実行(-y)、環境変数認証でAI開発ワークフローに完全対応</p>
+                    <div class="feature-usecase">
+                        <strong>💡 活用例:</strong> AIプロジェクトのCI/CDで自動ドメイン取得
+                    </div>
                     <div class="feature-code">
                         <code>regctl domains register $DOMAIN -y --json</code>
                     </div>
@@ -219,35 +412,48 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
 
                 <div class="feature-card">
                     <div class="feature-icon">⚡</div>
-                    <h3>ワンライン実行</h3>
+                    <h3>1行で完全自動化</h3>
                     <p>インストールからドメイン取得まで1行で完了。デプロイスクリプトに組み込み可能</p>
+                    <div class="feature-usecase">
+                        <strong>💡 活用例:</strong> デプロイ時に自動でサブドメイン作成
+                    </div>
                     <div class="feature-code">
-                        <code>curl -fsSL regctl.com/quick.sh | bash -s domain.com</code>
+                        <code>curl -fsSL regctl.com/quick.sh | bash -s app.example.com</code>
                     </div>
                 </div>
 
                 <div class="feature-card">
-                    <div class="feature-icon">🚀</div>
-                    <h3>バッチ処理対応</h3>
-                    <p>複数ドメインの一括登録・管理。大規模プロジェクトの自動化に最適</p>
+                    <div class="feature-icon">📊</div>
+                    <h3>バッチ処理・大量管理</h3>
+                    <p>複数ドメインの一括登録・管理。エンタープライズレベルの大規模運用に対応</p>
+                    <div class="feature-usecase">
+                        <strong>💡 活用例:</strong> マイクロサービス用に100個のサブドメインを一括作成
+                    </div>
                     <div class="feature-code">
-                        <code>regctl domains batch-register *.com -y</code>
+                        <code>regctl domains batch-register service{1..100}.example.com -y</code>
                     </div>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">💰</div>
-                    <h3>明瞭な従量課金</h3>
-                    <p>1ドメイン月額¥10。使った分だけ支払い、無駄なし</p>
+                    <h3>完全透明な料金体系</h3>
+                    <p>1ドメイン月額¥10のみ。ドメイン登録は原価横流しで隠れたコストゼロ</p>
+                    <div class="feature-usecase">
+                        <strong>💡 節約効果:</strong> 他社比90%以上のコスト削減
+                    </div>
                     <div class="feature-price">
                         <span class="price-highlight">¥10/月/ドメイン</span>
+                        <span class="price-savings">他社比90%削減</span>
                     </div>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">🌐</div>
-                    <h3>マルチレジストラー</h3>
-                    <p>VALUE-DOMAIN、Route53、Porkbunを統一インターフェースで管理</p>
+                    <h3>マルチレジストラー統合</h3>
+                    <p>VALUE-DOMAIN、Route53、Porkbunを統一インターフェースで管理。最適なレジストラーを自動選択</p>
+                    <div class="feature-usecase">
+                        <strong>💡 活用例:</strong> .comはPorkbun、.jpはVALUE-DOMAINを自動選択
+                    </div>
                     <div class="feature-badges">
                         <span class="badge">VALUE-DOMAIN</span>
                         <span class="badge">Route53</span>
@@ -258,11 +464,53 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
                 <div class="feature-card">
                     <div class="feature-icon">🔒</div>
                     <h3>エンタープライズ品質</h3>
-                    <p>Cloudflare Workers、OAuth認証、監査ログで本格運用に対応</p>
+                    <p>Cloudflare Workers、OAuth認証、完全な監査ログで企業レベルの要求に対応</p>
+                    <div class="feature-usecase">
+                        <strong>💡 活用例:</strong> 上場企業の厳格なセキュリティ要件もクリア
+                    </div>
                     <div class="feature-badges">
-                        <span class="badge">OAuth</span>
+                        <span class="badge">OAuth 2.0</span>
                         <span class="badge">監査ログ</span>
                         <span class="badge">99.9% SLA</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 特定業界向けの活用例 -->
+            <div class="industry-examples">
+                <h3>🏢 業界別活用例</h3>
+                <div class="industry-grid">
+                    <div class="industry-card">
+                        <div class="industry-icon">🚀</div>
+                        <h4>スタートアップ</h4>
+                        <p>プロダクト毎にドメイン自動取得。開発・ステージング・本番環境を瞬時に構築</p>
+                        <div class="industry-tech">
+                            <span>Docker</span>
+                            <span>Kubernetes</span>
+                            <span>CI/CD</span>
+                        </div>
+                    </div>
+                    
+                    <div class="industry-card">
+                        <div class="industry-icon">🏢</div>
+                        <h4>エンタープライズ</h4>
+                        <p>数千ドメインの一括管理。レジストラー統合とコスト最適化で運用効率化</p>
+                        <div class="industry-tech">
+                            <span>Terraform</span>
+                            <span>監査ログ</span>
+                            <span>RBAC</span>
+                        </div>
+                    </div>
+                    
+                    <div class="industry-card">
+                        <div class="industry-icon">🤖</div>
+                        <h4>AI開発チーム</h4>
+                        <p>Claude Code、ChatGPT連携。AI開発ワークフローに完全統合</p>
+                        <div class="industry-tech">
+                            <span>Claude Code</span>
+                            <span>GitHub Actions</span>
+                            <span>JSON API</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -272,87 +520,115 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
     <!-- Pricing Section -->
     <section id="pricing" class="pricing">
         <div class="container">
-            <h2>💳 シンプルな料金体系</h2>
-            <p class="pricing-subtitle">使った分だけお支払い。隠れたコストは一切ありません。</p>
+            <h2>💳 完全透明な料金体系</h2>
+            <p class="pricing-subtitle">月額¥10のシンプル料金。ドメイン登録は原価横流しで隠れたコストゼロ。</p>
+            
+            <!-- 料金の仕組み説明 -->
+            <div class="pricing-explanation">
+                <div class="explanation-item">
+                    <div class="explanation-icon">🏷️</div>
+                    <div class="explanation-content">
+                        <h4>ドメイン登録</h4>
+                        <p>レジストラー原価のまま</p>
+                    </div>
+                </div>
+                <div class="explanation-plus">+</div>
+                <div class="explanation-item">
+                    <div class="explanation-icon">⚙️</div>
+                    <div class="explanation-content">
+                        <h4>管理費用</h4>
+                        <p>月額¥10/ドメイン</p>
+                    </div>
+                </div>
+                <div class="explanation-equals">=</div>
+                <div class="explanation-item">
+                    <div class="explanation-icon">✨</div>
+                    <div class="explanation-content">
+                        <h4>完全透明料金</h4>
+                        <p>隠れたコスト一切なし</p>
+                    </div>
+                </div>
+            </div>
             
             <div class="pricing-grid">
-                <div class="pricing-card starter">
+                <div class="pricing-card">
                     <div class="pricing-header">
                         <h3>ライト</h3>
                         <div class="price">¥1,000</div>
                         <div class="price-desc">100ポイント</div>
                     </div>
+                    <div class="pricing-target">
+                        <strong>こんな方におすすめ:</strong><br>
+                        個人開発者・学習目的
+                    </div>
                     <ul class="pricing-features">
                         <li>✅ .com ドメイン 1個分</li>
                         <li>✅ 10ヶ月分の管理費用</li>
-                        <li>✅ 個人開発者向け</li>
                         <li>✅ CLI & JSON API</li>
+                        <li>✅ 基本サポート</li>
                     </ul>
-                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">チャージ</a>
+                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">今すぐ始める</a>
                 </div>
 
-                <div class="pricing-card standard">
+                <div class="pricing-card">
                     <div class="pricing-header">
                         <h3>スターター</h3>
                         <div class="price">¥3,000</div>
                         <div class="price-desc">300ポイント</div>
                     </div>
+                    <div class="pricing-target">
+                        <strong>こんな方におすすめ:</strong><br>
+                        小規模チーム・複数プロジェクト
+                    </div>
                     <ul class="pricing-features">
                         <li>✅ .com ドメイン 3個分</li>
                         <li>✅ 30ヶ月分の管理費用</li>
-                        <li>✅ 個人・チーム開発</li>
                         <li>✅ バッチ処理対応</li>
+                        <li>✅ メールサポート</li>
                     </ul>
-                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">チャージ</a>
+                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">今すぐ始める</a>
                 </div>
 
-                <div class="pricing-card standard popular">
-                    <div class="pricing-badge">人気</div>
+                <div class="pricing-card popular">
+                    <div class="pricing-badge">🔥 最人気</div>
+                    <div class="pricing-glow"></div>
                     <div class="pricing-header">
                         <h3>スタンダード</h3>
                         <div class="price">¥10,000</div>
-                        <div class="price-desc">1,100ポイント <span class="bonus">+10%</span></div>
+                        <div class="price-desc">1,100ポイント <span class="bonus">+10%ボーナス</span></div>
+                    </div>
+                    <div class="pricing-target">
+                        <strong>こんな方におすすめ:</strong><br>
+                        成長中のスタートアップ・開発チーム
                     </div>
                     <ul class="pricing-features">
-                        <li>✅ .com ドメイン 11個分</li>
-                        <li>✅ .jp ドメイン 5個分</li>
-                        <li>✅ チーム開発向け</li>
-                        <li>✅ バッチ処理無制限</li>
-                        <li>✅ 優先サポート</li>
+                        <li>⭐ .com ドメイン 11個分</li>
+                        <li>⭐ .jp ドメイン 5個分</li>
+                        <li>⭐ バッチ処理無制限</li>
+                        <li>⭐ 優先サポート</li>
+                        <li>⭐ Claude Code最適化</li>
                     </ul>
-                    <a href="https://app.regctl.com/billing" class="btn btn-primary">チャージ</a>
+                    <a href="https://app.regctl.com/billing" class="btn btn-primary popular-btn">🚀 今すぐ始める</a>
                 </div>
 
-                <div class="pricing-card pro">
+                <div class="pricing-card">
                     <div class="pricing-header">
                         <h3>プロフェッショナル</h3>
                         <div class="price">¥30,000</div>
-                        <div class="price-desc">3,500ポイント <span class="bonus">+17%</span></div>
+                        <div class="price-desc">3,500ポイント <span class="bonus">+17%ボーナス</span></div>
+                    </div>
+                    <div class="pricing-target">
+                        <strong>こんな方におすすめ:</strong><br>
+                        大規模プロジェクト・エンタープライズ
                     </div>
                     <ul class="pricing-features">
                         <li>✅ 大量ドメイン管理</li>
                         <li>✅ エンタープライズ機能</li>
                         <li>✅ カスタム統合</li>
                         <li>✅ 専用サポート</li>
-                        <li>✅ SLA保証</li>
+                        <li>✅ SLA 99.9%保証</li>
                     </ul>
-                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">チャージ</a>
-                </div>
-
-                <div class="pricing-card enterprise">
-                    <div class="pricing-header">
-                        <h3>カスタム</h3>
-                        <div class="price">¥5,000〜</div>
-                        <div class="price-desc">500〜50,000ポイント</div>
-                    </div>
-                    <ul class="pricing-features">
-                        <li>✅ 任意の金額で柔軟チャージ</li>
-                        <li>✅ 大口割引対応</li>
-                        <li>✅ 請求書払い可能</li>
-                        <li>✅ 専任サポート</li>
-                        <li>✅ カスタム契約</li>
-                    </ul>
-                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">相談する</a>
+                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">今すぐ始める</a>
                 </div>
             </div>
 
@@ -633,6 +909,47 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
         </div>
     </footer>
 
+    <!-- Floating CTA -->
+    <div class="floating-cta" id="floating-cta">
+        <div class="floating-cta-content">
+            <div class="floating-cta-text">
+                <strong>今すぐドメイン管理を始めよう</strong>
+                <span>月額¥10から・完全透明料金</span>
+            </div>
+            <a href="https://app.regctl.com" class="floating-cta-btn">
+                🚀 無料で体験する
+            </a>
+        </div>
+        <button class="floating-cta-close" onclick="hideFloatingCTA()">&times;</button>
+    </div>
+
     <script src="js/main.js"></script>
+    <script>
+        // Floating CTA functionality
+        function hideFloatingCTA() {
+            document.getElementById('floating-cta').style.display = 'none';
+            localStorage.setItem('cta-hidden', 'true');
+        }
+
+        // Show floating CTA after scroll or delay
+        window.addEventListener('scroll', function() {
+            const cta = document.getElementById('floating-cta');
+            const isHidden = localStorage.getItem('cta-hidden');
+            
+            if (!isHidden && window.scrollY > 500) {
+                cta.classList.add('show');
+            }
+        });
+
+        // Show CTA after 10 seconds
+        setTimeout(function() {
+            const cta = document.getElementById('floating-cta');
+            const isHidden = localStorage.getItem('cta-hidden');
+            
+            if (!isHidden) {
+                cta.classList.add('show');
+            }
+        }, 10000);
+    </script>
 </body>
 </html>
