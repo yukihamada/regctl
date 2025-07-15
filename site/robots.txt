@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://regctl.com/sitemap.xml
+
+# Block crawling of API endpoints
+Disallow: /api/
+Disallow: /_worker.js
+
+# Allow important marketing pages
+Allow: /
+Allow: /pricing
+Allow: /docs
+Allow: /blog
+
+# Block development/test pages
+Disallow: /test/
+Disallow: /dev/
+Disallow: /_next/
+Disallow: /.well-known/
