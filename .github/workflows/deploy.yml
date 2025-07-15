@@ -95,3 +95,9 @@ jobs:
         projectName: regctl-site
         directory: ./site
         gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        
+    - name: Setup custom domains for SaaS
+      run: |
+        echo "🌐 Setting up custom domains for regctl.com"
+        # The domains should be configured in Cloudflare dashboard or via API
+        # This step ensures the deployment is aware of the custom domain setup

@@ -35,7 +35,7 @@ JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
 APP_URL = "https://regctl-app.pages.dev"
 VALUE_DOMAIN_API_KEY = "0LuCVBY2sy0LvKbTsDNB0NBa6zTfap0gSmHrANxT07WaCamHGZ9pydQwSVzn3ruWGFqRas99VBBfbsBz1FsDxgFFmA6f2Y4UbMU4"
 
-# Routes - Updated for regctl.com domain
+# Routes - Updated for regctl.com domain (SaaS)
 routes = [
   "api.regctl.com/*",
   "regctl.com/api/*",
@@ -43,6 +43,15 @@ routes = [
   "api.regctl.cloud/*",
   "regctl.cloud/api/*"
 ]
+
+# Custom domains for SaaS
+[[routes]]
+pattern = "api.regctl.com/*"
+custom_domain = true
+
+[[routes]]
+pattern = "regctl.com/api/*"
+custom_domain = true
 
 # Development
 [env.development]
