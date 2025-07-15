@@ -1,0 +1,27 @@
+{
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "doctype-style": "error",
+    "no-inline-style": "warn",
+    "require-sri": "off",
+    "no-trailing-whitespace": "error",
+    "void-style": ["error", { "style": "selfclosing" }],
+    "element-permitted-content": "error",
+    "element-required-attributes": "error",
+    "attribute-boolean-style": ["error", { "style": "omit" }],
+    "close-order": "error",
+    "no-dup-id": "error",
+    "heading-level": "error",
+    "meta-refresh": "error",
+    "no-missing-references": "error",
+    "prefer-button": "error",
+    "tel-non-breaking": "error",
+    "script-type": "off",
+    "long-title": ["error", { "maxlength": 70 }],
+    "missing-doctype": "error",
+    "no-conditional-comment": "error"
+  },
+  "elements": [
+    "html5"
+  ]
+}

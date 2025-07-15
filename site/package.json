@@ -1,0 +1,39 @@
+{
+  "name": "regctl-site",
+  "version": "1.0.0",
+  "description": "regctl Cloud - AI開発者のためのドメイン管理SaaS",
+  "scripts": {
+    "test": "npm run test:html && npm run test:css && npm run lint:js && npm run test:links",
+    "test:html": "html-validate *.html",
+    "test:css": "stylelint css/*.css",
+    "lint:js": "eslint js/*.js",
+    "test:links": "linkinator . --recurse --skip 'mailto:|tel:|javascript:|#' --timeout 30000",
+    "serve": "http-server . -p 8080",
+    "lighthouse": "lighthouse http://localhost:8080 --output=json --output-path=./test-results/lighthouse.json",
+    "format": "prettier --write '**/*.{html,css,js}'",
+    "format:check": "prettier --check '**/*.{html,css,js}'"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "html-validate": "^8.18.1",
+    "http-server": "^14.1.1",
+    "lighthouse": "^11.5.0",
+    "linkinator": "^6.0.4",
+    "prettier": "^3.2.5",
+    "stylelint": "^16.2.1",
+    "stylelint-config-standard": "^36.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yukihamada/regctl.git"
+  },
+  "keywords": [
+    "domain",
+    "dns",
+    "cloudflare",
+    "saas",
+    "ai"
+  ],
+  "author": "Yuki Hamada",
+  "license": "MIT"
+}
