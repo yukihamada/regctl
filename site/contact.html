@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>お問い合わせ - regctl</title>
+    <meta name="description" content="regctl Cloud へのお問い合わせ・サポート・技術相談">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <style>
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .contact-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .contact-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+            background: white;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .faq-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+        
+        .faq-item {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+        
+        .faq-question {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .faq-answer {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            display: none;
+        }
+        
+        .faq-answer.show {
+            display: block;
+        }
+        
+        .response-time {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            color: var(--success-color);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect x="4" y="4" width="24" height="24" stroke="currentColor" stroke-width="2" rx="4"/>
+                    <circle cx="16" cy="16" r="4" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.6"/>
+                    <circle cx="20" cy="20" r="2" fill="currentColor" opacity="0.6"/>
+                </svg>
+                <span>regctl</span>
+                <span class="beta">Cloud</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">ホーム</a></li>
+                <li><a href="/#features">機能</a></li>
+                <li><a href="/#pricing">料金</a></li>
+                <li><a href="https://app.regctl.com" class="login-btn">ログイン</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container" style="max-width: 1000px; margin: 4rem auto; padding: 2rem;">
+        <div style="text-align: center; margin-bottom: 3rem;">
+            <h1 style="margin-bottom: 1rem; color: var(--text-primary);">お問い合わせ</h1>
+            <p style="color: var(--text-secondary); font-size: 1.125rem;">
+                ご質問、サポート、技術相談など、お気軽にお問い合わせください
+            </p>
+        </div>
+
+        <!-- お問い合わせ方法 -->
+        <section class="contact-grid">
+            <div class="contact-card">
+                <div class="contact-icon">📧</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 1rem;">メールサポート</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                    一般的なご質問やサポートは<br>メールでお問い合わせください
+                </p>
+                <a href="mailto:support@regctl.com" class="btn btn-primary" style="text-decoration: none;">
+                    support@regctl.com
+                </a>
+                <div class="response-time">
+                    ⏱️ 通常24時間以内に返信
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">🐛</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 1rem;">バグ報告・機能要望</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                    技術的な問題や新機能の<br>ご要望はGitHubで受け付けています
+                </p>
+                <a href="https://github.com/yukihamada/regctl/issues" class="btn btn-secondary" style="text-decoration: none;">
+                    GitHub Issues
+                </a>
+                <div class="response-time">
+                    ⏱️ 開発者が直接対応
+                </div>
+            </div>
+
+            <div class="contact-card">
+                <div class="contact-icon">💬</div>
+                <h3 style="color: var(--text-primary); margin-bottom: 1rem;">コミュニティ</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem; line-height: 1.6;">
+                    他のユーザーとの情報交換や<br>質問はディスカッションで
+                </p>
+                <a href="https://github.com/yukihamada/regctl/discussions" class="btn btn-secondary" style="text-decoration: none;">
+                    GitHub Discussions
+                </a>
+                <div class="response-time">
+                    💡 コミュニティと開発者による回答
+                </div>
+            </div>
+        </section>
+
+        <!-- お問い合わせフォーム -->
+        <section style="background: white; padding: 3rem; border-radius: 1.5rem; box-shadow: var(--shadow-lg); margin-bottom: 3rem;">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">お問い合わせフォーム</h2>
+            
+            <form id="contact-form" style="max-width: 600px; margin: 0 auto;">
+                <div class="form-group">
+                    <label for="inquiry-type">お問い合わせ種別 *</label>
+                    <select id="inquiry-type" name="inquiry-type" required>
+                        <option value="">選択してください</option>
+                        <option value="general">一般的な質問</option>
+                        <option value="technical">技術サポート</option>
+                        <option value="billing">料金・請求について</option>
+                        <option value="feature">機能要望・改善提案</option>
+                        <option value="bug">バグ報告</option>
+                        <option value="enterprise">エンタープライズ相談</option>
+                        <option value="media">メディア・パートナーシップ</option>
+                        <option value="other">その他</option>
+                    </select>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="name">お名前 *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="company">会社名（任意）</label>
+                        <input type="text" id="company" name="company">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email">メールアドレス *</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">件名 *</label>
+                    <input type="text" id="subject" name="subject" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="message">メッセージ *</label>
+                    <textarea id="message" name="message" required placeholder="お問い合わせ内容を詳しくお書きください..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="agree" name="agree" required style="width: auto; margin-right: 0.5rem;">
+                        <a href="/privacy" style="color: var(--primary-color);">プライバシーポリシー</a>に同意します *
+                    </label>
+                </div>
+
+                <div style="text-align: center;">
+                    <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem;">
+                        送信する
+                    </button>
+                </div>
+            </form>
+
+            <div id="form-success" style="display: none; text-align: center; margin-top: 2rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 0.5rem; color: var(--success-color);">
+                ✅ お問い合わせを受け付けました。24時間以内にご返信いたします。
+            </div>
+        </section>
+
+        <!-- よくあるご質問 -->
+        <section class="faq-section">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: var(--text-primary);">よくあるご質問</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>regctl Cloud の料金体系を教えてください</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    regctl Cloud はポイント制の従量課金です。ドメイン管理費は1ドメインあたり月額10ポイント（¥10）、ドメイン登録・更新費用は各レジストラーの料金に準拠します。初回は¥1,000〜の任意の金額でチャージが可能です。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>Claude Code との連携方法を教えてください</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    環境変数 REGCTL_AUTO_CONFIRM="true" および REGCTL_OUTPUT="json" を設定することで、Claude Code での自動化に最適化されます。確認なし実行（-y フラグ）とJSON出力により、AI開発ワークフローにシームレスに統合できます。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>対応しているドメインレジストラーは何ですか？</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    現在、VALUE-DOMAIN、AWS Route 53、Porkbun に対応しています。統一されたAPIインターフェースにより、複数のレジストラーを一つのCLIで管理できます。追加のレジストラー対応も継続的に開発中です。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>API の利用制限はありますか？</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    適正利用の範囲内であれば、API利用に特別な制限はありません。レート制限（1秒あたり10リクエスト）が適用されますが、一般的な利用では問題になりません。大量リクエストが必要な場合はエンタープライズプランをご検討ください。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>データのセキュリティ対策について教えてください</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    すべてのデータは暗号化され、Cloudflare Workers上で処理されます。OAuth認証、PBKDF2によるパスワードハッシュ化、JWTベースの認証システムを採用。監査ログによる完全な操作履歴管理も行っています。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>無料トライアルはありますか？</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    アカウント作成は無料で、CLIのインストールと基本機能の確認が可能です。実際のドメイン管理には最低¥1,000のチャージが必要ですが、少額から始められます。まずは無料でCLIをお試しください。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>原価なのにどうやって利益を出すの？</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    ドメイン登録・更新料はレジストラ原価（NameSilo、Namecheap等）をそのまま横流しし、利益はゼロ円です。月額10ポイント（¥10）の管理費のみで運営コストをカバーしています。この透明なビジネスモデルにより、ユーザーは業界最安値でドメインを管理できます。
+                </div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question" onclick="toggleFaq(this)">
+                    <span>原価は為替変動で変わりますか？</span>
+                    <span>+</span>
+                </div>
+                <div class="faq-answer">
+                    はい、為替レートとレジストラの価格改定に連動してリアルタイムで変動します。ダッシュボードで「本日の原価レート」を常に確認できます。価格変動はすべて利用規約に基づき自動的に転嫁されますが、管理費（10pt/月）は固定です。
+                </div>
+            </div>
+        </section>
+
+        <!-- 営業時間・サポート情報 -->
+        <section style="background: var(--bg-secondary); padding: 2rem; border-radius: 1rem; text-align: center;">
+            <h3 style="color: var(--text-primary); margin-bottom: 1rem;">サポート営業時間</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">📧 メールサポート</h4>
+                    <p style="color: var(--text-secondary); margin: 0;">24時間受付（返信は営業時間内）</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">🕐 営業時間</h4>
+                    <p style="color: var(--text-secondary); margin: 0;">平日 9:00-18:00 JST</p>
+                </div>
+                <div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">🚨 緊急時</h4>
+                    <p style="color: var(--text-secondary); margin: 0;">GitHub Issues で報告</p>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0;">
+                エンタープライズプランのお客様には専用サポートチャンネルをご用意しています。
+            </p>
+        </section>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="/" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">← ホームに戻る</a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 regctl Cloud. Built with ❤️ for AI developers.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // FAQ toggle function
+        function toggleFaq(element) {
+            const answer = element.nextElementSibling;
+            const icon = element.querySelector('span:last-child');
+            
+            if (answer.classList.contains('show')) {
+                answer.classList.remove('show');
+                icon.textContent = '+';
+            } else {
+                // Close all other FAQs
+                document.querySelectorAll('.faq-answer.show').forEach(item => {
+                    item.classList.remove('show');
+                });
+                document.querySelectorAll('.faq-question span:last-child').forEach(item => {
+                    item.textContent = '+';
+                });
+                
+                // Open clicked FAQ
+                answer.classList.add('show');
+                icon.textContent = '−';
+            }
+        }
+
+        // Contact form submission
+        document.getElementById('contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // In a real implementation, you would send the form data to your backend
+            // For now, we'll just show a success message
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            
+            console.log('Contact form submitted:', data);
+            
+            // Show success message
+            document.getElementById('form-success').style.display = 'block';
+            this.style.display = 'none';
+            
+            // In a real implementation, you would send this data to your backend:
+            // fetch('/api/contact', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(data)
+            // });
+        });
+    </script>
+</body>
+</html>

@@ -57,7 +57,7 @@ export abstract class DomainProvider {
 
   abstract checkAvailability(domain: string): Promise<DomainAvailability>
   abstract getDomainInfo(domain: string): Promise<DomainInfo>
-  abstract registerDomain(domain: string, options: RegisterOptions): Promise<any>
+  abstract registerDomain(domain: string, options: RegisterOptions): Promise<DomainInfo>
   abstract transferDomain(domain: string, authCode: string): Promise<TransferResult>
   abstract getAuthCode(domain: string): Promise<string>
   abstract updateNameservers(domain: string, nameservers: string[]): Promise<void>
@@ -67,8 +67,9 @@ export abstract class DomainProvider {
   abstract lockDomain(domain: string): Promise<void>
   abstract unlockDomain(domain: string): Promise<void>
 
-  protected async request(path: string, options: RequestInit = {}): Promise<any> {
-    const response = await fetch(`${this.endpoint}${path}`, {
+  protected async request(path: string, options: RequestInit = {}, queryString = ''): Promise<Record<string, unknown>> {
+    const url = `${this.endpoint}${path}${queryString}`
+    const response = await fetch(url, {
       ...options,
       headers: {
         'Content-Type': 'application/json',

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>regctl Documentation</title>
+    <meta name="description" content="regctl AI開発者向けドメイン管理SaaSの公式ドキュメント">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8fafc;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        header {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #3b82f6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #6b7280;
+            font-size: 1.125rem;
+        }
+        
+        .docs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .doc-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #e5e7eb;
+            transition: all 0.2s;
+        }
+        
+        .doc-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .doc-card h3 {
+            color: #1f2937;
+            margin-bottom: 0.5rem;
+        }
+        
+        .doc-card p {
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+        
+        .doc-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .doc-link:hover {
+            text-decoration: underline;
+        }
+        
+        .back-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            margin-bottom: 2rem;
+        }
+        
+        .back-link:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="https://regctl.com" class="back-link">← regctl.com に戻る</a>
+        
+        <header>
+            <h1>📚 regctl Documentation</h1>
+            <p class="subtitle">AI開発者向けドメイン管理SaaSの公式ドキュメント</p>
+        </header>
+        
+        <div class="docs-grid">
+            <div class="doc-card">
+                <h3>🚀 API リファレンス</h3>
+                <p>RESTful API の詳細仕様とエンドポイント一覧</p>
+                <a href="API.html" class="doc-link">API.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>💻 CLI リファレンス</h3>
+                <p>regctl コマンドライン使用法とオプション詳細</p>
+                <a href="CLI_REFERENCE.html" class="doc-link">CLI_REFERENCE.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>🏗️ アーキテクチャ</h3>
+                <p>システム設計とCloudflare Workers構成</p>
+                <a href="ARCHITECTURE.html" class="doc-link">ARCHITECTURE.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>🌐 Cloudflare DNS設定</h3>
+                <p>DNS設定とCloudflare統合ガイド</p>
+                <a href="CLOUDFLARE_DNS_SETUP.html" class="doc-link">CLOUDFLARE_DNS_SETUP.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>💰 ドメイン料金</h3>
+                <p>料金体系とポイントシステムの詳細</p>
+                <a href="DOMAIN_PRICING.html" class="doc-link">DOMAIN_PRICING.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>📝 ドメイン登録ガイド</h3>
+                <p>ドメイン登録の手順と注意事項</p>
+                <a href="DOMAIN_REGISTRATION_GUIDE.html" class="doc-link">DOMAIN_REGISTRATION_GUIDE.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>❓ よくある質問</h3>
+                <p>FAQ と トラブルシューティング</p>
+                <a href="FAQ.html" class="doc-link">FAQ.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>🚀 デプロイメント</h3>
+                <p>regctl のデプロイと運用ガイド</p>
+                <a href="REGCTL_DEPLOYMENT.html" class="doc-link">REGCTL_DEPLOYMENT.md を読む →</a>
+            </div>
+            
+            <div class="doc-card">
+                <h3>🏠 セルフホスティング</h3>
+                <p>オンプレミス環境での構築方法</p>
+                <a href="SELF_HOSTING.html" class="doc-link">SELF_HOSTING.md を読む →</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

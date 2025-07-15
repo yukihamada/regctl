@@ -1,14 +1,17 @@
 import { Hono } from 'hono'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
-import { authenticate } from '../middleware/auth'
-import type { Env, Domain, DNSRecord, User } from '../types'
+import { authMiddleware } from '../middleware/auth'
+import type { Env, Domain, DNSRecord, User, ParsedZoneRecord } from '../types'
 import { generateId } from '../utils/id'
+import { ValueDomainProvider } from '../services/providers/value-domain'
+import { Route53Provider } from '../services/providers/route53'
+import { PorkbunProvider } from '../services/providers/porkbun'
 
 export const dnsRouter = new Hono<{ Bindings: Env }>()
 
 // Apply auth middleware
-dnsRouter.use('*', authenticate())
+dnsRouter.use('*', authMiddleware())
 
 // Schemas
 const createRecordSchema = z.object({
@@ -31,19 +34,28 @@ const updateRecordSchema = z.object({
 dnsRouter.get('/:domain/records', async (c) => {
   const user = c.get('user') as User
   const domainName = c.req.param('domain')
-  const { type } = c.req.query()
+  const { type, sync } = c.req.query()
 
   // Check domain ownership
   const domain = await c.env.DB.prepare(
-    'SELECT * FROM domains WHERE name = ? AND owner_id = ?'
+    'SELECT * FROM domains WHERE domain = ? AND user_id = ?'
   ).bind(domainName, user.id).first<Domain>()
 
   if (!domain) {
     return c.json({ error: 'Domain not found' }, 404)
   }
 
+  // Sync DNS records from provider if requested
+  if (sync === 'true') {
+    try {
+      await syncDNSRecordsFromProvider(domain, c.env)
+    } catch (error) {
+      console.error('Failed to sync DNS records:', error)
+    }
+  }
+
   let query = 'SELECT * FROM dns_records WHERE domain_id = ?'
-  const params: any[] = [domain.id]
+  const params: (string | number)[] = [domain.id]
 
   if (type) {
     query += ' AND type = ?'
@@ -68,7 +80,7 @@ dnsRouter.get('/:domain/records/:recordId', async (c) => {
 
   // Check domain ownership
   const domain = await c.env.DB.prepare(
-    'SELECT * FROM domains WHERE name = ? AND owner_id = ?'
+    'SELECT * FROM domains WHERE domain = ? AND user_id = ?'
   ).bind(domainName, user.id).first<Domain>()
 
   if (!domain) {
@@ -94,7 +106,7 @@ dnsRouter.post('/:domain/records', zValidator('json', createRecordSchema), async
 
   // Check domain ownership
   const domain = await c.env.DB.prepare(
-    'SELECT * FROM domains WHERE name = ? AND owner_id = ?'
+    'SELECT * FROM domains WHERE domain = ? AND user_id = ?'
   ).bind(domainName, user.id).first<Domain>()
 
   if (!domain) {
@@ -171,7 +183,7 @@ dnsRouter.patch('/:domain/records/:recordId', zValidator('json', updateRecordSch
 
   // Check domain ownership
   const domain = await c.env.DB.prepare(
-    'SELECT * FROM domains WHERE name = ? AND owner_id = ?'
+    'SELECT * FROM domains WHERE domain = ? AND user_id = ?'
   ).bind(domainName, user.id).first<Domain>()
 
   if (!domain) {
@@ -188,7 +200,7 @@ dnsRouter.patch('/:domain/records/:recordId', zValidator('json', updateRecordSch
 
   // Update record
   const updates: string[] = []
-  const values: any[] = []
+  const values: (string | number | null)[] = []
 
   if (data.content !== undefined) {
     updates.push('content = ?')
@@ -244,7 +256,7 @@ dnsRouter.delete('/:domain/records/:recordId', async (c) => {
 
   // Check domain ownership
   const domain = await c.env.DB.prepare(
-    'SELECT * FROM domains WHERE name = ? AND owner_id = ?'
+    'SELECT * FROM domains WHERE domain = ? AND user_id = ?'
   ).bind(domainName, user.id).first<Domain>()
 
   if (!domain) {
@@ -285,7 +297,7 @@ dnsRouter.post('/:domain/import', async (c) => {
 
   // Check domain ownership
   const domain = await c.env.DB.prepare(
-    'SELECT * FROM domains WHERE name = ? AND owner_id = ?'
+    'SELECT * FROM domains WHERE domain = ? AND user_id = ?'
   ).bind(domainName, user.id).first<Domain>()
 
   if (!domain) {
@@ -294,7 +306,7 @@ dnsRouter.post('/:domain/import', async (c) => {
 
   // Parse zone file (simplified parser)
   const records = parseZoneFile(zoneFile, domainName)
-  const imported: any[] = []
+  const imported: DNSRecord[] = []
 
   for (const record of records) {
     try {
@@ -334,23 +346,82 @@ dnsRouter.post('/:domain/import', async (c) => {
 })
 
 // Cloudflare API helpers
-async function createCloudflareRecord(env: Env, domain: string, record: any) {
+async function createCloudflareRecord(_env: Env, _domain: string, _record: Partial<DNSRecord>) {
   // This would integrate with Cloudflare's API
   // For now, it's a placeholder
-  console.log('Creating Cloudflare record:', { domain, record })
+  // Creating Cloudflare record: { domain, record }
 }
 
-async function updateCloudflareRecord(env: Env, domain: string, recordId: string, updates: any) {
-  console.log('Updating Cloudflare record:', { domain, recordId, updates })
+async function updateCloudflareRecord(_env: Env, _domain: string, _recordId: string, _updates: Partial<DNSRecord>) {
+  // Updating Cloudflare record: { domain, recordId, updates }
 }
 
-async function deleteCloudflareRecord(env: Env, domain: string, recordId: string) {
-  console.log('Deleting Cloudflare record:', { domain, recordId })
+async function deleteCloudflareRecord(_env: Env, _domain: string, _recordId: string) {
+  // Deleting Cloudflare record: { domain, recordId }
+}
+
+// Helper function to sync DNS records from provider
+async function syncDNSRecordsFromProvider(domain: Domain, env: Env): Promise<void> {
+  if (domain.registrar !== 'value-domain') {
+    // Only VALUE-DOMAIN is supported for now
+    return
+  }
+
+  const provider = getProvider(domain.registrar, env)
+  if (!(provider instanceof ValueDomainProvider)) return
+
+  try {
+    const providerRecords = await provider.getDNSRecords(domain.name)
+    
+    // Clear existing records in database
+    await env.DB.prepare('DELETE FROM dns_records WHERE domain_id = ?')
+      .bind(domain.id).run()
+
+    // Insert new records from provider
+    for (const record of providerRecords) {
+      const recordId = generateId('dns')
+      const now = new Date().toISOString()
+
+      await env.DB.prepare(
+        `INSERT INTO dns_records (
+          id, domain_id, type, name, content, ttl, priority, proxied, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).bind(
+        recordId,
+        domain.id,
+        record.type,
+        record.name,
+        record.content,
+        record.ttl || 3600,
+        record.priority || null,
+        record.proxied || false,
+        now,
+        now
+      ).run()
+    }
+  } catch (error) {
+    console.error('Failed to sync DNS records from provider:', error)
+    throw error
+  }
+}
+
+// Helper function to get provider instance
+function getProvider(registrar: string, env: Env) {
+  switch (registrar) {
+    case 'value-domain':
+      return new ValueDomainProvider(env.VALUE_DOMAIN_API_KEY)
+    case 'route53':
+      return new Route53Provider(env.AWS_ACCESS_KEY_ID, env.AWS_SECRET_ACCESS_KEY, env)
+    case 'porkbun':
+      return new PorkbunProvider(env.PORKBUN_API_KEY, env.PORKBUN_API_SECRET)
+    default:
+      throw new Error(`Unknown registrar: ${registrar}`)
+  }
 }
 
 // Simple zone file parser
-function parseZoneFile(zoneFile: string, domain: string): any[] {
-  const records: any[] = []
+function parseZoneFile(zoneFile: string, domain: string): ParsedZoneRecord[] {
+  const records: ParsedZoneRecord[] = []
   const lines = zoneFile.split('\n')
 
   for (const line of lines) {

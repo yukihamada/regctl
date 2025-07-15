@@ -18,8 +18,8 @@ export class PorkbunProvider extends DomainProvider {
       }),
     })
 
-    const [name, tld] = domain.split('.')
-    const pricing = response.pricing[`.${tld}`]
+    const tld = domain.substring(domain.lastIndexOf('.'))
+    const pricing = response.pricing[tld]
 
     if (!pricing) {
       return { available: false }
@@ -77,7 +77,7 @@ export class PorkbunProvider extends DomainProvider {
     }
   }
 
-  async registerDomain(domain: string, options: RegisterOptions): Promise<any> {
+  async registerDomain(domain: string, options: RegisterOptions): Promise<DomainInfo> {
     const response = await this.request('/domain/create', {
       method: 'POST',
       body: JSON.stringify({

@@ -3,7 +3,7 @@ import { HTTPException } from 'hono/http-exception'
 import { verify } from 'hono/jwt'
 import type { Env, User } from '../types'
 
-export const authenticate = (required = true) => {
+export const authMiddleware = (required = true) => {
   return async (c: Context<{ Bindings: Env }>, next: Next) => {
     const authorization = c.req.header('Authorization')
     
@@ -58,6 +58,7 @@ export const authenticate = (required = true) => {
       )
 
       c.set('user', result)
+      c.set('userId', result.id)
       await next()
     } catch (error) {
       throw new HTTPException(401, { message: 'Invalid token' })

@@ -92,7 +92,7 @@ authRouter.post('/register', zValidator('json', registerSchema), async (c) => {
   if (data.organization_name) {
     organizationId = generateId('org')
     await c.env.DB.prepare(
-      'INSERT INTO organizations (id, name, owner_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
+      'INSERT INTO organizations (id, name, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?)'
     ).bind(organizationId, data.organization_name, userId, now, now).run()
   }
 

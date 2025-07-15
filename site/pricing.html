@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>料金プラン - regctl</title>
+    <meta name="description" content="regctl Cloud の詳細料金プラン・ドメイン価格・チャージオプション">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <style>
+        .pricing-hero {
+            background: var(--gradient-hero);
+            padding: 4rem 0;
+            text-align: center;
+            color: white;
+        }
+        
+        .calculator {
+            background: white;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: var(--shadow-lg);
+            margin: 2rem auto;
+            max-width: 500px;
+        }
+        
+        .calculator-input {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .calculator-input input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+        }
+        
+        .calculator-result {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .comparison-table th,
+        .comparison-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .comparison-table th {
+            background: var(--bg-secondary);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .comparison-table .price {
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .domain-pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .domain-category {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .domain-category:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .domain-category h3 {
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+        }
+        
+        .domain-list {
+            list-style: none;
+        }
+        
+        .domain-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+            color: var(--text-secondary);
+        }
+        
+        .domain-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .domain-list .price {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .enterprise-section {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+            border-radius: 1rem;
+            padding: 3rem;
+            text-align: center;
+            margin: 3rem 0;
+        }
+        
+        .highlight-box {
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <rect x="4" y="4" width="24" height="24" stroke="currentColor" stroke-width="2" rx="4"/>
+                    <circle cx="16" cy="16" r="4" fill="currentColor"/>
+                    <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.6"/>
+                    <circle cx="20" cy="20" r="2" fill="currentColor" opacity="0.6"/>
+                </svg>
+                <span>regctl</span>
+                <span class="beta">Cloud</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">ホーム</a></li>
+                <li><a href="/#features">機能</a></li>
+                <li><a href="#pricing">料金</a></li>
+                <li><a href="https://app.regctl.com" class="login-btn">ログイン</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Pricing Hero -->
+    <section class="pricing-hero">
+        <div class="container">
+            <h1 style="font-size: 3rem; font-weight: 900; margin-bottom: 1rem;">
+                透明性のある料金体系
+            </h1>
+            <p style="font-size: 1.25rem; margin-bottom: 2rem; color: rgba(255, 255, 255, 0.9);">
+                ポイント制従量課金で、使った分だけお支払い。隠れたコストは一切ありません。
+            </p>
+            
+            <!-- 料金計算機 -->
+            <div class="calculator">
+                <h3 style="color: var(--text-primary); margin-bottom: 1rem; text-align: center;">月額料金計算機</h3>
+                <div class="calculator-input">
+                    <label style="color: var(--text-primary); white-space: nowrap;">管理ドメイン数:</label>
+                    <input type="number" id="domain-count" value="5" min="1" onchange="calculateCost()">
+                    <span style="color: var(--text-secondary);">個</span>
+                </div>
+                <div class="calculator-result">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="color: var(--text-secondary);">ドメイン管理費:</span>
+                        <span id="management-cost" style="color: var(--text-primary); font-weight: 600;">¥50</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; border-top: 1px solid var(--border-color); padding-top: 0.5rem;">
+                        <span style="color: var(--text-primary); font-weight: 600;">月額合計:</span>
+                        <span id="total-cost" style="color: var(--primary-color); font-weight: 700; font-size: 1.25rem;">¥50</span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 0.5rem; margin-bottom: 0;">
+                        ※ ドメイン登録・更新費用は別途発生します
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="container" style="max-width: 1200px; margin: 4rem auto; padding: 2rem;">
+        
+        <!-- 基本料金体系 -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);">基本料金体系</h2>
+            
+            <div class="highlight-box">
+                <h3 style="color: var(--primary-color); margin-bottom: 1rem;">💡 重要なポイント</h3>
+                <ul style="color: var(--text-secondary); line-height: 1.7; text-align: left; max-width: 600px; margin: 0 auto;">
+                    <li style="margin-bottom: 0.5rem;">**ドメイン管理費**: 1ドメインあたり月額10ポイント（¥10）</li>
+                    <li style="margin-bottom: 0.5rem;">**ドメイン登録・更新**: 各レジストラーの定価（一般的な相場）</li>
+                    <li style="margin-bottom: 0.5rem;">**DNS管理・SSL証明書**: 完全無料</li>
+                    <li style="margin-bottom: 0.5rem;">**API利用・CLI使用**: 追加料金なし</li>
+                </ul>
+            </div>
+
+            <table class="comparison-table" style="margin-top: 2rem;">
+                <thead>
+                    <tr>
+                        <th>サービス</th>
+                        <th>regctl Cloud</th>
+                        <th>他社平均</th>
+                        <th>節約額</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ドメイン管理費</td>
+                        <td class="price">¥10/月/ドメイン</td>
+                        <td>¥200-500/月/ドメイン</td>
+                        <td style="color: var(--success-color); font-weight: 600;">¥190-490/月</td>
+                    </tr>
+                    <tr>
+                        <td>DNS管理</td>
+                        <td class="price">無料</td>
+                        <td>¥500-1,000/月</td>
+                        <td style="color: var(--success-color); font-weight: 600;">¥500-1,000/月</td>
+                    </tr>
+                    <tr>
+                        <td>SSL証明書</td>
+                        <td class="price">無料 (Let's Encrypt)</td>
+                        <td>¥3,000-10,000/年</td>
+                        <td style="color: var(--success-color); font-weight: 600;">¥3,000-10,000/年</td>
+                    </tr>
+                    <tr>
+                        <td>API利用</td>
+                        <td class="price">無料</td>
+                        <td>¥1,000-3,000/月</td>
+                        <td style="color: var(--success-color); font-weight: 600;">¥1,000-3,000/月</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- ドメイン登録・更新料金 -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);">ドメイン登録・更新料金</h2>
+            
+            <div class="domain-pricing-grid">
+                <div class="domain-category">
+                    <h3>🌐 人気ドメイン</h3>
+                    <ul class="domain-list">
+                        <li><span>.com</span> <span class="price">¥790/年</span></li>
+                        <li><span>.net</span> <span class="price">¥1,200/年</span></li>
+                        <li><span>.org</span> <span class="price">¥1,480/年</span></li>
+                        <li><span>.info</span> <span class="price">¥1,580/年</span></li>
+                        <li><span>.biz</span> <span class="price">¥1,380/年</span></li>
+                    </ul>
+                </div>
+
+                <div class="domain-category">
+                    <h3>🇯🇵 日本ドメイン</h3>
+                    <ul class="domain-list">
+                        <li><span>.jp</span> <span class="price">¥2,035/年</span></li>
+                        <li><span>.co.jp</span> <span class="price">¥3,850/年</span></li>
+                        <li><span>.or.jp</span> <span class="price">¥1,023/年</span></li>
+                        <li><span>.ne.jp</span> <span class="price">¥1,023/年</span></li>
+                        <li><span>.gr.jp</span> <span class="price">¥1,023/年</span></li>
+                    </ul>
+                </div>
+
+                <div class="domain-category">
+                    <h3>💻 テック系</h3>
+                    <ul class="domain-list">
+                        <li><span>.dev</span> <span class="price">¥1,200/年</span></li>
+                        <li><span>.tech</span> <span class="price">¥2,800/年</span></li>
+                        <li><span>.io</span> <span class="price">¥3,200/年</span></li>
+                        <li><span>.ai</span> <span class="price">¥8,000/年</span></li>
+                        <li><span>.app</span> <span class="price">¥1,200/年</span></li>
+                    </ul>
+                </div>
+
+                <div class="domain-category">
+                    <h3>🏢 ビジネス系</h3>
+                    <ul class="domain-list">
+                        <li><span>.company</span> <span class="price">¥3,200/年</span></li>
+                        <li><span>.business</span> <span class="price">¥3,200/年</span></li>
+                        <li><span>.store</span> <span class="price">¥2,800/年</span></li>
+                        <li><span>.shop</span> <span class="price">¥1,800/年</span></li>
+                        <li><span>.services</span> <span class="price">¥1,800/年</span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    上記以外のTLD価格についてはお問い合わせください
+                </p>
+                <a href="/contact" class="btn btn-secondary">価格を問い合わせる</a>
+            </div>
+        </section>
+
+        <!-- チャージプラン -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);">チャージプラン</h2>
+            
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>ライト</h3>
+                        <div class="price">¥1,000</div>
+                        <div class="price-desc">100ポイント</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ .com ドメイン 1個分</li>
+                        <li>✅ 10ヶ月分の管理費用</li>
+                        <li>✅ 個人開発者向け</li>
+                        <li>✅ CLI & JSON API</li>
+                    </ul>
+                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">チャージ</a>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>スターター</h3>
+                        <div class="price">¥3,000</div>
+                        <div class="price-desc">300ポイント</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ .com ドメイン 3個分</li>
+                        <li>✅ 30ヶ月分の管理費用</li>
+                        <li>✅ 個人・チーム開発</li>
+                        <li>✅ バッチ処理対応</li>
+                    </ul>
+                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">チャージ</a>
+                </div>
+
+                <div class="pricing-card popular">
+                    <div class="pricing-badge">人気</div>
+                    <div class="pricing-header">
+                        <h3>スタンダード</h3>
+                        <div class="price">¥10,000</div>
+                        <div class="price-desc">1,100ポイント <span class="bonus">+10%</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ .com ドメイン 11個分</li>
+                        <li>✅ .jp ドメイン 5個分</li>
+                        <li>✅ チーム開発向け</li>
+                        <li>✅ バッチ処理無制限</li>
+                        <li>✅ 優先サポート</li>
+                    </ul>
+                    <a href="https://app.regctl.com/billing" class="btn btn-primary">チャージ</a>
+                </div>
+
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3>プロフェッショナル</h3>
+                        <div class="price">¥30,000</div>
+                        <div class="price-desc">3,500ポイント <span class="bonus">+17%</span></div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>✅ 大量ドメイン管理</li>
+                        <li>✅ エンタープライズ機能</li>
+                        <li>✅ カスタム統合</li>
+                        <li>✅ 専用サポート</li>
+                        <li>✅ SLA保証</li>
+                    </ul>
+                    <a href="https://app.regctl.com/billing" class="btn btn-secondary">チャージ</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- エンタープライズ -->
+        <section class="enterprise-section">
+            <h2 style="color: var(--text-primary); margin-bottom: 2rem;">🏢 エンタープライズプラン</h2>
+            <p style="color: var(--text-secondary); font-size: 1.125rem; margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                大企業・組織向けのカスタムプランをご用意。専任サポート、請求書払い、カスタム統合など、ビジネスニーズに合わせた柔軟な対応が可能です。
+            </p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0; max-width: 800px; margin-left: auto; margin-right: auto;">
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">💰</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">カスタム価格</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">¥5,000〜50,000/月<br>大口割引適用</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🎯</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">専任サポート</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">専用チャット<br>優先対応</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔧</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">カスタム統合</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">API拡張<br>専用機能開発</p>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">📋</div>
+                    <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">請求書払い</h4>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">月次・年次請求<br>購買部門対応</p>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem;">
+                <a href="/contact" class="btn btn-primary" style="margin-right: 1rem;">相談する</a>
+                <a href="mailto:enterprise@regctl.com" class="btn btn-secondary">enterprise@regctl.com</a>
+            </div>
+        </section>
+
+        <!-- よくある質問 -->
+        <section style="margin-bottom: 4rem;">
+            <h2 style="text-align: center; margin-bottom: 3rem; color: var(--text-primary);">料金に関するFAQ</h2>
+            
+            <div style="max-width: 800px; margin: 0 auto;">
+                <div style="background: white; border-radius: 1rem; box-shadow: var(--shadow-sm); overflow: hidden;">
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                        <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">ポイントの有効期限はありますか？</h4>
+                        <p style="color: var(--text-secondary); margin: 0;">チャージしたポイントに有効期限はありません。アカウントが有効な限り無期限でご利用いただけます。</p>
+                    </div>
+                    
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                        <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">月の途中でドメインを追加した場合の料金は？</h4>
+                        <p style="color: var(--text-secondary); margin: 0;">日割り計算で請求されます。例えば月の15日に追加した場合、その月は約5ポイントの消費となります。</p>
+                    </div>
+                    
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                        <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">ドメイン移管時の料金は？</h4>
+                        <p style="color: var(--text-secondary); margin: 0;">他のレジストラーからのドメイン移管は無料です（レジストラーによる移管費用は別途）。移管完了後から管理費が発生します。</p>
+                    </div>
+                    
+                    <div style="padding: 1.5rem; border-bottom: 1px solid var(--border-color);">
+                        <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">返金はできますか？</h4>
+                        <p style="color: var(--text-secondary); margin: 0;">チャージしたポイントの返金は基本的に行っておりません。サービスに問題がある場合は個別にご相談ください。</p>
+                    </div>
+                    
+                    <div style="padding: 1.5rem;">
+                        <h4 style="color: var(--text-primary); margin-bottom: 0.5rem;">請求書払いは可能ですか？</h4>
+                        <p style="color: var(--text-secondary); margin: 0;">エンタープライズプランでは請求書払いに対応しています。月次・年次の選択が可能です。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div style="text-align: center; margin-top: 3rem;">
+            <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                その他ご質問がございましたら、お気軽にお問い合わせください
+            </p>
+            <a href="/contact" class="btn btn-primary">お問い合わせ</a>
+        </div>
+        
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="/" style="color: var(--primary-color); text-decoration: none; font-weight: 600;">← ホームに戻る</a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 regctl Cloud. Built with ❤️ for AI developers.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function calculateCost() {
+            const domainCount = parseInt(document.getElementById('domain-count').value) || 0;
+            const managementCost = domainCount * 10; // 10円 per domain per month
+            
+            document.getElementById('management-cost').textContent = `¥${managementCost}`;
+            document.getElementById('total-cost').textContent = `¥${managementCost}`;
+        }
+
+        // Initialize calculation
+        calculateCost();
+    </script>
+</body>
+</html>

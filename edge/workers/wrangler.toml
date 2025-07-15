@@ -4,15 +4,15 @@ compatibility_date = "2024-01-01"
 
 # KV Namespaces
 kv_namespaces = [
-  { binding = "SESSIONS", id = "sessions_kv" },
-  { binding = "CACHE", id = "cache_kv" }
+  { binding = "SESSIONS", id = "03f57dba5a964634a495a0eaaa9868f1" },
+  { binding = "CACHE", id = "75904cc15d75441b8b4fb33b0e0e5bc2" }
 ]
 
 # D1 Database
 [[d1_databases]]
 binding = "DB"
 database_name = "regctl-db"
-database_id = "regctl-database-id"
+database_id = "1fd5a222-8923-4947-99c1-cb8defd90039"
 
 # Durable Objects
 [[durable_objects.bindings]]
@@ -28,15 +28,18 @@ new_classes = ["RateLimiter"]
 binding = "WEBHOOKS"
 queue = "regctl-webhooks"
 
-[[queues.consumers]]
-queue = "regctl-webhooks"
-
 # Environment Variables
 [vars]
 ENVIRONMENT = "production"
+JWT_SECRET = "your-super-secret-jwt-key-change-this-in-production"
+APP_URL = "https://regctl-app.pages.dev"
+VALUE_DOMAIN_API_KEY = "0LuCVBY2sy0LvKbTsDNB0NBa6zTfap0gSmHrANxT07WaCamHGZ9pydQwSVzn3ruWGFqRas99VBBfbsBz1FsDxgFFmA6f2Y4UbMU4"
 
-# Routes
+# Routes - Updated for regctl.com domain
 routes = [
+  "api.regctl.com/*",
+  "regctl.com/api/*",
+  # Keep cloud routes for backward compatibility during transition
   "api.regctl.cloud/*",
   "regctl.cloud/api/*"
 ]

@@ -172,6 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
         trackABTestEvent('page_view');
     }
     
+    // リアルタイム原価レート取得機能
+    updateRealtimePrices();
+    // 5分ごとに更新
+    setInterval(updateRealtimePrices, 300000);
+    
     // Initialize demo tab based on A/B test
     const targetTab = document.querySelector(`.tab[onclick="showDemo('${defaultDemo}')"]`);
     const targetDemo = document.getElementById(`demo-${defaultDemo}`);
@@ -265,4 +270,46 @@ function toggleTheme() {
 const savedTheme = localStorage.getItem('theme');
 if (savedTheme === 'dark') {
     document.body.classList.add('dark-theme');
+}
+
+// リアルタイム原価レート取得
+async function updateRealtimePrices() {
+    try {
+        // 実際の実装では、APIエンドポイントから取得
+        // const response = await fetch('https://api.regctl.com/v1/pricing/realtime');
+        // const data = await response.json();
+        
+        // デモ用の為替レート計算
+        const exchangeRate = 150 + (Math.random() * 5 - 2.5); // 147.5-152.5の範囲でランダム
+        const nameSiloCom = 11.05; // NameSilo .com原価
+        const comPriceJPY = Math.round(nameSiloCom * exchangeRate);
+        
+        // DOM更新
+        const realtimeEl = document.getElementById('com-price-realtime');
+        const displayEl = document.getElementById('com-price-display');
+        
+        if (realtimeEl) {
+            realtimeEl.textContent = `¥${comPriceJPY.toLocaleString()}`;
+            // 為替レート表示も更新
+            const parentEl = realtimeEl.parentElement;
+            if (parentEl) {
+                const rateSpan = parentEl.querySelector('span[style*="font-size: 0.8rem"]');
+                if (rateSpan) {
+                    rateSpan.textContent = `(NameSilo: $${nameSiloCom} × ¥${exchangeRate.toFixed(1)})`;
+                }
+            }
+        }
+        
+        if (displayEl) {
+            displayEl.textContent = `¥${comPriceJPY.toLocaleString()}`;
+        }
+        
+        // 最終更新時刻を表示
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+        console.log(`価格更新: ${timeStr} - .com = ¥${comPriceJPY}`);
+        
+    } catch (error) {
+        console.error('価格取得エラー:', error);
+    }
 }

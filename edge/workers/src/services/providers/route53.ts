@@ -1,12 +1,15 @@
 import { DomainProvider, DomainAvailability, DomainInfo, RegisterOptions, TransferResult } from './base'
 import { generateId } from '../../utils/id'
+import type { Env } from '../../types'
 
 export class Route53Provider extends DomainProvider {
   private secretKey: string
+  private env?: Env
 
-  constructor(accessKeyId: string, secretAccessKey: string) {
+  constructor(accessKeyId: string, secretAccessKey: string, env?: Env) {
     super(accessKeyId, 'https://route53domains.amazonaws.com')
     this.secretKey = secretAccessKey
+    this.env = env
   }
 
   async checkAvailability(domain: string): Promise<DomainAvailability> {
@@ -35,7 +38,7 @@ export class Route53Provider extends DomainProvider {
       auto_renew: response.AutoRenew || false,
       locked: response.AdminContact?.PrivacyProtectAdminContact || false,
       privacy_enabled: response.PrivacyProtectAdminContact || false,
-      nameservers: response.Nameservers?.map((ns: any) => ns.Name) || [],
+      nameservers: response.Nameservers?.map((ns: { Name: string }) => ns.Name) || [],
       registrant: response.AdminContact ? {
         name: `${response.AdminContact.FirstName} ${response.AdminContact.LastName}`,
         email: response.AdminContact.Email,
@@ -44,7 +47,7 @@ export class Route53Provider extends DomainProvider {
     }
   }
 
-  async registerDomain(domain: string, options: RegisterOptions): Promise<any> {
+  async registerDomain(domain: string, options: RegisterOptions): Promise<DomainInfo> {
     const contact = options.registrant ? {
       FirstName: options.registrant.name.split(' ')[0],
       LastName: options.registrant.name.split(' ').slice(1).join(' ') || 'N/A',
@@ -117,16 +120,16 @@ export class Route53Provider extends DomainProvider {
     })
   }
 
-  async setAutoRenew(domain: string, enabled: boolean): Promise<void> {
+  async setAutoRenew(domain: string, _enabled: boolean): Promise<void> {
     await this.awsRequest('EnableDomainAutoRenew', {
       DomainName: domain,
     })
   }
 
-  async setPrivacy(domain: string, enabled: boolean): Promise<void> {
+  async setPrivacy(_domain: string, _enabled: boolean): Promise<void> {
     // Route53 doesn't have a direct privacy toggle API
     // Would need to update contact privacy settings
-    console.log('Privacy settings update not implemented for Route53')
+    // Privacy settings update not implemented for Route53
   }
 
   async lockDomain(domain: string): Promise<void> {
@@ -141,7 +144,7 @@ export class Route53Provider extends DomainProvider {
     })
   }
 
-  private async awsRequest(action: string, params: any): Promise<any> {
+  private async awsRequest(action: string, params: Record<string, unknown>): Promise<Record<string, unknown>> {
     // Simplified AWS API request - in production, use proper AWS SDK v4 signing
     const timestamp = new Date().toISOString()
     

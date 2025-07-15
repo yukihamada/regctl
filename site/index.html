@@ -93,6 +93,16 @@
                     JSON出力、バッチ処理、確認なし実行で完全自動化。
                 </p>
                 
+                <!-- 原価提供モデルの説明 -->
+                <div style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 1rem; padding: 1rem 1.5rem; margin: 1.5rem 0; backdrop-filter: blur(10px);">
+                    <p style="color: white; font-weight: 600; font-size: 1.125rem; margin: 0; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        💰 原価ドメイン + 月額ポイント = 100% 透明価格
+                    </p>
+                    <p style="color: rgba(255, 255, 255, 0.8); font-size: 0.9rem; margin: 0.5rem 0 0;">
+                        登録料はレジストラ原価のまま横流し。利益は月額10pt（¥10）の管理費のみ。
+                    </p>
+                </div>
+                
                 <!-- One-liner install -->
                 <div class="hero-install">
                     <div class="install-command">
@@ -348,6 +358,21 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
 
             <div class="pricing-details">
                 <h3>💡 詳細料金</h3>
+                
+                <!-- リアルタイム原価レート表示 -->
+                <div style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: 0.75rem; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                    <p style="color: var(--primary-color); font-weight: 600; margin: 0 0 0.5rem;">
+                        🔄 本日の原価レート（リアルタイム更新）
+                    </p>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                        .com: <span id="com-price-realtime" style="font-weight: 700; color: var(--primary-color);">¥1,660</span> 
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">(NameSilo: $11.05 × ¥150)</span>
+                    </p>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0.5rem 0 0;">
+                        ※ レジストラ原価＋為替レートで自動計算。利益ゼロ円で提供。
+                    </p>
+                </div>
+                
                 <div class="pricing-table">
                     <div class="pricing-row">
                         <span>ドメイン管理費</span>
@@ -355,7 +380,7 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
                     </div>
                     <div class="pricing-row">
                         <span>.com 登録・更新</span>
-                        <span>¥790/年 + 10pt/月</span>
+                        <span><span id="com-price-display">¥1,660</span>/年 + 10pt/月</span>
                     </div>
                     <div class="pricing-row">
                         <span>.net 登録・更新</span>
@@ -588,10 +613,11 @@ regctl dns create <span class="variable">$DOMAIN</span> A @ <span class="variabl
                 <div class="footer-section">
                     <h4>サポート</h4>
                     <ul>
-                        <li><a href="mailto:support@regctl.com">お問い合わせ</a></li>
+                        <li><a href="/contact">お問い合わせ</a></li>
                         <li><a href="/status">ステータス</a></li>
                         <li><a href="/privacy">プライバシー</a></li>
                         <li><a href="/terms">利用規約</a></li>
+                        <li><a href="/law">特定商取引法に基づく表示</a></li>
                     </ul>
                 </div>
             </div>

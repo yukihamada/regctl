@@ -1,0 +1,16 @@
+{
+  "name": "regctl-ab-test",
+  "version": "1.0.0",
+  "description": "A/B Testing Worker for regctl.com",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20231121.0",
+    "wrangler": "^3.0.0",
+    "vitest": "^0.34.0"
+  }
+}

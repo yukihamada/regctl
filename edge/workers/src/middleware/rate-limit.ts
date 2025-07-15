@@ -50,7 +50,7 @@ export class RateLimiter {
   }
 }
 
-export const rateLimiter = () => {
+export const rateLimitMiddleware = () => {
   return async (c: Context<{ Bindings: Env }>, next: Next) => {
     const clientIp = c.req.header('CF-Connecting-IP') || 'unknown'
     const auth = c.req.header('Authorization')

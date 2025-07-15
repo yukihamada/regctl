@@ -1,0 +1,27 @@
+name = "regctl-ab-test"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# Routes for A/B testing
+routes = [
+  "regctl.com/*",
+  "www.regctl.com/*"
+]
+
+# Environment Variables
+[vars]
+ENVIRONMENT = "production"
+# A/B test configurations
+AB_TEST_HERO_CTA = "true"
+AB_TEST_PRICING_ORDER = "true"
+AB_TEST_DEMO_DEFAULT = "true"
+
+# Development
+[env.development]
+vars = { ENVIRONMENT = "development" }
+routes = []
+
+# Staging
+[env.staging]
+vars = { ENVIRONMENT = "staging" }
+routes = ["staging.regctl.com/*"]
