@@ -208,7 +208,7 @@
             <div class="highlight-box">
                 <h3 style="color: var(--primary-color); margin-bottom: 1rem;">💡 重要なポイント</h3>
                 <ul style="color: var(--text-secondary); line-height: 1.7; text-align: left; max-width: 600px; margin: 0 auto;">
-                    <li style="margin-bottom: 0.5rem;">**ドメイン管理費**: 1ドメインあたり月額10ポイント（¥10）</li>
+                    <li style="margin-bottom: 0.5rem;">**ドメイン管理費**: 1ドメインあたり月額¥10</li>
                     <li style="margin-bottom: 0.5rem;">**ドメイン登録・更新**: 各レジストラーの定価（一般的な相場）</li>
                     <li style="margin-bottom: 0.5rem;">**DNS管理・SSL証明書**: 完全無料</li>
                     <li style="margin-bottom: 0.5rem;">**API利用・CLI使用**: 追加料金なし</li>
@@ -475,7 +475,7 @@
     <script>
         function calculateCost() {
             const domainCount = parseInt(document.getElementById('domain-count').value) || 0;
-            const managementCost = domainCount * 10; // 10円 per domain per month
+            const managementCost = domainCount * 10; // ¥10 per domain per month
             
             document.getElementById('management-cost').textContent = `¥${managementCost}`;
             document.getElementById('total-cost').textContent = `¥${managementCost}`;
