@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>管理画面 - regctl Cloud | ドメイン管理ダッシュボード</title>
+    <meta name="description" content="regctl Cloud 管理画面。ValueDomainやRoute53、Porkbunの残高確認、ドメイン一覧管理、API設定を一元管理。">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Admin Dashboard Specific Styles -->
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .admin-header {
+            background: var(--gradient-premium);
+            color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        
+        .admin-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-icon {
+            font-size: 1.5rem;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .status-online {
+            background: var(--success-color);
+            box-shadow: 0 0 8px rgba(5, 150, 105, 0.4);
+        }
+        
+        .status-offline {
+            background: var(--error-color);
+            box-shadow: 0 0 8px rgba(220, 38, 38, 0.4);
+        }
+        
+        .balance-display {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--primary-color);
+            margin: 1rem 0;
+        }
+        
+        .balance-sub {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+        
+        .domain-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .domain-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-light);
+            transition: background 0.2s ease;
+        }
+        
+        .domain-item:hover {
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .domain-item:last-child {
+            border-bottom: none;
+        }
+        
+        .domain-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .domain-status {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-weight: 600;
+        }
+        
+        .status-active {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--success-color);
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning-color);
+        }
+        
+        .status-expired {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error-color);
+        }
+        
+        .refresh-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+        
+        .refresh-btn:disabled {
+            background: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .success-message {
+            background: rgba(5, 150, 105, 0.1);
+            border: 1px solid rgba(5, 150, 105, 0.3);
+            color: var(--success-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+        }
+        
+        .api-status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .api-status-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg-secondary);
+            border-radius: 0.5rem;
+        }
+        
+        .last-updated {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.75rem 1rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--text-muted);
+            color: white;
+        }
+        
+        .btn-success {
+            background: var(--success-color);
+            color: white;
+        }
+        
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 1rem;
+            }
+            
+            .admin-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .admin-card {
+                padding: 1.5rem;
+            }
+            
+            .balance-display {
+                font-size: 1.5rem;
+            }
+            
+            .quick-actions {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                min-width: auto;
+            }
+        }
+        
+        /* Logout button */
+        .logout-btn {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: var(--error-color);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background: rgba(220, 38, 38, 0.2);
+            transform: translateY(-1px);
+        }
+        
+        /* Dark theme support */
+        @media (prefers-color-scheme: dark) {
+            .admin-card {
+                background: rgba(15, 23, 42, 0.8);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+            
+            .domain-item:hover {
+                background: rgba(59, 130, 246, 0.1);
+            }
+            
+            .api-status-item {
+                background: rgba(15, 23, 42, 0.6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <defs>
+                        <linearGradient id="headerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1" />
+                            <stop offset="50%" style="stop-color:#10B981;stop-opacity:1" />
+                            <stop offset="100%" style="stop-color:#06B6D4;stop-opacity:1" />
+                        </linearGradient>
+                    </defs>
+                    <rect x="4" y="4" width="24" height="24" rx="5" stroke="url(#headerGradient)" stroke-width="2.5" fill="none"/>
+                    <circle cx="16" cy="16" r="4.5" fill="url(#headerGradient)"/>
+                    <circle cx="11.5" cy="11.5" r="1.8" fill="url(#headerGradient)" opacity="0.8"/>
+                    <circle cx="20.5" cy="20.5" r="1.8" fill="url(#headerGradient)" opacity="0.8"/>
+                    <circle cx="20.5" cy="11.5" r="1.3" fill="url(#headerGradient)" opacity="0.6"/>
+                    <circle cx="11.5" cy="20.5" r="1.3" fill="url(#headerGradient)" opacity="0.6"/>
+                    <line x1="13" y1="13" x2="16" y2="16" stroke="white" stroke-width="1.8" opacity="0.9"/>
+                    <line x1="19" y1="19" x2="16" y2="16" stroke="white" stroke-width="1.8" opacity="0.9"/>
+                    <line x1="19" y1="13" x2="16" y2="16" stroke="white" stroke-width="1.2" opacity="0.7"/>
+                    <line x1="13" y1="19" x2="16" y2="16" stroke="white" stroke-width="1.2" opacity="0.7"/>
+                    <circle cx="16" cy="16" r="1.5" fill="white" opacity="0.9"/>
+                </svg>
+                <span>regctl</span>
+                <span class="beta">管理画面</span>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/">ホーム</a></li>
+                <li><a href="#domains">ドメイン</a></li>
+                <li><a href="#settings">設定</a></li>
+                <li><a href="https://app.regctl.com">ダッシュボード</a></li>
+                <li><button onclick="logout()" class="logout-btn" title="ログアウト">🚪 ログアウト</button></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-container">
+        <!-- Header -->
+        <div class="admin-header">
+            <h1>🛠️ regctl Cloud 管理画面</h1>
+            <p>ドメイン管理・プロバイダー残高・API設定を一元管理</p>
+            <div class="last-updated" id="last-updated">
+                最終更新: <span id="update-time">--</span>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="admin-grid">
+            <!-- ValueDomain Status -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">🌐</span>
+                        VALUE-DOMAIN
+                    </div>
+                    <div class="status-indicator status-online" id="vd-status"></div>
+                </div>
+                <div class="balance-display" id="vd-balance">--</div>
+                <div class="balance-sub">残高 (JPY)</div>
+                <div class="api-status-grid">
+                    <div class="api-status-item">
+                        <span>API応答</span>
+                        <span id="vd-response-time">--</span>
+                    </div>
+                    <div class="api-status-item">
+                        <span>管理ドメイン数</span>
+                        <span id="vd-domain-count">--</span>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn btn-primary" onclick="refreshValueDomain()">
+                        <span id="vd-refresh-text">🔄 更新</span>
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="showValueDomainDetails()">
+                        📊 詳細
+                    </button>
+                </div>
+                <div id="vd-error" style="display: none;"></div>
+            </div>
+
+            <!-- Route53 Status -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">☁️</span>
+                        AWS Route53
+                    </div>
+                    <div class="status-indicator status-online" id="r53-status"></div>
+                </div>
+                <div class="balance-display" id="r53-cost">--</div>
+                <div class="balance-sub">今月のコスト (USD)</div>
+                <div class="api-status-grid">
+                    <div class="api-status-item">
+                        <span>ホストゾーン数</span>
+                        <span id="r53-zones">--</span>
+                    </div>
+                    <div class="api-status-item">
+                        <span>DNSクエリ数</span>
+                        <span id="r53-queries">--</span>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn btn-primary" onclick="refreshRoute53()">
+                        <span id="r53-refresh-text">🔄 更新</span>
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="showRoute53Details()">
+                        📊 詳細
+                    </button>
+                </div>
+                <div id="r53-error" style="display: none;"></div>
+            </div>
+
+            <!-- Porkbun Status -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">🐷</span>
+                        Porkbun
+                    </div>
+                    <div class="status-indicator status-online" id="pb-status"></div>
+                </div>
+                <div class="balance-display" id="pb-balance">--</div>
+                <div class="balance-sub">残高 (USD)</div>
+                <div class="api-status-grid">
+                    <div class="api-status-item">
+                        <span>API応答</span>
+                        <span id="pb-response-time">--</span>
+                    </div>
+                    <div class="api-status-item">
+                        <span>管理ドメイン数</span>
+                        <span id="pb-domain-count">--</span>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn btn-primary" onclick="refreshPorkbun()">
+                        <span id="pb-refresh-text">🔄 更新</span>
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="showPorkbunDetails()">
+                        📊 詳細
+                    </button>
+                </div>
+                <div id="pb-error" style="display: none;"></div>
+            </div>
+
+            <!-- System Status -->
+            <div class="admin-card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-icon">⚙️</span>
+                        システム状態
+                    </div>
+                    <div class="status-indicator status-online" id="system-status"></div>
+                </div>
+                <div class="api-status-grid">
+                    <div class="api-status-item">
+                        <span>Workers</span>
+                        <span id="workers-status">🟢 稼働中</span>
+                    </div>
+                    <div class="api-status-item">
+                        <span>Database</span>
+                        <span id="db-status">🟢 稼働中</span>
+                    </div>
+                    <div class="api-status-item">
+                        <span>Cache</span>
+                        <span id="cache-status">🟢 稼働中</span>
+                    </div>
+                    <div class="api-status-item">
+                        <span>Queue</span>
+                        <span id="queue-status">🟢 稼働中</span>
+                    </div>
+                </div>
+                <div class="quick-actions">
+                    <button class="action-btn btn-success" onclick="refreshSystemStatus()">
+                        <span id="system-refresh-text">🔄 ヘルスチェック</span>
+                    </button>
+                    <button class="action-btn btn-secondary" onclick="showSystemLogs()">
+                        📝 ログ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Domain List Section -->
+        <div class="admin-card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span class="card-icon">📋</span>
+                    管理ドメイン一覧
+                </div>
+                <button class="refresh-btn" onclick="refreshDomains()" id="domain-refresh-btn">
+                    🔄 更新
+                </button>
+            </div>
+            <div class="domain-list" id="domain-list">
+                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    ドメインデータを読み込み中...
+                </div>
+            </div>
+            <div class="quick-actions">
+                <button class="action-btn btn-primary" onclick="addNewDomain()">
+                    ➕ ドメイン追加
+                </button>
+                <button class="action-btn btn-secondary" onclick="exportDomains()">
+                    📥 エクスポート
+                </button>
+                <button class="action-btn btn-secondary" onclick="bulkActions()">
+                    🔧 一括操作
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 3rem;">
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2025 regctl Cloud 管理画面. Built with ❤️ for domain management.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/admin.js"></script>
+</body>
+</html>

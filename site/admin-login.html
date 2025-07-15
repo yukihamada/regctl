@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者ログイン - regctl Cloud</title>
+    <meta name="description" content="regctl Cloud 管理画面へのログイン">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <link rel="icon" type="image/svg+xml" href="img/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+    
+    <style>
+        body {
+            background: var(--gradient-premium);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .login-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 1.5rem;
+            padding: 3rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-premium);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            background: var(--bg-primary);
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--gradient-premium);
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+        
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .error-message {
+            background: rgba(220, 38, 38, 0.1);
+            border: 1px solid rgba(220, 38, 38, 0.3);
+            color: var(--error-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+        }
+        
+        .demo-info {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: var(--warning-color);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .back-link {
+            text-align: center;
+            margin-top: 2rem;
+        }
+        
+        .back-link a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .back-link a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-title">🛠️ 管理者ログイン</div>
+            <div class="login-subtitle">regctl Cloud 管理画面</div>
+        </div>
+        
+        <form id="login-form">
+            <div id="error-message" class="error-message"></div>
+            
+            <div class="form-group">
+                <label for="username" class="form-label">ユーザー名</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    name="username" 
+                    class="form-input" 
+                    required 
+                    autocomplete="username"
+                    placeholder="管理者ユーザー名"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password" class="form-label">パスワード</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    required 
+                    autocomplete="current-password"
+                    placeholder="管理者パスワード"
+                >
+            </div>
+            
+            <button type="submit" class="login-btn" id="login-btn">
+                <span id="login-text">ログイン</span>
+            </button>
+        </form>
+        
+        <div class="demo-info">
+            💡 <strong>デモ用ログイン情報</strong><br>
+            ユーザー名: <code>admin</code><br>
+            パスワード: <code>demo123</code>
+        </div>
+        
+        <div class="back-link">
+            <a href="/">← ホームに戻る</a>
+        </div>
+    </div>
+
+    <script>
+        class AdminLogin {
+            constructor() {
+                this.form = document.getElementById('login-form');
+                this.errorMessage = document.getElementById('error-message');
+                this.loginBtn = document.getElementById('login-btn');
+                this.loginText = document.getElementById('login-text');
+                
+                this.init();
+            }
+            
+            init() {
+                this.form.addEventListener('submit', (e) => this.handleLogin(e));
+                
+                // 既にログイン済みかチェック
+                if (this.isLoggedIn()) {
+                    window.location.href = '/admin.html';
+                }
+            }
+            
+            async handleLogin(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                this.setLoading(true);
+                this.hideError();
+                
+                try {
+                    const success = await this.authenticate(username, password);
+                    
+                    if (success) {
+                        // ログイン成功
+                        this.setAuthToken('admin_demo_token');
+                        window.location.href = '/admin.html';
+                    } else {
+                        this.showError('ユーザー名またはパスワードが正しくありません');
+                    }
+                    
+                } catch (error) {
+                    this.showError('ログインに失敗しました: ' + error.message);
+                } finally {
+                    this.setLoading(false);
+                }
+            }
+            
+            async authenticate(username, password) {
+                // デモ実装: 実際のAPIと置き換える
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        // デモ用認証
+                        const isValid = (username === 'admin' && password === 'demo123') ||
+                                       (username === 'regctl_admin' && password === 'admin_pass_2025');
+                        resolve(isValid);
+                    }, 1000);
+                });
+                
+                // 実際のAPI実装例:
+                /*
+                const response = await fetch('https://api.regctl.com/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Authentication failed');
+                }
+                
+                const data = await response.json();
+                return data.success;
+                */
+            }
+            
+            setAuthToken(token) {
+                localStorage.setItem('regctl_admin_token', token);
+                localStorage.setItem('regctl_admin_login_time', Date.now().toString());
+            }
+            
+            isLoggedIn() {
+                const token = localStorage.getItem('regctl_admin_token');
+                const loginTime = localStorage.getItem('regctl_admin_login_time');
+                
+                if (!token || !loginTime) {
+                    return false;
+                }
+                
+                // 24時間でトークン期限切れ
+                const isExpired = Date.now() - parseInt(loginTime) > 24 * 60 * 60 * 1000;
+                
+                if (isExpired) {
+                    this.logout();
+                    return false;
+                }
+                
+                return true;
+            }
+            
+            logout() {
+                localStorage.removeItem('regctl_admin_token');
+                localStorage.removeItem('regctl_admin_login_time');
+            }
+            
+            setLoading(loading) {
+                this.loginBtn.disabled = loading;
+                this.loginText.textContent = loading ? '⏳ ログイン中...' : 'ログイン';
+            }
+            
+            showError(message) {
+                this.errorMessage.textContent = message;
+                this.errorMessage.style.display = 'block';
+            }
+            
+            hideError() {
+                this.errorMessage.style.display = 'none';
+            }
+        }
+        
+        // 初期化
+        document.addEventListener('DOMContentLoaded', () => {
+            new AdminLogin();
+        });
+        
+        // セキュリティ: コンソールでの警告
+        console.warn('%c🚨 セキュリティ警告', 'color: red; font-size: 20px; font-weight: bold;');
+        console.warn('この管理画面は認証されたユーザーのみがアクセスできます。');
+        console.warn('不正なアクセスは記録され、法的措置の対象となる場合があります。');
+    </script>
+</body>
+</html>
