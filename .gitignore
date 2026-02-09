@@ -9,7 +9,7 @@ build/
 *.dll
 *.so
 *.dylib
-regctl
+/regctl
 
 # Environment files
 .env
@@ -62,4 +62,8 @@ go.work.sum
 *.sqlite3
 
 # Local development
-.local/
+.local/regctl
+dist/
+*.exe
+.env
+.regctl/
