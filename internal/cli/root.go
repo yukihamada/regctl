@@ -7,42 +7,48 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/yukihamada/regctl/internal/config"
+	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
+	"github.com/yukihamada/regctl/internal/provider/porkbun"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 )
 
 var (
-	cfg    *config.Config
-	client *valuedomain.Client
+	cfg             *config.Config
+	client          *valuedomain.Client
+	porkbunClient   *porkbun.Client
+	cloudflareClient *cfprovider.Client
 )
 
 // NewRootCmd creates the root command for regctl.
 func NewRootCmd(version string) *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "regctl",
-		Short: "Domain management CLI for Value Domain",
+		Short: "Multi-registrar domain management CLI",
 		Long: `regctl — Domain Management Made Easy
 
-  Manage domains and DNS records via the Value Domain API.
-  Supports table, JSON, and AI-friendly output formats.
+  Manage domains across multiple registrars:
+    Porkbun, Cloudflare, Value Domain
+
+  Compare prices and register at the cheapest provider.
 
   First time? Run:
     regctl init
 
   Examples:
-    regctl domains list              List all your domains
-    regctl domains check example.com Check if a domain is available
-    regctl dns list example.com      Show DNS records
-    regctl dns add example.com -t A -n @ -c 1.2.3.4
-    regctl server                    Start API server
+    regctl domains check example.com   Compare prices across registrars
+    regctl domains list                List all your domains
+    regctl domains register example.com Register at cheapest price
+    regctl dns list example.com        Show DNS records
+    regctl server                      Start API server
 
   AI-friendly output:
-    regctl domains list --format json
-    regctl dns list example.com --format ai`,
+    regctl domains check example.com --format json`,
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			// Commands that don't need API key
 			skip := map[string]bool{
 				"init": true, "set": true, "show": true,
 				"help": true, "version": true, "completion": true,
+				"check": true, // check works with public pricing APIs
 			}
 			if skip[cmd.Name()] {
 				return nil
@@ -54,26 +60,28 @@ func NewRootCmd(version string) *cobra.Command {
 				return fmt.Errorf("load config: %w", err)
 			}
 
-			if cfg.APIKey == "" {
+			// Initialize all configured providers
+			initProviders(cfg)
+
+			if !cfg.HasAnyProvider() {
 				fmt.Println()
-				color.New(color.FgYellow, color.Bold).Println("  API key is not configured.")
+				color.New(color.FgYellow, color.Bold).Println("  No registrar API keys configured.")
 				fmt.Println()
 				fmt.Println("  Quick setup (interactive wizard):")
 				color.Cyan("    regctl init")
 				fmt.Println()
-				fmt.Println("  Or set it directly:")
-				color.Cyan("    regctl config set api_key YOUR_KEY")
+				fmt.Println("  Or set keys directly:")
+				color.Cyan("    regctl config set porkbun_api_key YOUR_KEY")
+				color.Cyan("    regctl config set porkbun_secret_key YOUR_SECRET")
 				fmt.Println()
-				fmt.Println("  Or use an environment variable:")
-				color.Cyan("    export VALUEDOMAIN_API_KEY=YOUR_KEY")
-				fmt.Println()
-				fmt.Println("  Get your API key at:")
-				color.New(color.FgCyan, color.Underline).Println("    https://www.value-domain.com/api/")
+				fmt.Println("  Supported registrars:")
+				fmt.Println("    Porkbun      — porkbun_api_key + porkbun_secret_key")
+				fmt.Println("    Cloudflare   — cloudflare_token (or cloudflare_global_key + cloudflare_email)")
+				fmt.Println("    Value Domain — api_key")
 				fmt.Println()
 				os.Exit(1)
 			}
 
-			client = valuedomain.NewClient(cfg.APIKey)
 			return nil
 		},
 		Run: func(cmd *cobra.Command, args []string) {
@@ -114,6 +122,23 @@ func NewRootCmd(version string) *cobra.Command {
 	rootCmd.CompletionOptions.HiddenDefaultCmd = true
 
 	return rootCmd
+}
+
+func initProviders(cfg *config.Config) {
+	if cfg.APIKey != "" {
+		client = valuedomain.NewClient(cfg.APIKey)
+	}
+	if cfg.PorkbunAPIKey != "" && cfg.PorkbunSecretKey != "" {
+		porkbunClient = porkbun.NewClient(cfg.PorkbunAPIKey, cfg.PorkbunSecretKey)
+	}
+	if cfg.CloudflareGlobalKey != "" && cfg.CloudflareEmail != "" {
+		cloudflareClient = cfprovider.NewClientGlobal(cfg.CloudflareGlobalKey, cfg.CloudflareEmail, cfg.CloudflareAccountID)
+	} else if cfg.CloudflareToken != "" {
+		cloudflareClient = cfprovider.NewClient(cfg.CloudflareToken)
+		if cfg.CloudflareAccountID != "" {
+			cloudflareClient.AccountID = cfg.CloudflareAccountID
+		}
+	}
 }
 
 func newVersionCmd(version string) *cobra.Command {

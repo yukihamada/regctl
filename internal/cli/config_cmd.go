@@ -9,6 +9,17 @@ import (
 	"github.com/yukihamada/regctl/internal/config"
 )
 
+var allConfigKeys = []string{
+	"api_key", "porkbun_api_key", "porkbun_secret_key",
+	"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id",
+	"regctl_api_key", "server_port",
+}
+
+var secretKeys = map[string]bool{
+	"api_key": true, "porkbun_api_key": true, "porkbun_secret_key": true,
+	"cloudflare_token": true, "cloudflare_global_key": true, "regctl_api_key": true,
+}
+
 func newConfigCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "config",
@@ -19,8 +30,14 @@ Configuration is stored in ~/.regctl/config.yaml.
 Environment variables take precedence over the config file.
 
 Environment variables:
-  VALUEDOMAIN_API_KEY   Your Value Domain API key
-  REGCTL_API_KEY        API key for the regctl HTTP server`,
+  VALUEDOMAIN_API_KEY    Value Domain API key
+  PORKBUN_API_KEY        Porkbun API key
+  PORKBUN_SECRET_KEY     Porkbun secret key
+  CLOUDFLARE_API_TOKEN   Cloudflare API token
+  CLOUDFLARE_GLOBAL_KEY  Cloudflare Global API key
+  CLOUDFLARE_EMAIL       Cloudflare account email
+  CLOUDFLARE_ACCOUNT_ID  Cloudflare account ID
+  REGCTL_API_KEY         API key for the regctl HTTP server`,
 	}
 
 	cmd.AddCommand(
@@ -38,22 +55,29 @@ func newConfigSetCmd() *cobra.Command {
 		Long: `Set a configuration value.
 
 Valid keys:
-  api_key         Your Value Domain API key
-  regctl_api_key  API key for the regctl HTTP server
-  server_port     Port for the HTTP server (default: 8080)`,
-		Example: `  regctl config set api_key YOUR_API_KEY
-  regctl config set server_port 3000`,
+  api_key               Value Domain API key
+  porkbun_api_key       Porkbun API key
+  porkbun_secret_key    Porkbun secret key
+  cloudflare_token      Cloudflare API token (Bearer)
+  cloudflare_global_key Cloudflare Global API key
+  cloudflare_email      Cloudflare account email
+  cloudflare_account_id Cloudflare account ID
+  regctl_api_key        API key for the regctl HTTP server
+  server_port           Port for the HTTP server (default: 8080)`,
+		Example: `  regctl config set porkbun_api_key pk1_xxxx
+  regctl config set porkbun_secret_key sk1_xxxx
+  regctl config set cloudflare_global_key xxxx
+  regctl config set cloudflare_email you@example.com`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key, value := args[0], args[1]
 
-			validKeys := map[string]bool{
-				"api_key":        true,
-				"regctl_api_key": true,
-				"server_port":    true,
+			validKeys := make(map[string]bool)
+			for _, k := range allConfigKeys {
+				validKeys[k] = true
 			}
 			if !validKeys[key] {
-				return fmt.Errorf("unknown key: %s\n\nValid keys: api_key, regctl_api_key, server_port", key)
+				return fmt.Errorf("unknown key: %s\n\nValid keys: %v", key, allConfigKeys)
 			}
 
 			if err := config.Set(key, value); err != nil {
@@ -84,15 +108,13 @@ func newConfigShowCmd() *cobra.Command {
 				return err
 			}
 
-			keys := []string{"api_key", "regctl_api_key", "server_port"}
-
 			if isStructuredOutput() {
 				data := map[string]interface{}{
 					"config_file": config.GetConfigPath(),
 				}
-				for _, key := range keys {
+				for _, key := range allConfigKeys {
 					val := viper.GetString(key)
-					if (key == "api_key" || key == "regctl_api_key") && len(val) > 8 {
+					if secretKeys[key] && len(val) > 8 {
 						val = val[:4] + "****" + val[len(val)-4:]
 					}
 					data[key] = val
@@ -104,17 +126,30 @@ func newConfigShowCmd() *cobra.Command {
 			printSection("Configuration")
 			fmt.Printf("  File: %s\n\n", config.GetConfigPath())
 
-			for _, key := range keys {
-				val := viper.GetString(key)
-				if (key == "api_key" || key == "regctl_api_key") && len(val) > 8 {
-					val = val[:4] + "****" + val[len(val)-4:]
-				}
-				if val == "" {
-					val = color.New(color.FgYellow).Sprint("(not set)")
-				}
-				printKeyValue(key, val)
+			sections := []struct {
+				name string
+				keys []string
+			}{
+				{"Value Domain", []string{"api_key"}},
+				{"Porkbun", []string{"porkbun_api_key", "porkbun_secret_key"}},
+				{"Cloudflare", []string{"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id"}},
+				{"General", []string{"regctl_api_key", "server_port"}},
 			}
-			fmt.Println()
+
+			for _, s := range sections {
+				color.New(color.Bold).Printf("  [%s]\n", s.name)
+				for _, key := range s.keys {
+					val := viper.GetString(key)
+					if secretKeys[key] && len(val) > 8 {
+						val = val[:4] + "****" + val[len(val)-4:]
+					}
+					if val == "" {
+						val = color.New(color.FgYellow).Sprint("(not set)")
+					}
+					printKeyValue(key, val)
+				}
+				fmt.Println()
+			}
 			return nil
 		},
 	}

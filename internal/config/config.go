@@ -16,10 +16,23 @@ const (
 
 // Config holds the application configuration.
 type Config struct {
-	APIKey      string `mapstructure:"api_key"`
-	RegctlKey   string `mapstructure:"regctl_api_key"`
-	OutputJSON  bool   `mapstructure:"output_json"`
-	ServerPort  int    `mapstructure:"server_port"`
+	// Value Domain
+	APIKey string `mapstructure:"api_key"`
+
+	// Porkbun
+	PorkbunAPIKey    string `mapstructure:"porkbun_api_key"`
+	PorkbunSecretKey string `mapstructure:"porkbun_secret_key"`
+
+	// Cloudflare
+	CloudflareToken     string `mapstructure:"cloudflare_token"`
+	CloudflareGlobalKey string `mapstructure:"cloudflare_global_key"`
+	CloudflareEmail     string `mapstructure:"cloudflare_email"`
+	CloudflareAccountID string `mapstructure:"cloudflare_account_id"`
+
+	// General
+	RegctlKey  string `mapstructure:"regctl_api_key"`
+	OutputJSON bool   `mapstructure:"output_json"`
+	ServerPort int    `mapstructure:"server_port"`
 }
 
 // Load reads configuration from file and environment variables.
@@ -42,6 +55,12 @@ func Load() (*Config, error) {
 
 	// Environment variable bindings
 	viper.BindEnv("api_key", "VALUEDOMAIN_API_KEY")
+	viper.BindEnv("porkbun_api_key", "PORKBUN_API_KEY")
+	viper.BindEnv("porkbun_secret_key", "PORKBUN_SECRET_KEY")
+	viper.BindEnv("cloudflare_token", "CLOUDFLARE_API_TOKEN")
+	viper.BindEnv("cloudflare_global_key", "CLOUDFLARE_GLOBAL_KEY")
+	viper.BindEnv("cloudflare_email", "CLOUDFLARE_EMAIL")
+	viper.BindEnv("cloudflare_account_id", "CLOUDFLARE_ACCOUNT_ID")
 	viper.BindEnv("regctl_api_key", "REGCTL_API_KEY")
 
 	// Defaults
@@ -92,4 +111,9 @@ func Set(key, value string) error {
 func GetConfigPath() string {
 	home, _ := os.UserHomeDir()
 	return filepath.Join(home, configDir, configFile+"."+configType)
+}
+
+// HasAnyProvider returns true if at least one provider is configured.
+func (c *Config) HasAnyProvider() bool {
+	return c.APIKey != "" || c.PorkbunAPIKey != "" || c.CloudflareToken != "" || c.CloudflareGlobalKey != ""
 }
