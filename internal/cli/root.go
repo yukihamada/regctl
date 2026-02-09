@@ -9,6 +9,7 @@ import (
 	"github.com/yukihamada/regctl/internal/config"
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
 	"github.com/yukihamada/regctl/internal/provider/porkbun"
+	"github.com/yukihamada/regctl/internal/provider/spaceship"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 )
 
@@ -16,7 +17,8 @@ var (
 	cfg             *config.Config
 	client          *valuedomain.Client
 	porkbunClient   *porkbun.Client
-	cloudflareClient *cfprovider.Client
+	cloudflareClient  *cfprovider.Client
+	spaceshipClient   *spaceship.Client
 )
 
 // NewRootCmd creates the root command for regctl.
@@ -130,6 +132,9 @@ func initProviders(cfg *config.Config) {
 	}
 	if cfg.PorkbunAPIKey != "" && cfg.PorkbunSecretKey != "" {
 		porkbunClient = porkbun.NewClient(cfg.PorkbunAPIKey, cfg.PorkbunSecretKey)
+	}
+	if cfg.SpaceshipAPIKey != "" && cfg.SpaceshipAPISecret != "" {
+		spaceshipClient = spaceship.NewClient(cfg.SpaceshipAPIKey, cfg.SpaceshipAPISecret)
 	}
 	if cfg.CloudflareGlobalKey != "" && cfg.CloudflareEmail != "" {
 		cloudflareClient = cfprovider.NewClientGlobal(cfg.CloudflareGlobalKey, cfg.CloudflareEmail, cfg.CloudflareAccountID)

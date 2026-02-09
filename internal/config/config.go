@@ -29,6 +29,10 @@ type Config struct {
 	CloudflareEmail     string `mapstructure:"cloudflare_email"`
 	CloudflareAccountID string `mapstructure:"cloudflare_account_id"`
 
+	// Spaceship
+	SpaceshipAPIKey    string `mapstructure:"spaceship_api_key"`
+	SpaceshipAPISecret string `mapstructure:"spaceship_api_secret"`
+
 	// General
 	RegctlKey  string `mapstructure:"regctl_api_key"`
 	OutputJSON bool   `mapstructure:"output_json"`
@@ -61,6 +65,8 @@ func Load() (*Config, error) {
 	viper.BindEnv("cloudflare_global_key", "CLOUDFLARE_GLOBAL_KEY")
 	viper.BindEnv("cloudflare_email", "CLOUDFLARE_EMAIL")
 	viper.BindEnv("cloudflare_account_id", "CLOUDFLARE_ACCOUNT_ID")
+	viper.BindEnv("spaceship_api_key", "SPACESHIP_API_KEY")
+	viper.BindEnv("spaceship_api_secret", "SPACESHIP_API_SECRET")
 	viper.BindEnv("regctl_api_key", "REGCTL_API_KEY")
 
 	// Defaults
@@ -115,5 +121,5 @@ func GetConfigPath() string {
 
 // HasAnyProvider returns true if at least one provider is configured.
 func (c *Config) HasAnyProvider() bool {
-	return c.APIKey != "" || c.PorkbunAPIKey != "" || c.CloudflareToken != "" || c.CloudflareGlobalKey != ""
+	return c.APIKey != "" || c.PorkbunAPIKey != "" || c.CloudflareToken != "" || c.CloudflareGlobalKey != "" || c.SpaceshipAPIKey != ""
 }

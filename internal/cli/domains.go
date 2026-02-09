@@ -12,6 +12,7 @@ import (
 	"github.com/yukihamada/regctl/internal/provider"
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
 	"github.com/yukihamada/regctl/internal/provider/porkbun"
+	ssprovider "github.com/yukihamada/regctl/internal/provider/spaceship"
 )
 
 func newDomainsCmd() *cobra.Command {
@@ -53,6 +54,14 @@ func newDomainsListCmd() *cobra.Command {
 				domains, err := porkbunClient.ListDomains()
 				if err != nil {
 					errors = append(errors, fmt.Sprintf("Porkbun: %v", err))
+				} else {
+					allDomains = append(allDomains, domains...)
+				}
+			}
+			if spaceshipClient != nil {
+				domains, err := spaceshipClient.ListDomains()
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("Spaceship: %v", err))
 				} else {
 					allDomains = append(allDomains, domains...)
 				}
@@ -249,7 +258,48 @@ func newDomainsCheckCmd() *cobra.Command {
 				}
 			}()
 
-			// 2) Cloudflare - static pricing (no registration API)
+			// 2) Spaceship - live API check (if configured)
+			if spaceshipClient != nil {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					avail, err := spaceshipClient.CheckAvailability(domain)
+					if err == nil {
+						// Spaceship availability API doesn't return price;
+						// use static pricing from known data
+						reg, ren := ssprovider.GetStaticPrice(tld)
+						mu.Lock()
+						prices = append(prices, priceEntry{
+							Registrar: "Spaceship",
+							RegPrice:  reg,
+							RenPrice:  ren,
+							Available: avail.Available,
+							CanRegAPI: true,
+						})
+						mu.Unlock()
+					}
+				}()
+			} else {
+				// Fallback: static pricing without auth
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					reg, ren := ssprovider.GetStaticPrice(tld)
+					if reg > 0 {
+						mu.Lock()
+						prices = append(prices, priceEntry{
+							Registrar: "Spaceship",
+							RegPrice:  reg,
+							RenPrice:  ren,
+							Available: true,
+							CanRegAPI: false,
+						})
+						mu.Unlock()
+					}
+				}()
+			}
+
+			// 3) Cloudflare - static pricing (no registration API)
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
@@ -260,14 +310,14 @@ func newDomainsCheckCmd() *cobra.Command {
 						Registrar: "Cloudflare",
 						RegPrice:  reg,
 						RenPrice:  renew,
-						Available: true, // assume available if TLD supported
+						Available: true,
 						CanRegAPI: false,
 					})
 					mu.Unlock()
 				}
 			}()
 
-			// 3) Value Domain - live API check (if configured)
+			// 4) Value Domain - live API check (if configured)
 			if client != nil {
 				wg.Add(1)
 				go func() {
@@ -392,6 +442,12 @@ func newDomainsRegisterCmd() *cobra.Command {
 					return nil
 				}
 				return registerViaPorkbun(domain)
+			case "spaceship":
+				if spaceshipClient == nil {
+					printErrorResult("register", fmt.Errorf("Spaceship not configured"), "regctl config set spaceship_api_key YOUR_KEY")
+					return nil
+				}
+				return registerViaSpaceship(domain)
 			case "valuedomain", "value-domain":
 				if client == nil {
 					printErrorResult("register", fmt.Errorf("Value Domain not configured"), "regctl config set api_key YOUR_KEY")
@@ -401,11 +457,14 @@ func newDomainsRegisterCmd() *cobra.Command {
 			case "":
 				// Auto-select cheapest
 			default:
-				printErrorResult("register", fmt.Errorf("unknown registrar: %s", registrar), "Supported: porkbun, valuedomain")
+				printErrorResult("register", fmt.Errorf("unknown registrar: %s", registrar), "Supported: porkbun, spaceship, valuedomain")
 				return nil
 			}
 
-			// Auto-select: try Porkbun first (best API), then Value Domain
+			// Auto-select: try Spaceship first (cheapest), then Porkbun, then Value Domain
+			if spaceshipClient != nil {
+				return registerViaSpaceship(domain)
+			}
 			if porkbunClient != nil {
 				return registerViaPorkbun(domain)
 			}
@@ -414,11 +473,11 @@ func newDomainsRegisterCmd() *cobra.Command {
 			}
 
 			printErrorResult("register", fmt.Errorf("no registrar with API registration configured"),
-				"Set up Porkbun: regctl config set porkbun_api_key YOUR_KEY && regctl config set porkbun_secret_key YOUR_SECRET")
+				"Set up Spaceship: regctl config set spaceship_api_key YOUR_KEY && regctl config set spaceship_api_secret YOUR_SECRET")
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&registrar, "registrar", "", "Force a specific registrar (porkbun, valuedomain)")
+	cmd.Flags().StringVar(&registrar, "registrar", "", "Force a specific registrar (spaceship, porkbun, valuedomain)")
 	return cmd
 }
 
@@ -462,6 +521,30 @@ func registerViaValueDomain(domain string) error {
 	}
 
 	printSuccess(fmt.Sprintf("  Domain %s registered on Value Domain!", domain))
+	fmt.Println()
+	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
+	return nil
+}
+
+func registerViaSpaceship(domain string) error {
+	if err := spaceshipClient.RegisterDomain(domain); err != nil {
+		printErrorResult("register", err, "Check availability first: regctl domains check "+domain)
+		return nil
+	}
+
+	if isStructuredOutput() {
+		printResult("register",
+			map[string]interface{}{"domain": domain, "registrar": "Spaceship", "status": "registered"},
+			fmt.Sprintf("Domain %s registered on Spaceship", domain),
+			[]string{
+				fmt.Sprintf("regctl dns list %s", domain),
+				fmt.Sprintf("regctl domains list"),
+			},
+		)
+		return nil
+	}
+
+	printSuccess(fmt.Sprintf("  Domain %s registered on Spaceship!", domain))
 	fmt.Println()
 	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
 	return nil

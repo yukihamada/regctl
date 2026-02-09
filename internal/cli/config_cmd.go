@@ -11,12 +11,14 @@ import (
 
 var allConfigKeys = []string{
 	"api_key", "porkbun_api_key", "porkbun_secret_key",
+	"spaceship_api_key", "spaceship_api_secret",
 	"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id",
 	"regctl_api_key", "server_port",
 }
 
 var secretKeys = map[string]bool{
 	"api_key": true, "porkbun_api_key": true, "porkbun_secret_key": true,
+	"spaceship_api_key": true, "spaceship_api_secret": true,
 	"cloudflare_token": true, "cloudflare_global_key": true, "regctl_api_key": true,
 }
 
@@ -33,6 +35,8 @@ Environment variables:
   VALUEDOMAIN_API_KEY    Value Domain API key
   PORKBUN_API_KEY        Porkbun API key
   PORKBUN_SECRET_KEY     Porkbun secret key
+  SPACESHIP_API_KEY      Spaceship API key
+  SPACESHIP_API_SECRET   Spaceship API secret
   CLOUDFLARE_API_TOKEN   Cloudflare API token
   CLOUDFLARE_GLOBAL_KEY  Cloudflare Global API key
   CLOUDFLARE_EMAIL       Cloudflare account email
@@ -58,6 +62,8 @@ Valid keys:
   api_key               Value Domain API key
   porkbun_api_key       Porkbun API key
   porkbun_secret_key    Porkbun secret key
+  spaceship_api_key     Spaceship API key
+  spaceship_api_secret  Spaceship API secret
   cloudflare_token      Cloudflare API token (Bearer)
   cloudflare_global_key Cloudflare Global API key
   cloudflare_email      Cloudflare account email
@@ -132,6 +138,7 @@ func newConfigShowCmd() *cobra.Command {
 			}{
 				{"Value Domain", []string{"api_key"}},
 				{"Porkbun", []string{"porkbun_api_key", "porkbun_secret_key"}},
+				{"Spaceship", []string{"spaceship_api_key", "spaceship_api_secret"}},
 				{"Cloudflare", []string{"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id"}},
 				{"General", []string{"regctl_api_key", "server_port"}},
 			}

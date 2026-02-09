@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>regctl — Domain Management CLI</title>
+<meta name="description" content="Compare domain prices across registrars. Manage domains via CLI with Spaceship, Porkbun, Cloudflare, and Value Domain.">
+<style>
+:root {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8b949e;
+  --green: #3fb950;
+  --blue: #58a6ff;
+  --yellow: #d29922;
+  --red: #f85149;
+  --accent: #58a6ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+}
+.container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+header {
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+header h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+header h1 span { color: var(--green); }
+header p {
+  color: var(--muted);
+  font-size: 1.2rem;
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+.install-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 24px;
+  display: inline-block;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 1rem;
+  color: var(--green);
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.install-box:hover { border-color: var(--green); }
+.install-box .dollar { color: var(--muted); }
+
+section { padding: 40px 0; }
+h2 {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+h2 span { color: var(--green); }
+.subtitle {
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* Price table */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+th {
+  background: var(--surface);
+  text-align: left;
+  padding: 12px 14px;
+  font-weight: 600;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tr:last-child td { border-bottom: none; }
+tr:hover { background: rgba(88,166,255,0.04); }
+.best {
+  color: var(--green);
+  font-weight: 700;
+}
+.na { color: var(--muted); }
+.api-yes { color: var(--green); }
+.api-no { color: var(--yellow); }
+.tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.tag-best { background: rgba(63,185,80,0.15); color: var(--green); }
+.tag-atcost { background: rgba(210,153,34,0.15); color: var(--yellow); }
+.tag-noapi { background: rgba(248,81,73,0.15); color: var(--red); }
+
+/* Features */
+.features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.feature {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+.feature h3 {
+  font-size: 1rem;
+  margin-bottom: 6px;
+}
+.feature p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* CLI demo */
+.cli-demo {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 0.85rem;
+  overflow-x: auto;
+  margin-top: 24px;
+}
+.cli-demo .prompt { color: var(--green); }
+.cli-demo .output { color: var(--muted); }
+.cli-demo .highlight { color: var(--blue); }
+
+footer {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+footer a { color: var(--blue); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+@media (max-width: 600px) {
+  header h1 { font-size: 1.8rem; }
+  header p { font-size: 1rem; }
+  .install-box { font-size: 0.85rem; padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>regctl<span>.</span></h1>
+  <p>Compare domain prices across registrars. Register at the cheapest with one command.</p>
+  <div class="install-box" onclick="navigator.clipboard.writeText('curl -fsSL https://raw.githubusercontent.com/yukihamada/regctl/main/install.sh | sh')">
+    <span class="dollar">$</span> curl -fsSL https://raw.githubusercontent.com/yukihamada/regctl/main/install.sh | sh
+  </div>
+</header>
+
+<div class="container">
+
+<!-- Price Comparison -->
+<section>
+  <h2>Domain Price <span>Comparison</span></h2>
+  <p class="subtitle">Renewal prices (USD/year). Updated Feb 2026. Green = cheapest with API.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>TLD</th>
+          <th>Spaceship <span class="tag tag-best">API</span></th>
+          <th>Porkbun <span class="tag tag-best">API</span></th>
+          <th>Cloudflare <span class="tag tag-atcost">at-cost</span><span class="tag tag-noapi">no reg API</span></th>
+          <th>Value Domain <span class="tag tag-best">API</span></th>
+          <th>onamae.com <span class="tag tag-noapi">no API</span></th>
+          <th>Best</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>.com</strong></td>
+          <td class="best">$10.18</td>
+          <td>$11.08</td>
+          <td>$10.44</td>
+          <td>$13.24</td>
+          <td>$9.00</td>
+          <td class="best">Spaceship</td>
+        </tr>
+        <tr>
+          <td><strong>.net</strong></td>
+          <td class="best">$11.40</td>
+          <td>$12.52</td>
+          <td>$11.84</td>
+          <td>$15.34</td>
+          <td>$10.37</td>
+          <td class="best">Spaceship</td>
+        </tr>
+        <tr>
+          <td><strong>.org</strong></td>
+          <td class="best">$10.00</td>
+          <td>$10.74</td>
+          <td>$10.11</td>
+          <td>$15.34</td>
+          <td>$10.37</td>
+          <td class="best">Spaceship</td>
+        </tr>
+        <tr>
+          <td><strong>.io</strong></td>
+          <td>$51.75</td>
+          <td>$51.80</td>
+          <td>$45.00</td>
+          <td>$59.16</td>
+          <td>$45.41</td>
+          <td>Cloudflare*</td>
+        </tr>
+        <tr>
+          <td><strong>.dev</strong></td>
+          <td>$12.62</td>
+          <td>$12.87</td>
+          <td>$10.18</td>
+          <td>$18.08</td>
+          <td>$20.67</td>
+          <td>Cloudflare*</td>
+        </tr>
+        <tr>
+          <td><strong>.sh</strong></td>
+          <td>$46.58</td>
+          <td>$46.65</td>
+          <td>$45.00</td>
+          <td>$90.95</td>
+          <td class="na">N/A</td>
+          <td>Cloudflare*</td>
+        </tr>
+        <tr>
+          <td><strong>.app</strong></td>
+          <td>$14.69</td>
+          <td>$14.93</td>
+          <td>$12.18</td>
+          <td>$22.64</td>
+          <td>$22.43</td>
+          <td>Cloudflare*</td>
+        </tr>
+        <tr>
+          <td><strong>.jp</strong></td>
+          <td class="na">N/A</td>
+          <td class="na">N/A</td>
+          <td class="na">N/A</td>
+          <td>$25.93</td>
+          <td class="best">$19.90</td>
+          <td>onamae.com</td>
+        </tr>
+        <tr>
+          <td><strong>.co.jp</strong></td>
+          <td class="na">N/A</td>
+          <td class="na">N/A</td>
+          <td class="na">N/A</td>
+          <td class="best">$34.51</td>
+          <td>$48.91</td>
+          <td class="best">Value Domain</td>
+        </tr>
+        <tr>
+          <td><strong>.xyz</strong></td>
+          <td>$12.72</td>
+          <td>$12.98</td>
+          <td>$11.18</td>
+          <td>$13.51</td>
+          <td>$12.83</td>
+          <td>Cloudflare*</td>
+        </tr>
+        <tr>
+          <td><strong>.info</strong></td>
+          <td>$21.94</td>
+          <td>$22.14</td>
+          <td>$17.68</td>
+          <td>$22.64</td>
+          <td>$10.37</td>
+          <td>onamae.com</td>
+        </tr>
+        <tr>
+          <td><strong>.me</strong></td>
+          <td class="best">$15.53</td>
+          <td>$17.27</td>
+          <td>$15.79</td>
+          <td>$22.64</td>
+          <td>$17.38</td>
+          <td class="best">Spaceship</td>
+        </tr>
+        <tr>
+          <td><strong>.ai</strong></td>
+          <td>$55.98</td>
+          <td>$51.80</td>
+          <td>$70.00</td>
+          <td class="na">N/A</td>
+          <td class="na">N/A</td>
+          <td class="best">Porkbun</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="subtitle" style="margin-top:12px;">
+    * Cloudflare = at-cost (cheapest renewal) but <strong>no registration API</strong> &mdash; dashboard only.<br>
+    onamae.com requires partner contract + 100,000 JPY deposit for API access.<br>
+    <strong>Green = cheapest registrar with API registration support.</strong>
+  </p>
+</section>
+
+<!-- Features -->
+<section>
+  <h2>Why <span>regctl</span>?</h2>
+  <div class="features">
+    <div class="feature">
+      <h3>Multi-Registrar Price Compare</h3>
+      <p>Instantly compare prices across Spaceship, Porkbun, Cloudflare, and Value Domain with one command.</p>
+    </div>
+    <div class="feature">
+      <h3>Register at Cheapest</h3>
+      <p>Auto-selects the cheapest registrar with API support. Register with <code>regctl domains register</code>.</p>
+    </div>
+    <div class="feature">
+      <h3>Unified DNS Management</h3>
+      <p>Manage DNS records across all registrars with <code>regctl dns list/add/delete</code>.</p>
+    </div>
+    <div class="feature">
+      <h3>AI-Friendly Output</h3>
+      <p>Use <code>--format json</code> for structured output. Works with Claude, GPT, and other AI tools.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CLI Demo -->
+<section>
+  <h2>Quick <span>Demo</span></h2>
+  <div class="cli-demo">
+<span class="prompt">$</span> regctl domains check mysite.com<br><br>
+<span class="output">  Price comparison for mysite.com</span><br><br>
+<span class="output">  Registrar       Register   Renew     Status      API</span><br>
+<span class="output">  ─────────────────────────────────────────────────────</span><br>
+<span class="highlight">  Spaceship BEST  $9.08      $10.18    Available   Yes</span><br>
+<span class="output">  Cloudflare      $10.44     $10.44    Available   Dashboard</span><br>
+<span class="output">  Porkbun         $11.08     $11.08    Available   Yes</span><br><br>
+<span class="highlight">  Cheapest API-registrable: Spaceship at $9.08/yr</span><br>
+<span class="output">  Register: regctl domains register mysite.com</span><br><br>
+<span class="prompt">$</span> regctl domains register mysite.com<br>
+<span class="highlight">  Domain mysite.com registered on Spaceship!</span><br>
+<span class="output">  Next: regctl dns list mysite.com</span>
+  </div>
+</section>
+
+<!-- Supported Registrars -->
+<section>
+  <h2>Supported <span>Registrars</span></h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Registrar</th><th>Register</th><th>DNS</th><th>List</th><th>Price Check</th><th>Setup</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Spaceship</strong></td>
+          <td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td>
+          <td><code>regctl config set spaceship_api_key</code></td>
+        </tr>
+        <tr>
+          <td><strong>Porkbun</strong></td>
+          <td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td>
+          <td><code>regctl config set porkbun_api_key</code></td>
+        </tr>
+        <tr>
+          <td><strong>Cloudflare</strong></td>
+          <td class="api-no">No</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Static</td>
+          <td><code>regctl config set cloudflare_token</code></td>
+        </tr>
+        <tr>
+          <td><strong>Value Domain</strong></td>
+          <td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td><td class="api-yes">Yes</td>
+          <td><code>regctl config set api_key</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<footer>
+  <p>
+    <a href="https://github.com/yukihamada/regctl">GitHub</a> &middot;
+    MIT License &middot;
+    Built by <a href="https://github.com/yukihamada">yukihamada</a>
+  </p>
+</footer>
+
+</body>
+</html>

@@ -45,7 +45,7 @@ type listResponse struct {
 		TLD       string `json:"tld"`
 		CreateAt  string `json:"createDate"`
 		ExpireAt  string `json:"expireDate"`
-		AutoRenew bool   `json:"autoRenew"`
+		AutoRenew string `json:"autoRenew"`
 	} `json:"domains"`
 }
 
@@ -118,7 +118,7 @@ func (c *Client) ListDomains() ([]provider.Domain, error) {
 			Registrar: "Porkbun",
 			Status:    d.Status,
 			ExpiresAt: d.ExpireAt,
-			AutoRenew: d.AutoRenew,
+			AutoRenew: d.AutoRenew == "1",
 		})
 	}
 	return domains, nil
