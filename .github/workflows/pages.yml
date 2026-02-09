@@ -24,7 +24,9 @@ jobs:
           mkdir -p _site
           cp install.sh _site/install.sh
           cp -r docs/site/* _site/ 2>/dev/null || true
-          cp docs/site/index.html _site/index.html 2>/dev/null || true
+          # Root index.html takes priority (price comparison page)
+          cp index.html _site/index.html
+          echo "regctl.sh" > _site/CNAME
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
