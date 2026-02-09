@@ -1,6 +1,6 @@
 #!/bin/sh
 # regctl installer — works on macOS, Linux, and WSL
-# Usage: curl -fsSL https://regctl.com/install.sh | sh
+# Usage: curl -fsSL https://regctl.sh/install.sh | sh
 set -e
 
 REPO="yukihamada/regctl"
