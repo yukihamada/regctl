@@ -7,6 +7,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/yukihamada/regctl/internal/billing"
+	"github.com/yukihamada/regctl/internal/config"
 	"github.com/yukihamada/regctl/internal/server"
 )
 
@@ -43,6 +44,16 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
   curl http://localhost:8080/health
   curl -H "Authorization: Bearer YOUR_KEY" http://localhost:8080/v1/domains`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Server command skips PersistentPreRunE, so load config here
+			if cfg == nil {
+				var err error
+				cfg, err = config.Load()
+				if err != nil {
+					cfg = &config.Config{}
+				}
+				initProviders(cfg)
+			}
+
 			srvCfg := server.Config{
 				Client: client,
 				APIKey: cfg.RegctlKey,
