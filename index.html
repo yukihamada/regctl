@@ -550,7 +550,7 @@ function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 
 var checkTimer=null;
 var checkController=null;
-const CHECK_API='https://regctl-api.fly.dev';
+const CHECK_API=location.origin;
 
 function renderPrices(domainName,tld,match){
   const prices=[];

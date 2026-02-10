@@ -3,6 +3,7 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
@@ -15,6 +16,7 @@ type Config struct {
 	BillingClient *billing.Client // nil = billing disabled
 	SigningSecret  string
 	WebhookSecret  string
+	StaticDir     string         // directory with static files (index.html, etc.)
 }
 
 // Server is the HTTP API server.
@@ -25,6 +27,7 @@ type Server struct {
 	signingSecret  string
 	webhookSecret  string
 	billingEnabled bool
+	staticDir      string
 	mux            *http.ServeMux
 }
 
@@ -37,6 +40,7 @@ func New(cfg Config) *Server {
 		signingSecret:  cfg.SigningSecret,
 		webhookSecret:  cfg.WebhookSecret,
 		billingEnabled: cfg.BillingClient != nil,
+		staticDir:      cfg.StaticDir,
 		mux:            http.NewServeMux(),
 	}
 	s.routes()
@@ -93,5 +97,23 @@ func (s *Server) routes() {
 		s.mux.HandleFunc("GET /v1/billing/balance", s.auth(s.handleBalance))
 		s.mux.HandleFunc("GET /v1/billing/session/{session_id}", s.handleGetSession)
 		s.mux.HandleFunc("POST /webhooks/stripe", s.handleStripeWebhook)
+	}
+
+	// Static file serving (when staticDir is configured)
+	if s.staticDir != "" {
+		if _, err := os.Stat(s.staticDir); err == nil {
+			s.mux.HandleFunc("GET /install.sh", s.serveStatic("install.sh", "text/x-shellscript"))
+			s.mux.HandleFunc("GET /llms.txt", s.serveStatic("llms.txt", "text/plain; charset=utf-8"))
+			s.mux.HandleFunc("GET /prices.json", s.serveStatic("prices.json", "application/json"))
+			s.mux.HandleFunc("GET /{$}", s.serveStatic("index.html", "text/html; charset=utf-8"))
+		}
+	}
+}
+
+func (s *Server) serveStatic(filename, contentType string) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", contentType)
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		http.ServeFile(w, r, s.staticDir+"/"+filename)
 	}
 }

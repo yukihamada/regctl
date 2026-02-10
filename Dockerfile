@@ -15,6 +15,9 @@ FROM alpine:latest
 RUN apk add --no-cache ca-certificates
 COPY --from=builder /build/regctl /usr/local/bin/regctl
 
+# Static files for web serving
+COPY index.html install.sh llms.txt prices.json /static/
+
 EXPOSE 8080
 
 ENTRYPOINT ["regctl"]

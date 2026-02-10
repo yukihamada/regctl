@@ -13,6 +13,7 @@ import (
 
 func newServerCmd() *cobra.Command {
 	var port int
+	var staticDir string
 
 	cmd := &cobra.Command{
 		Use:   "server",
@@ -54,9 +55,17 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 				initProviders(cfg)
 			}
 
+			// Auto-detect static dir
+			if staticDir == "" {
+				if _, err := os.Stat("/static/index.html"); err == nil {
+					staticDir = "/static"
+				}
+			}
+
 			srvCfg := server.Config{
-				Client: client,
-				APIKey: cfg.RegctlKey,
+				Client:    client,
+				APIKey:    cfg.RegctlKey,
+				StaticDir: staticDir,
 			}
 
 			// Initialize billing if Stripe env vars are set
@@ -104,5 +113,6 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 	}
 
 	cmd.Flags().IntVar(&port, "port", 8080, "Port to listen on")
+	cmd.Flags().StringVar(&staticDir, "static-dir", "", "Directory with static files (auto-detects /static)")
 	return cmd
 }
