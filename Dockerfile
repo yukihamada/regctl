@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /build
 
@@ -16,7 +16,7 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /build/regctl /usr/local/bin/regctl
 
 # Static files for web serving
-COPY index.html install.sh llms.txt prices.json /static/
+COPY index.html install.sh llms.txt prices.json og-image.svg /static/
 
 EXPOSE 8080
 

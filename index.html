@@ -8,17 +8,26 @@
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://regctl.sh/">
 
+<!-- Favicon (inline SVG) -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1117'/%3E%3Ctext x='32' y='44' font-family='system-ui,sans-serif' font-size='32' font-weight='800' fill='%233fb950' text-anchor='middle'%3Erc%3C/text%3E%3Ccircle cx='54' cy='14' r='6' fill='%233fb950'/%3E%3C/svg%3E">
+
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="regctl — Domain Price Comparison &amp; CLI">
 <meta property="og:description" content="Compare 897 TLD prices across Spaceship, Porkbun, Cloudflare. Always register at the cheapest price.">
 <meta property="og:url" content="https://regctl.sh/">
 <meta property="og:site_name" content="regctl">
+<meta property="og:image" content="https://regctl.sh/og-image.svg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ja_JP">
 
 <!-- Twitter Card -->
-<meta name="twitter:card" content="summary">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="regctl — Domain Price Comparison &amp; CLI">
 <meta name="twitter:description" content="Compare 897 TLD prices across Spaceship, Porkbun, Cloudflare. Always register at the cheapest price.">
+<meta name="twitter:image" content="https://regctl.sh/og-image.svg">
 
 <!-- JSON-LD Structured Data -->
 <script type="application/ld+json">
@@ -201,6 +210,21 @@ tr:hover{background:rgba(88,166,255,.04)}
 .signup-pricing td{padding:4px 8px;border-bottom:1px solid var(--border)}
 .signup-pricing td:last-child{text-align:right;color:var(--text)}
 
+/* Language Toggle */
+.lang-toggle{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:.8rem;cursor:pointer;transition:all .2s;font-family:inherit}
+.lang-toggle:hover{border-color:var(--blue);color:var(--text)}
+html[lang="ja"] [data-i18n-en]{display:none}
+html[lang="en"] [data-i18n-ja]{display:none}
+
+/* Discovery */
+.discovery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:16px}
+.disc-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;transition:border-color .2s}
+.disc-card:hover{border-color:var(--green)}
+.disc-domain{font-weight:700;font-size:1rem;color:var(--text);margin-bottom:4px}
+.disc-meta{font-size:.8rem;color:var(--muted)}
+.disc-count{color:var(--green);font-weight:600}
+.disc-empty{color:var(--muted);font-size:.9rem;padding:20px 0}
+
 /* Footer */
 footer{text-align:center;padding:32px 20px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--border)}
 footer a{color:var(--blue);text-decoration:none}
@@ -232,10 +256,11 @@ footer a:hover{text-decoration:underline}
 <div class="nav-inner">
   <a href="#" class="nav-logo">regctl<span>.</span></a>
   <div class="nav-links">
-    <a href="#prices" class="hide-mobile">Prices</a>
-    <a href="#how-it-works" class="hide-mobile">How it Works</a>
-    <a href="#registrars" class="hide-mobile">Registrars</a>
-    <a href="#signup" class="hide-mobile">Sign Up</a>
+    <a href="#prices" class="hide-mobile"><span data-i18n-en>Prices</span><span data-i18n-ja>料金</span></a>
+    <a href="#discovery" class="hide-mobile"><span data-i18n-en>Discovery</span><span data-i18n-ja>発見</span></a>
+    <a href="#how-it-works" class="hide-mobile"><span data-i18n-en>How it Works</span><span data-i18n-ja>使い方</span></a>
+    <a href="#signup" class="hide-mobile"><span data-i18n-en>Sign Up</span><span data-i18n-ja>登録</span></a>
+    <button class="lang-toggle" id="langToggle" aria-label="Switch language">JA</button>
     <a href="https://github.com/yukihamada/regctl" class="nav-gh" aria-label="GitHub repository"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
   </div>
 </div>
@@ -246,11 +271,12 @@ footer a:hover{text-decoration:underline}
 <!-- Hero Section -->
 <header>
 <h1>regctl<span>.</span></h1>
-<p>Automatically finds the cheapest registrar and registers your domain. Compare 897 TLDs across Spaceship, Porkbun, Cloudflare — always get the lowest price.</p>
+<p data-i18n-en>Automatically finds the cheapest registrar and registers your domain. Compare 897 TLDs across Spaceship, Porkbun, Cloudflare — always get the lowest price.</p>
+<p data-i18n-ja>最安のレジストラを自動で見つけてドメインを登録。Spaceship・Porkbun・Cloudflare の 897 TLD を比較して、常に最安値で取得できます。</p>
 
 <!-- Domain Search -->
 <div class="domain-search-hero" role="search" aria-label="Domain price search">
-  <label class="search-label" for="heroSearch">Find the cheapest price for your domain</label>
+  <label class="search-label" for="heroSearch"><span data-i18n-en>Find the cheapest price for your domain</span><span data-i18n-ja>ドメインの最安値を検索</span></label>
   <input type="text" id="heroSearch" placeholder="e.g. mysite.com, example.io, startup.dev" autocomplete="off" spellcheck="false">
   <div class="search-results" id="heroResults" aria-live="polite"></div>
 </div>
@@ -263,8 +289,10 @@ footer a:hover{text-decoration:underline}
 
 <!-- Price Comparison Section -->
 <section id="prices" class="container" aria-label="TLD Price Comparison">
-<h2>897 TLD Price <span>Comparison</span></h2>
-<p class="sub">Renewal prices (USD/year). Green = cheapest with API registration. Data from live APIs, Feb 2026.</p>
+<h2 data-i18n-en>897 TLD Price <span>Comparison</span></h2>
+<h2 data-i18n-ja>897 TLD <span>料金比較</span></h2>
+<p class="sub" data-i18n-en>Renewal prices (USD/year). Green = cheapest with API registration. Data from live APIs, Feb 2026.</p>
+<p class="sub" data-i18n-ja>更新料金（USD/年）。緑 = API登録対応の最安値。2026年2月のライブAPI取得データ。</p>
 
 <!-- Quick Filters -->
 <div class="filter-wrap" role="group" aria-label="Quick filter by category">
@@ -301,10 +329,47 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 </p>
 </section>
 
+<!-- Discovery Feed -->
+<section id="discovery" class="container" aria-label="Discovery feed">
+<h2 data-i18n-en>Domain <span>Discovery</span></h2>
+<h2 data-i18n-ja>ドメイン<span>ディスカバリー</span></h2>
+<p class="sub" data-i18n-en>Available domains recently searched by other users. Updated every 24 hours.</p>
+<p class="sub" data-i18n-ja>他のユーザーが最近検索した空きドメイン。24時間ごとに更新されます。</p>
+<div class="discovery-grid" id="discoveryGrid">
+  <p class="disc-empty" data-i18n-en>Loading discovery feed...</p>
+  <p class="disc-empty" data-i18n-ja>ディスカバリーフィードを読み込み中...</p>
+</div>
+</section>
+
+<!-- Referral Rewards -->
+<section class="container" aria-label="Referral rewards">
+<h2 data-i18n-en>Referral <span>Rewards</span></h2>
+<h2 data-i18n-ja>リファラル<span>報酬</span></h2>
+<div class="features">
+<div class="feature">
+  <h3 data-i18n-en>Discover Domains</h3><h3 data-i18n-ja>ドメインを発見</h3>
+  <p data-i18n-en>Search for available domains. Your searches are logged and contributed to the discovery feed after 24 hours.</p>
+  <p data-i18n-ja>空きドメインを検索すると、24時間後にディスカバリーフィードに掲載されます。</p>
+</div>
+<div class="feature">
+  <h3 data-i18n-en>Earn 10% Credit</h3><h3 data-i18n-ja>10%クレジット獲得</h3>
+  <p data-i18n-en>When another user registers a domain you discovered first, you earn 10% of the registration cost as account credit.</p>
+  <p data-i18n-ja>あなたが最初に発見したドメインを他のユーザーが登録すると、登録費用の10%がクレジットとして付与されます。</p>
+</div>
+<div class="feature">
+  <h3 data-i18n-en>Free Up to 1,000/day</h3><h3 data-i18n-ja>1日1,000回まで無料</h3>
+  <p data-i18n-en>Domain checks are free up to 1,000 per day. After that, each check costs just $0.01.</p>
+  <p data-i18n-ja>ドメインチェックは1日1,000回まで無料。超過分は1回$0.01です。</p>
+</div>
+</div>
+</section>
+
 <!-- How it Works (Getting Started) -->
 <section id="how-it-works" class="container" aria-label="Getting started steps">
-<h2>Getting <span>Started</span></h2>
-<p class="sub">Three steps to the cheapest domain registration.</p>
+<h2 data-i18n-en>Getting <span>Started</span></h2>
+<h2 data-i18n-ja><span>はじめ方</span></h2>
+<p class="sub" data-i18n-en>Three steps to the cheapest domain registration.</p>
+<p class="sub" data-i18n-ja>最安のドメイン登録まで3ステップ。</p>
 <div class="steps">
   <div class="step">
     <div class="step-num">1</div>
@@ -338,12 +403,13 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 
 <!-- Why regctl -->
 <section class="container" aria-label="Features">
-<h2>Why <span>regctl</span>?</h2>
+<h2 data-i18n-en>Why <span>regctl</span>?</h2>
+<h2 data-i18n-ja>なぜ <span>regctl</span>？</h2>
 <div class="features">
-<div class="feature"><h3>Always the Lowest Price</h3><p>Compares 897 TLDs across multiple registrars in real-time. You always register at the cheapest available price.</p></div>
-<div class="feature"><h3>One-Command Registration</h3><p>Auto-selects the cheapest registrar and registers instantly. <code>regctl domains register example.com</code></p></div>
-<div class="feature"><h3>Unified DNS Management</h3><p>Manage DNS records across all registrars. <code>regctl dns list/add/delete</code></p></div>
-<div class="feature"><h3>AI-Friendly Output</h3><p><code>--format json</code> for structured output. Works with Claude, GPT, and AI tools.</p></div>
+<div class="feature"><h3 data-i18n-en>Always the Lowest Price</h3><h3 data-i18n-ja>常に最安値</h3><p data-i18n-en>Compares 897 TLDs across multiple registrars in real-time. You always register at the cheapest available price.</p><p data-i18n-ja>897 TLDをリアルタイムで複数のレジストラから比較。常に最安値で登録できます。</p></div>
+<div class="feature"><h3 data-i18n-en>One-Command Registration</h3><h3 data-i18n-ja>ワンコマンド登録</h3><p data-i18n-en>Auto-selects the cheapest registrar and registers instantly. <code>regctl domains register example.com</code></p><p data-i18n-ja>最安のレジストラを自動選択して即座に登録。<code>regctl domains register example.com</code></p></div>
+<div class="feature"><h3 data-i18n-en>Unified DNS Management</h3><h3 data-i18n-ja>統合DNS管理</h3><p data-i18n-en>Manage DNS records across all registrars. <code>regctl dns list/add/delete</code></p><p data-i18n-ja>全レジストラのDNSレコードを一括管理。<code>regctl dns list/add/delete</code></p></div>
+<div class="feature"><h3 data-i18n-en>AI-Friendly Output</h3><h3 data-i18n-ja>AI対応出力</h3><p data-i18n-en><code>--format json</code> for structured output. Works with Claude, GPT, and AI tools.</p><p data-i18n-ja><code>--format json</code> で構造化出力。Claude、GPTなどのAIツールと連携。</p></div>
 </div>
 </section>
 
@@ -383,8 +449,10 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 </section>
 
 <section id="signup" class="signup-section container" aria-label="Sign up for API access">
-<h2>API Access</h2>
-<p>Get your API key and manage domains programmatically. 1 point = $1 USD.</p>
+<h2 data-i18n-en>API Access</h2>
+<h2 data-i18n-ja>API アクセス</h2>
+<p data-i18n-en>Get your API key and manage domains programmatically. 1 point = $1 USD.</p>
+<p data-i18n-ja>APIキーを取得してプログラムからドメインを管理。1ポイント = $1 USD。</p>
 
 <div class="signup-box">
   <label for="signupEmail">Email address</label>
@@ -408,13 +476,15 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
   </div>
 
   <div class="signup-pricing">
-    <strong>Pricing</strong>
+    <strong data-i18n-en>Pricing</strong>
+    <strong data-i18n-ja>料金</strong>
     <table>
-      <tr><td>domains check</td><td>Free</td></tr>
-      <tr><td>domains register</td><td>Cost + 20%</td></tr>
-      <tr><td>domains list / info</td><td>$0.05</td></tr>
-      <tr><td>dns list</td><td>$0.05</td></tr>
-      <tr><td>dns add / delete</td><td>$0.10</td></tr>
+      <tr><td data-i18n-en>domains check</td><td data-i18n-ja>ドメインチェック</td><td data-i18n-en>Free (1,000/day, then $0.01)</td><td data-i18n-ja>無料（1,000回/日、超過$0.01）</td></tr>
+      <tr><td data-i18n-en>domains register</td><td data-i18n-ja>ドメイン登録</td><td data-i18n-en>Cost + 20%</td><td data-i18n-ja>原価 + 20%</td></tr>
+      <tr><td data-i18n-en>domains list / info</td><td data-i18n-ja>一覧 / 情報</td><td>$0.05</td></tr>
+      <tr><td data-i18n-en>dns list</td><td data-i18n-ja>DNS一覧</td><td>$0.05</td></tr>
+      <tr><td data-i18n-en>dns add / delete</td><td data-i18n-ja>DNS追加 / 削除</td><td>$0.10</td></tr>
+      <tr><td data-i18n-en>referral reward</td><td data-i18n-ja>リファラル報酬</td><td data-i18n-en>10% of registration</td><td data-i18n-ja>登録費用の10%</td></tr>
     </table>
   </div>
 </div>
@@ -806,6 +876,53 @@ document.querySelectorAll('nav a[href^="#"]').forEach(function(a){
     })
     .catch(function(){});
   }
+})();
+
+// Language toggle
+(function(){
+  var html=document.documentElement;
+  var btn=document.getElementById('langToggle');
+  var stored=localStorage.getItem('regctl_lang');
+  if(stored==='ja'){html.lang='ja';btn.textContent='EN';}
+  else if(navigator.language&&navigator.language.startsWith('ja')&&!stored){html.lang='ja';btn.textContent='EN';}
+  btn.addEventListener('click',function(){
+    if(html.lang==='ja'){html.lang='en';btn.textContent='JA';localStorage.setItem('regctl_lang','en');}
+    else{html.lang='ja';btn.textContent='EN';localStorage.setItem('regctl_lang','ja');}
+  });
+})();
+
+// Discovery feed
+(function(){
+  var grid=document.getElementById('discoveryGrid');
+  var apiBase=location.origin;
+  fetch(apiBase+'/v1/discovery?limit=12')
+  .then(function(r){return r.json()})
+  .then(function(res){
+    if(!res.ok||!res.data||!res.data.domains||res.data.domains.length===0){
+      grid.innerHTML='<p class="disc-empty" data-i18n-en>No domains discovered yet. Search for a domain above to contribute!</p>'
+        +'<p class="disc-empty" data-i18n-ja>まだ発見されたドメインはありません。上の検索欄からドメインを検索して貢献しましょう！</p>';
+      // Re-apply lang visibility
+      if(document.documentElement.lang==='ja'){grid.querySelectorAll('[data-i18n-en]').forEach(function(el){el.style.display='none'});}
+      else{grid.querySelectorAll('[data-i18n-ja]').forEach(function(el){el.style.display='none'});}
+      return;
+    }
+    var html='';
+    res.data.domains.forEach(function(d){
+      html+='<div class="disc-card"><div class="disc-domain">'+escHtml(d.domain)+'</div>'
+        +'<div class="disc-meta"><span class="disc-count">'+d.search_count+'</span> '
+        +'<span data-i18n-en>searches</span><span data-i18n-ja>検索</span></div></div>';
+    });
+    grid.innerHTML=html;
+    // Re-apply lang visibility
+    if(document.documentElement.lang==='ja'){grid.querySelectorAll('[data-i18n-en]').forEach(function(el){el.style.display='none'});}
+    else{grid.querySelectorAll('[data-i18n-ja]').forEach(function(el){el.style.display='none'});}
+  })
+  .catch(function(){
+    grid.innerHTML='<p class="disc-empty" data-i18n-en>Discovery feed unavailable.</p>'
+      +'<p class="disc-empty" data-i18n-ja>ディスカバリーフィードは利用できません。</p>';
+    if(document.documentElement.lang==='ja'){grid.querySelectorAll('[data-i18n-en]').forEach(function(el){el.style.display='none'});}
+    else{grid.querySelectorAll('[data-i18n-ja]').forEach(function(el){el.style.display='none'});}
+  });
 })();
 
 // Initial render

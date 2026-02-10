@@ -30,6 +30,7 @@ jobs:
           cp install.sh _site/
           cp llms.txt _site/
           cp prices.json _site/
+          cp og-image.svg _site/
 
       - uses: actions/configure-pages@v4
 

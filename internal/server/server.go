@@ -114,6 +114,7 @@ func (s *Server) routes() {
 			s.mux.HandleFunc("GET /install.sh", s.serveStatic("install.sh", "text/x-shellscript"))
 			s.mux.HandleFunc("GET /llms.txt", s.serveStatic("llms.txt", "text/plain; charset=utf-8"))
 			s.mux.HandleFunc("GET /prices.json", s.serveStatic("prices.json", "application/json"))
+			s.mux.HandleFunc("GET /og-image.svg", s.serveStatic("og-image.svg", "image/svg+xml"))
 			s.mux.HandleFunc("GET /{$}", s.serveStatic("index.html", "text/html; charset=utf-8"))
 		}
 	}
