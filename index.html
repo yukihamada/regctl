@@ -9,7 +9,7 @@
 <link rel="canonical" href="https://regctl.sh/">
 
 <!-- Favicon (inline SVG) -->
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1117'/%3E%3Ctext x='32' y='44' font-family='system-ui,sans-serif' font-size='32' font-weight='800' fill='%233fb950' text-anchor='middle'%3Erc%3C/text%3E%3Ccircle cx='54' cy='14' r='6' fill='%233fb950'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230d1117'/%3E%3Ctext x='32' y='44' font-family='system-ui,sans-serif' font-size='28' font-weight='800' fill='%233fb950' text-anchor='middle'%3E.sh%3C/text%3E%3C/svg%3E">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
@@ -108,6 +108,13 @@ header p{color:var(--muted);font-size:1.15rem;max-width:620px;margin:0 auto 28px
 .sr-avail.taken{background:rgba(248,81,73,.1);border:1px solid var(--red);color:var(--red)}
 .sr-avail.loading{background:var(--surface);border:1px solid var(--border);color:var(--muted)}
 .sr-avail-price{font-size:.85rem;color:var(--muted);margin-top:4px;font-weight:400}
+.sr-register-btn{display:inline-block;margin-top:10px;padding:10px 24px;background:var(--green);color:#000;border:none;border-radius:8px;font-size:.95rem;font-weight:700;cursor:pointer;transition:opacity .2s}
+.sr-register-btn:hover{opacity:.85}
+.sr-register-btn:disabled{opacity:.5;cursor:not-allowed}
+.sr-register-msg{margin-top:8px;font-size:.85rem}
+.sr-register-msg.success{color:var(--green)}
+.sr-register-msg.error{color:var(--red)}
+.sr-register-login{margin-top:8px;font-size:.85rem;color:var(--muted)}
 
 /* Install */
 .install-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 20px;display:inline-block;font-family:'SF Mono','Fira Code',monospace;font-size:.95rem;color:var(--green);cursor:pointer;transition:border-color .2s;position:relative}
@@ -254,7 +261,7 @@ footer a:hover{text-decoration:underline}
 <!-- Navigation -->
 <nav aria-label="Main navigation">
 <div class="nav-inner">
-  <a href="#" class="nav-logo">regctl<span>.</span></a>
+  <a href="#" class="nav-logo">regctl<span>.sh</span></a>
   <div class="nav-links">
     <a href="#prices" class="hide-mobile"><span data-i18n-en>Prices</span><span data-i18n-ja>料金</span></a>
     <a href="#discovery" class="hide-mobile"><span data-i18n-en>Discovery</span><span data-i18n-ja>発見</span></a>
@@ -270,7 +277,7 @@ footer a:hover{text-decoration:underline}
 
 <!-- Hero Section -->
 <header>
-<h1>regctl<span>.</span></h1>
+<h1>regctl<span>.sh</span></h1>
 <p data-i18n-en>Automatically finds the cheapest registrar and registers your domain. Compare 897 TLDs across Spaceship, Porkbun, Cloudflare — always get the lowest price.</p>
 <p data-i18n-ja>最安のレジストラを自動で見つけてドメインを登録。Spaceship・Porkbun・Cloudflare の 897 TLD を比較して、常に最安値で取得できます。</p>
 
@@ -458,12 +465,12 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
   <label for="signupEmail">Email address</label>
   <input type="email" id="signupEmail" placeholder="you@example.com" required>
 
-  <label>Initial credit</label>
+  <label><span data-i18n-en>Initial credit</span><span data-i18n-ja>初回クレジット</span></label>
   <div class="amount-options">
-    <button class="amount-btn active" data-amount="500">$5</button>
     <button class="amount-btn" data-amount="1000">$10</button>
     <button class="amount-btn" data-amount="2500">$25</button>
-    <button class="amount-btn" data-amount="5000">$50</button>
+    <button class="amount-btn active" data-amount="5000">$50</button>
+    <button class="amount-btn" data-amount="10000">$100</button>
   </div>
 
   <button class="signup-submit" id="signupBtn">Sign Up with Stripe</button>
@@ -700,7 +707,16 @@ function checkAvailability(domain){
       if(d.available){
         el.className='sr-avail available';
         var priceInfo=d.price?' &mdash; '+d.currency+' '+d.price:'';
-        el.innerHTML='<strong>'+escHtml(domain)+'</strong> is available!'+priceInfo;
+        var html='<strong>'+escHtml(domain)+'</strong> is available!'+priceInfo;
+        var apiKey=localStorage.getItem('regctl_billing_key');
+        if(apiKey){
+          html+='<br><button class="sr-register-btn" onclick="registerDomain(\''+escHtml(domain).replace(/'/g,"\\'")+'\')"><span data-i18n-en>Register Now</span><span data-i18n-ja>今すぐ登録</span></button>';
+          html+='<div class="sr-register-msg" id="registerMsg"></div>';
+        }else{
+          html+='<div class="sr-register-login"><span data-i18n-en><a href="#signup">Sign up</a> to register this domain directly.</span><span data-i18n-ja>このドメインを直接登録するには<a href="#signup">サインアップ</a>してください。</span></div>';
+        }
+        el.innerHTML=html;
+        applyLang(el);
       }else{
         el.className='sr-avail taken';
         el.innerHTML='<strong>'+escHtml(domain)+'</strong> is taken';
@@ -711,6 +727,48 @@ function checkAvailability(domain){
     if(e.name==='AbortError')return;
     el.className='sr-avail loading';
     el.innerHTML='Could not check availability. API may be offline.';
+  });
+}
+
+function applyLang(el){
+  var lang=document.documentElement.lang;
+  el.querySelectorAll('[data-i18n-en]').forEach(function(e){e.style.display=lang==='ja'?'none':'';});
+  el.querySelectorAll('[data-i18n-ja]').forEach(function(e){e.style.display=lang==='en'?'none':'';});
+}
+
+function registerDomain(domain){
+  var btn=document.querySelector('.sr-register-btn');
+  var msg=document.getElementById('registerMsg');
+  if(!btn||!msg)return;
+  var apiKey=localStorage.getItem('regctl_billing_key');
+  if(!apiKey){msg.className='sr-register-msg error';msg.textContent='No API key found. Please sign up first.';return;}
+  btn.disabled=true;
+  btn.textContent='Registering...';
+  msg.className='sr-register-msg';
+  msg.textContent='';
+  fetch(CHECK_API+'/v1/domains',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
+    body:JSON.stringify({domain:domain,years:1})
+  })
+  .then(function(r){return r.json()})
+  .then(function(res){
+    if(res.ok){
+      msg.className='sr-register-msg success';
+      msg.innerHTML='<strong>'+escHtml(domain)+'</strong> registered successfully!';
+      btn.style.display='none';
+    }else{
+      msg.className='sr-register-msg error';
+      msg.textContent=res.error||(res.hint?res.hint:'Registration failed.');
+      btn.disabled=false;
+      btn.textContent='Register Now';
+    }
+  })
+  .catch(function(){
+    msg.className='sr-register-msg error';
+    msg.textContent='Network error. Please try again.';
+    btn.disabled=false;
+    btn.textContent='Register Now';
   });
 }
 
@@ -807,7 +865,7 @@ document.querySelectorAll('nav a[href^="#"]').forEach(function(a){
   const resultDiv=document.getElementById('signupResult');
   const apikeyDisplay=document.getElementById('apikeyDisplay');
   const cmdCopy=document.getElementById('cmdCopy');
-  let selectedAmount=500;
+  let selectedAmount=5000;
 
   amountBtns.forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -856,6 +914,7 @@ document.querySelectorAll('nav a[href^="#"]').forEach(function(a){
     .then(function(res){
       if(res.ok&&res.data&&res.data.api_key){
         var key=res.data.api_key;
+        localStorage.setItem('regctl_billing_key',key);
         apikeyDisplay.textContent=key;
         cmdCopy.textContent='export REGCTL_BILLING_KEY='+key;
         resultDiv.classList.add('active');
