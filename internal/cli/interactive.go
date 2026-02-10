@@ -41,7 +41,7 @@ func runInteractiveMode() {
 	// Show interactive menu
 	for {
 		printMenu()
-		fmt.Print("  Choose [1-7]: ")
+		fmt.Print("  Choose [1-8]: ")
 		choice, _ := reader.ReadString('\n')
 		choice = strings.TrimSpace(choice)
 
@@ -55,19 +55,21 @@ func runInteractiveMode() {
 		case "4":
 			runMenuDNSAdd(cfg, reader)
 		case "5":
+			runMenuLaunch(reader)
+		case "6":
 			fmt.Println()
 			printUsageGuide()
-		case "6":
+		case "7":
 			fmt.Println()
 			color.Cyan("  Run: regctl server --port 8080")
 			fmt.Println("  Then access: http://localhost:8080/health")
 			fmt.Println()
-		case "7", "q", "quit", "exit":
+		case "8", "q", "quit", "exit":
 			fmt.Println()
 			fmt.Println("  Goodbye!")
 			return
 		default:
-			color.Red("  Invalid choice. Enter 1-7.")
+			color.Red("  Invalid choice. Enter 1-8.")
 		}
 	}
 }
@@ -80,9 +82,10 @@ func printMenu() {
 	fmt.Println("    2) Check domain availability")
 	fmt.Println("    3) View DNS records")
 	fmt.Println("    4) Add a DNS record")
-	fmt.Println("    5) Show help & examples")
-	fmt.Println("    6) Start API server")
-	fmt.Println("    7) Quit")
+	fmt.Println("    5) Launch a new site")
+	fmt.Println("    6) Show help & examples")
+	fmt.Println("    7) Start API server")
+	fmt.Println("    8) Quit")
 	fmt.Println()
 }
 

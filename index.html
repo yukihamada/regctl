@@ -387,8 +387,8 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 <section id="how-it-works" class="container" aria-label="Getting started steps">
 <h2 data-i18n-en>Getting <span>Started</span></h2>
 <h2 data-i18n-ja><span>はじめ方</span></h2>
-<p class="sub" data-i18n-en>Three steps to the cheapest domain registration.</p>
-<p class="sub" data-i18n-ja>最安のドメイン登録まで3ステップ。</p>
+<p class="sub" data-i18n-en>Three steps from install to live site.</p>
+<p class="sub" data-i18n-ja>インストールからサイト公開まで3ステップ。</p>
 <div class="steps">
   <div class="step">
     <div class="step-num">1</div>
@@ -410,10 +410,12 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
   </div>
   <div class="step">
     <div class="step-num">3</div>
-    <h3>Search &amp; Register</h3>
-    <p>Compare prices and register at the cheapest registrar.</p>
-    <div class="step-cmd" data-copy="regctl domains check mysite.com">
-      <code>regctl domains check mysite.com</code>
+    <h3 data-i18n-en>Launch Your Site</h3>
+    <h3 data-i18n-ja>サイトを公開</h3>
+    <p data-i18n-en>Register a domain and connect to hosting — all in one command.</p>
+    <p data-i18n-ja>ドメイン取得からホスティング接続まで、ワンコマンドで完了。</p>
+    <div class="step-cmd" data-copy="regctl launch mysite.com">
+      <code>regctl launch mysite.com</code>
       <button class="copy-btn" aria-label="Copy command">Copy</button>
     </div>
   </div>
@@ -425,8 +427,9 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 <h2 data-i18n-en>Why <span>regctl</span>?</h2>
 <h2 data-i18n-ja>なぜ <span>regctl</span>？</h2>
 <div class="features">
+<div class="feature"><h3 data-i18n-en>One-Command Launch</h3><h3 data-i18n-ja>ワンコマンド公開</h3><p data-i18n-en>Register a domain and connect to hosting in one step. <code>regctl launch mysite.com</code></p><p data-i18n-ja>ドメイン取得からホスティング接続まで一発。<code>regctl launch mysite.com</code></p></div>
 <div class="feature"><h3 data-i18n-en>Always the Lowest Price</h3><h3 data-i18n-ja>常に最安値</h3><p data-i18n-en>Compares 897 TLDs across multiple registrars in real-time. You always register at the cheapest available price.</p><p data-i18n-ja>897 TLDをリアルタイムで複数のレジストラから比較。常に最安値で登録できます。</p></div>
-<div class="feature"><h3 data-i18n-en>One-Command Registration</h3><h3 data-i18n-ja>ワンコマンド登録</h3><p data-i18n-en>Auto-selects the cheapest registrar and registers instantly. <code>regctl domains register example.com</code></p><p data-i18n-ja>最安のレジストラを自動選択して即座に登録。<code>regctl domains register example.com</code></p></div>
+<div class="feature"><h3 data-i18n-en>Hosting Integration</h3><h3 data-i18n-ja>ホスティング連携</h3><p data-i18n-en>Connects to Vercel, Netlify, Cloudflare Pages, GitHub Pages, Fly.io. DNS records added automatically.</p><p data-i18n-ja>Vercel、Netlify、Cloudflare Pages、GitHub Pages、Fly.ioに対応。DNSレコードを自動追加。</p></div>
 <div class="feature"><h3 data-i18n-en>Unified DNS Management</h3><h3 data-i18n-ja>統合DNS管理</h3><p data-i18n-en>Manage DNS records across all registrars. <code>regctl dns list/add/delete</code></p><p data-i18n-ja>全レジストラのDNSレコードを一括管理。<code>regctl dns list/add/delete</code></p></div>
 <div class="feature"><h3 data-i18n-en>AI-Friendly Output</h3><h3 data-i18n-ja>AI対応出力</h3><p data-i18n-en><code>--format json</code> for structured output. Works with Claude, GPT, and AI tools.</p><p data-i18n-ja><code>--format json</code> で構造化出力。Claude、GPTなどのAIツールと連携。</p></div>
 </div>
@@ -435,18 +438,35 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 <!-- Quick Demo -->
 <section class="container" aria-label="CLI Demo">
 <h2>Quick <span>Demo</span></h2>
-<div class="cli-demo" role="img" aria-label="Terminal demo of regctl commands">
-<span class="pr">$</span> regctl domains check mysite.com<br><br>
-<span class="o">  Price comparison for mysite.com</span><br><br>
-<span class="o">  Registrar          Register   Renew     Status      API</span><br>
-<span class="o">  ──────────────────────────────────────────────────────────</span><br>
-<span class="h">  Spaceship BEST     $9.08      $10.18    Available   Yes</span><br>
-<span class="o">  Cloudflare         $10.44     $10.44    Available   Dashboard</span><br>
-<span class="o">  Porkbun            $11.08     $11.08    Available   Yes</span><br><br>
-<span class="h">  Cheapest API-registrable: Spaceship at $9.08/yr</span><br><br>
-<span class="pr">$</span> regctl domains register mysite.com<br>
-<span class="h">  Domain mysite.com registered on Spaceship!</span><br>
-<span class="o">  Next: regctl dns list mysite.com</span>
+<div class="cli-demo" role="img" aria-label="Terminal demo of regctl launch command">
+<span class="pr">$</span> regctl launch mysite.com<br><br>
+<span class="h">  Launch mysite.com</span><br><br>
+<span class="o">  Step 1: Check availability</span><br>
+<span class="o">    Checking mysite.com...</span><br>
+<span class="h">    Available on Spaceship at $9.08/yr</span><br><br>
+<span class="o">  Step 2: Register domain</span><br>
+<span class="o">    Register mysite.com on Spaceship? [Y/n]: </span>y<br>
+<span class="o">    Registering...</span> <span class="h">Domain registered!</span><br><br>
+<span class="o">  Step 3: Connect to hosting</span><br>
+<span class="o">    Which hosting provider?</span><br>
+<span class="o">      1) Vercel</span><br>
+<span class="o">      2) Netlify</span><br>
+<span class="o">      3) Cloudflare Pages</span><br>
+<span class="o">      4) GitHub Pages</span><br>
+<span class="o">      5) Fly.io</span><br>
+<span class="o">      6) Skip (DNS only)</span><br>
+<span class="o">    Choose [1-6]: </span>1<br><br>
+<span class="o">    Setting up DNS for Vercel...</span><br>
+<span class="h">      Adding A     @    -> 76.76.21.21          done</span><br>
+<span class="h">      Adding CNAME www  -> cname.vercel-dns.com  done</span><br><br>
+<span class="h">  Done!</span><br><br>
+<span class="o">  Summary:</span><br>
+<span class="o">    Domain:   mysite.com (registered on Spaceship)</span><br>
+<span class="o">    Hosting:  Vercel (2/2 DNS records added)</span><br><br>
+<span class="o">  Next steps:</span><br>
+<span class="o">    1. In Vercel dashboard, add "mysite.com" as a custom domain</span><br>
+<span class="o">    2. Vercel will auto-provision SSL</span><br>
+<span class="o">    3. Verify: regctl dns list mysite.com</span>
 </div>
 </section>
 

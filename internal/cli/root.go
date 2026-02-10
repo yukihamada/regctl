@@ -54,6 +54,8 @@ func NewRootCmd(version string) *cobra.Command {
 				"help": true, "version": true, "completion": true,
 				"check": true, // check works with public pricing APIs
 				"signup": true, "server": true,
+				"providers": true, // sites providers doesn't need API key
+				"launch":    true, // launch loads config internally
 			}
 			if skip[cmd.Name()] {
 				return nil
@@ -128,6 +130,8 @@ func NewRootCmd(version string) *cobra.Command {
 		newInitCmd(),
 		newDomainsCmd(),
 		newDNSCmd(),
+		newSitesCmd(),
+		newLaunchCmd(),
 		newConfigCmd(),
 		newServerCmd(),
 		newBillingCmd(),

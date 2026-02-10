@@ -22,15 +22,42 @@ regctl config set cloudflare_token YOUR_TOKEN
 
 ## CLI Commands
 
+- `regctl launch <domain>` — Register a domain and connect to hosting in one step (combines register + DNS setup)
 - `regctl domains check <domain>` — Compare prices across all registrars, show availability
 - `regctl domains register <domain>` — Register at the cheapest API-supported registrar
 - `regctl domains list` — List all domains across registrars
 - `regctl dns list <domain>` — List DNS records
 - `regctl dns add <domain> <type> <name> <content>` — Add a DNS record
 - `regctl dns delete <domain> <record-id>` — Delete a DNS record
+- `regctl sites create <domain>` — Connect a domain to a hosting provider (Vercel, Netlify, etc.)
+- `regctl sites providers` — List supported hosting providers
 - `regctl config set <key> <value>` — Set configuration (API keys)
 - `regctl config show` — Show current configuration
 - `regctl init` — Interactive setup wizard
+
+### regctl launch
+
+One command to go from idea to live site:
+
+```
+regctl launch mysite.com
+```
+
+Workflow:
+1. Checks availability across all configured registrars
+2. Registers at the cheapest API-supported registrar
+3. Asks which hosting provider (Vercel, Netlify, Cloudflare Pages, GitHub Pages, Fly.io)
+4. Adds the required DNS records automatically
+5. Prints next steps (e.g. add custom domain in Vercel dashboard)
+
+Flags:
+- `--registrar spaceship|porkbun|namecheap|valuedomain` — Force a specific registrar
+- `--provider vercel|netlify|cloudflare-pages|github-pages|flyio` — Skip hosting prompt
+
+Fully non-interactive:
+```
+regctl launch mysite.com --registrar spaceship --provider vercel
+```
 
 ## Supported Registrars
 
