@@ -53,7 +53,7 @@ func NewRootCmd(version string) *cobra.Command {
 				"init": true, "set": true, "show": true,
 				"help": true, "version": true, "completion": true,
 				"check": true, // check works with public pricing APIs
-				"signup": true,
+				"signup": true, "server": true,
 			}
 			if skip[cmd.Name()] {
 				return nil
