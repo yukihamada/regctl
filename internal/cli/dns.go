@@ -2,9 +2,9 @@ package cli
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/spf13/cobra"
+	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 )
 
@@ -40,45 +40,95 @@ func newDNSListCmd() *cobra.Command {
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			domain := args[0]
-			records, err := client.GetDNSRecords(domain)
+
+			var records []provider.DNSRecord
+			var err error
+
+			// Try providers that support DNS
+			if namecheapClient != nil {
+				records, err = namecheapClient.ListRecords(domain)
+				if err == nil {
+					return printDNSRecords(domain, records)
+				}
+			}
+			if porkbunClient != nil {
+				records, err = porkbunClient.ListRecords(domain)
+				if err == nil {
+					return printDNSRecords(domain, records)
+				}
+			}
+			if cloudflareClient != nil {
+				records, err = cloudflareClient.ListRecords(domain)
+				if err == nil {
+					return printDNSRecords(domain, records)
+				}
+			}
+			if spaceshipClient != nil {
+				records, err = spaceshipClient.ListRecords(domain)
+				if err == nil {
+					return printDNSRecords(domain, records)
+				}
+			}
+			if client != nil {
+				vdRecords, vdErr := client.GetDNSRecords(domain)
+				if vdErr == nil {
+					for _, r := range vdRecords {
+						records = append(records, provider.DNSRecord{
+							ID:       fmt.Sprintf("%d", r.ID),
+							Type:     r.Type,
+							Name:     r.Name,
+							Content:  r.Content,
+							TTL:      r.TTL,
+							Priority: r.Priority,
+						})
+					}
+					return printDNSRecords(domain, records)
+				}
+				err = vdErr
+			}
+
 			if err != nil {
 				printErrorResult("dns list", err, "Make sure you own this domain: regctl domains list")
-				return nil
+			} else {
+				printErrorResult("dns list", fmt.Errorf("no DNS provider configured"), "regctl config set namecheap_api_key YOUR_KEY")
 			}
-
-			if isStructuredOutput() {
-				printResult("dns list", map[string]interface{}{
-					"domain":  domain,
-					"records": records,
-					"count":   len(records),
-				},
-					fmt.Sprintf("%d DNS record(s) for %s", len(records), domain),
-					[]string{
-						fmt.Sprintf("regctl dns add %s -t A -n @ -c <ip> — Add a record", domain),
-						fmt.Sprintf("regctl dns delete %s <id> — Delete a record", domain),
-					},
-				)
-				return nil
-			}
-
-			if len(records) == 0 {
-				fmt.Printf("No DNS records found for %s.\n", domain)
-				fmt.Println()
-				fmt.Printf("  Add one: regctl dns add %s -t A -n @ -c 1.2.3.4\n", domain)
-				return nil
-			}
-
-			printSection(fmt.Sprintf("DNS Records — %s (%d)", domain, len(records)))
-			var rows [][]string
-			for _, r := range records {
-				rows = append(rows, []string{
-					fmt.Sprintf("%d", r.ID), r.Type, r.Name, r.Content, fmt.Sprintf("%d", r.TTL),
-				})
-			}
-			renderTable([]string{"ID", "Type", "Name", "Content", "TTL"}, rows)
 			return nil
 		},
 	}
+}
+
+func printDNSRecords(domain string, records []provider.DNSRecord) error {
+	if isStructuredOutput() {
+		printResult("dns list", map[string]interface{}{
+			"domain":  domain,
+			"records": records,
+			"count":   len(records),
+		},
+			fmt.Sprintf("%d DNS record(s) for %s", len(records), domain),
+			[]string{
+				fmt.Sprintf("regctl dns add %s -t A -n @ -c <ip> — Add a record", domain),
+				fmt.Sprintf("regctl dns delete %s <id> — Delete a record", domain),
+			},
+		)
+		return nil
+	}
+
+	if len(records) == 0 {
+		fmt.Printf("No DNS records found for %s.\n", domain)
+		fmt.Println()
+		fmt.Printf("  Add one: regctl dns add %s -t A -n @ -c 1.2.3.4\n", domain)
+		return nil
+	}
+
+	printSection(fmt.Sprintf("DNS Records — %s (%d)", domain, len(records)))
+	var rows [][]string
+	for _, r := range records {
+		rows = append(rows, []string{
+			r.ID, r.Type, r.Name, r.Content, fmt.Sprintf("%d", r.TTL),
+		})
+	}
+	renderTable([]string{"ID", "Type", "Name", "Content", "TTL"}, rows)
+	return nil
 }
 
 func newDNSAddCmd() *cobra.Command {
@@ -109,7 +159,7 @@ Common record types:
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			domain := args[0]
-			record := valuedomain.DNSRecord{
+			rec := provider.DNSRecord{
 				Type:     recordType,
 				Name:     name,
 				Content:  content,
@@ -117,7 +167,30 @@ Common record types:
 				Priority: priority,
 			}
 
-			if err := client.AddDNSRecord(domain, record); err != nil {
+			var err error
+			if namecheapClient != nil {
+				err = namecheapClient.AddRecord(domain, rec)
+			} else if porkbunClient != nil {
+				err = porkbunClient.AddRecord(domain, rec)
+			} else if cloudflareClient != nil {
+				err = cloudflareClient.AddRecord(domain, rec)
+			} else if spaceshipClient != nil {
+				err = spaceshipClient.AddRecord(domain, rec)
+			} else if client != nil {
+				vdRecord := valuedomain.DNSRecord{
+					Type:     recordType,
+					Name:     name,
+					Content:  content,
+					TTL:      ttl,
+					Priority: priority,
+				}
+				err = client.AddDNSRecord(domain, vdRecord)
+			} else {
+				printErrorResult("dns add", fmt.Errorf("no DNS provider configured"), "regctl config set namecheap_api_key YOUR_KEY")
+				return nil
+			}
+
+			if err != nil {
 				printErrorResult("dns add", err, "Check existing records: regctl dns list "+domain)
 				return nil
 			}
@@ -125,7 +198,7 @@ Common record types:
 			if isStructuredOutput() {
 				printResult("dns add", map[string]interface{}{
 					"domain": domain,
-					"record": record,
+					"record": rec,
 					"status": "created",
 				},
 					fmt.Sprintf("Added %s record '%s' -> '%s' to %s", recordType, name, content, domain),
@@ -162,14 +235,32 @@ func newDNSDeleteCmd() *cobra.Command {
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			domain := args[0]
-			recordID, err := strconv.Atoi(args[1])
-			if err != nil {
-				printErrorResult("dns delete", fmt.Errorf("invalid record ID: %s", args[1]),
-					"Find record IDs with: regctl dns list "+domain)
+			recordID := args[1]
+
+			var err error
+			if namecheapClient != nil {
+				err = namecheapClient.DeleteRecord(domain, recordID)
+			} else if porkbunClient != nil {
+				err = porkbunClient.DeleteRecord(domain, recordID)
+			} else if cloudflareClient != nil {
+				err = cloudflareClient.DeleteRecord(domain, recordID)
+			} else if spaceshipClient != nil {
+				err = spaceshipClient.DeleteRecord(domain, recordID)
+			} else if client != nil {
+				// Value Domain uses integer IDs
+				var intID int
+				if _, parseErr := fmt.Sscanf(recordID, "%d", &intID); parseErr != nil {
+					printErrorResult("dns delete", fmt.Errorf("invalid record ID: %s", recordID),
+						"Find record IDs with: regctl dns list "+domain)
+					return nil
+				}
+				err = client.DeleteDNSRecord(domain, intID)
+			} else {
+				printErrorResult("dns delete", fmt.Errorf("no DNS provider configured"), "regctl config set namecheap_api_key YOUR_KEY")
 				return nil
 			}
 
-			if err := client.DeleteDNSRecord(domain, recordID); err != nil {
+			if err != nil {
 				printErrorResult("dns delete", err,
 					"List records first: regctl dns list "+domain)
 				return nil
@@ -181,7 +272,7 @@ func newDNSDeleteCmd() *cobra.Command {
 					"record_id": recordID,
 					"status":    "deleted",
 				},
-					fmt.Sprintf("Deleted DNS record #%d from %s", recordID, domain),
+					fmt.Sprintf("Deleted DNS record #%s from %s", recordID, domain),
 					[]string{
 						fmt.Sprintf("regctl dns list %s — Verify the record was removed", domain),
 					},
@@ -189,7 +280,7 @@ func newDNSDeleteCmd() *cobra.Command {
 				return nil
 			}
 
-			printSuccess(fmt.Sprintf("  DNS record #%d deleted from %s", recordID, domain))
+			printSuccess(fmt.Sprintf("  DNS record #%s deleted from %s", recordID, domain))
 			fmt.Println()
 			return nil
 		},

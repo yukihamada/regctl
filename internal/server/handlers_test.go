@@ -39,7 +39,7 @@ func setupTestAPI() (*Server, *httptest.Server) {
 	client := valuedomain.NewClient("test-key")
 	client.BaseURL = mockAPI.URL
 
-	srv := New(client, "test-api-key")
+	srv := New(Config{Client: client, APIKey: "test-api-key"})
 	return srv, mockAPI
 }
 

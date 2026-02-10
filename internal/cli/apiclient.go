@@ -1,0 +1,90 @@
+package cli
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"strings"
+	"time"
+)
+
+// APIClient is an HTTP client for the regctl API server.
+type APIClient struct {
+	baseURL string
+	apiKey  string
+	http    *http.Client
+}
+
+// NewAPIClient creates a new API client.
+func NewAPIClient(baseURL, apiKey string) *APIClient {
+	return &APIClient{
+		baseURL: strings.TrimRight(baseURL, "/"),
+		apiKey:  apiKey,
+		http:    &http.Client{Timeout: 30 * time.Second},
+	}
+}
+
+type apiResult struct {
+	OK        bool            `json:"ok"`
+	Data      json.RawMessage `json:"data,omitempty"`
+	Error     string          `json:"error,omitempty"`
+	Hint      string          `json:"hint,omitempty"`
+	Timestamp string          `json:"timestamp"`
+}
+
+func (c *APIClient) do(method, path string, body string) (*apiResult, error) {
+	var bodyReader io.Reader
+	if body != "" {
+		bodyReader = strings.NewReader(body)
+	}
+
+	req, err := http.NewRequest(method, c.baseURL+path, bodyReader)
+	if err != nil {
+		return nil, err
+	}
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+	if body != "" {
+		req.Header.Set("Content-Type", "application/json")
+	}
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var result apiResult
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+	if !result.OK {
+		msg := result.Error
+		if result.Hint != "" {
+			msg += " (" + result.Hint + ")"
+		}
+		return nil, fmt.Errorf(msg)
+	}
+	return &result, nil
+}
+
+// GetBalance returns the account balance.
+func (c *APIClient) GetBalance() (json.RawMessage, error) {
+	r, err := c.do("GET", "/v1/billing/balance", "")
+	if err != nil {
+		return nil, err
+	}
+	return r.Data, nil
+}
+
+// CreateTopUp creates a top-up checkout session.
+func (c *APIClient) CreateTopUp(amountCents int64) (json.RawMessage, error) {
+	body := fmt.Sprintf(`{"amount_cents":%d}`, amountCents)
+	r, err := c.do("POST", "/v1/billing/topup", body)
+	if err != nil {
+		return nil, err
+	}
+	return r.Data, nil
+}

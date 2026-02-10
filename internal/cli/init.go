@@ -18,11 +18,12 @@ func newInitCmd() *cobra.Command {
 		Long: `Interactive setup wizard for first-time users.
 
 This will guide you through:
-  1. Setting your Value Domain API key
+  1. Setting your registrar API keys
   2. Verifying the connection
   3. Listing your domains
 
-You can get an API key at: https://www.value-domain.com/api/`,
+Supported registrars:
+  Porkbun, Spaceship, Namecheap, Cloudflare, Value Domain`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runInitWizard()
 		},

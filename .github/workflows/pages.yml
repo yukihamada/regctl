@@ -3,6 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,32 +15,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Build static site
-        run: |
-          mkdir -p _site
-          cp install.sh _site/install.sh
-          cp -r docs/site/* _site/ 2>/dev/null || true
-          # Root index.html takes priority (price comparison page)
-          cp index.html _site/index.html
-          echo "regctl.sh" > _site/CNAME
-
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
+      - uses: actions/checkout@v4
+
+      - name: Build site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+          cp install.sh _site/
+          cp llms.txt _site/
+          cp prices.json _site/
+
+      - uses: actions/configure-pages@v4
+
+      - uses: actions/upload-pages-artifact@v3
+
+      - id: deployment
         uses: actions/deploy-pages@v4

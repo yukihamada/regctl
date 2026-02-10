@@ -2,9 +2,11 @@ package cli
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/server"
 )
 
@@ -27,7 +29,13 @@ Endpoints:
   POST /v1/domains                Register domain
   GET  /v1/dns/{domain}           List DNS records
   POST /v1/dns/{domain}           Add DNS record
-  DELETE /v1/dns/{domain}/{id}    Delete DNS record`,
+  DELETE /v1/dns/{domain}/{id}    Delete DNS record
+
+Billing endpoints (when STRIPE_SECRET_KEY is set):
+  POST /v1/billing/signup         Create account
+  POST /v1/billing/topup          Add credit
+  GET  /v1/billing/balance        Check balance
+  POST /webhooks/stripe           Stripe webhook`,
 		Example: `  regctl server
   regctl server --port 3000
 
@@ -35,7 +43,31 @@ Endpoints:
   curl http://localhost:8080/health
   curl -H "Authorization: Bearer YOUR_KEY" http://localhost:8080/v1/domains`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			srv := server.New(client, cfg.RegctlKey)
+			srvCfg := server.Config{
+				Client: client,
+				APIKey: cfg.RegctlKey,
+			}
+
+			// Initialize billing if Stripe env vars are set
+			stripeKey := os.Getenv("STRIPE_SECRET_KEY")
+			signingSecret := os.Getenv("REGCTL_SIGNING_SECRET")
+			webhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
+			successURL := os.Getenv("REGCTL_SUCCESS_URL")
+			cancelURL := os.Getenv("REGCTL_CANCEL_URL")
+
+			if stripeKey != "" && signingSecret != "" {
+				if successURL == "" {
+					successURL = "https://regctl.sh"
+				}
+				if cancelURL == "" {
+					cancelURL = "https://regctl.sh"
+				}
+				srvCfg.BillingClient = billing.NewClient(stripeKey, signingSecret, successURL, cancelURL)
+				srvCfg.SigningSecret = signingSecret
+				srvCfg.WebhookSecret = webhookSecret
+			}
+
+			srv := server.New(srvCfg)
 
 			fmt.Println()
 			color.New(color.FgCyan, color.Bold).Printf("  regctl API server starting on port %d\n", port)
@@ -48,6 +80,9 @@ Endpoints:
 			} else {
 				color.Yellow("  Warning: No REGCTL_API_KEY set. API endpoints are unprotected.")
 				fmt.Println("  Set one: regctl config set regctl_api_key <key>")
+			}
+			if srvCfg.BillingClient != nil {
+				color.Green("  Billing: enabled (Stripe)")
 			}
 			fmt.Println()
 			fmt.Println("  Press Ctrl+C to stop.")

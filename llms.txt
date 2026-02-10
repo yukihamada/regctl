@@ -1,0 +1,80 @@
+# regctl
+
+> Domain registration CLI that compares prices across registrars and auto-registers at the cheapest one.
+
+regctl is a command-line tool for domain management. It compares renewal prices for 897 TLDs across Spaceship, Porkbun, and Cloudflare, then registers domains at the lowest-cost registrar with API support.
+
+## Quick Start
+
+Install:
+```
+curl -fsSL https://regctl.sh/install.sh | sh
+```
+
+Configure API keys:
+```
+regctl init
+regctl config set spaceship_api_key YOUR_KEY
+regctl config set porkbun_api_key YOUR_KEY
+regctl config set porkbun_secret_key YOUR_SECRET
+regctl config set cloudflare_token YOUR_TOKEN
+```
+
+## CLI Commands
+
+- `regctl domains check <domain>` — Compare prices across all registrars, show availability
+- `regctl domains register <domain>` — Register at the cheapest API-supported registrar
+- `regctl domains list` — List all domains across registrars
+- `regctl dns list <domain>` — List DNS records
+- `regctl dns add <domain> <type> <name> <content>` — Add a DNS record
+- `regctl dns delete <domain> <record-id>` — Delete a DNS record
+- `regctl config set <key> <value>` — Set configuration (API keys)
+- `regctl config show` — Show current configuration
+- `regctl init` — Interactive setup wizard
+
+## Supported Registrars
+
+| Registrar   | Register | DNS | List | Price Check |
+|-------------|----------|-----|------|-------------|
+| Spaceship   | Yes      | Yes | Yes  | Yes         |
+| Porkbun     | Yes      | Yes | Yes  | Yes         |
+| Cloudflare  | No       | Yes | Yes  | Static      |
+| Value Domain| Yes      | Yes | Yes  | Yes         |
+
+## Price Data (Machine-Readable)
+
+Get all 897 TLD prices as JSON:
+```
+curl https://regctl.sh/prices.json
+```
+
+Schema:
+```json
+{
+  "updated": "2026-02-10",
+  "registrars": { "spaceship": {...}, "porkbun": {...}, "cloudflare": {...} },
+  "total_tlds": 897,
+  "tlds": [
+    {
+      "tld": ".com",
+      "prices": { "spaceship": 10.18, "porkbun": 11.08, "cloudflare": 10.44 },
+      "best_registrar": "spaceship",
+      "best_price": 10.18
+    }
+  ]
+}
+```
+
+## Output Formats
+
+Use `--format json` for structured output compatible with AI tools:
+```
+regctl domains check example.com --format json
+```
+
+## Links
+
+- Website: https://regctl.sh
+- GitHub: https://github.com/yukihamada/regctl
+- Price Data: https://regctl.sh/prices.json
+- License: MIT

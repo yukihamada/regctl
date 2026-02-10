@@ -74,6 +74,14 @@ func newDomainsListCmd() *cobra.Command {
 					allDomains = append(allDomains, domains...)
 				}
 			}
+			if namecheapClient != nil {
+				domains, err := namecheapClient.ListDomains()
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("Namecheap: %v", err))
+				} else {
+					allDomains = append(allDomains, domains...)
+				}
+			}
 			if client != nil {
 				vdDomains, err := client.ListDomains()
 				if err != nil {
@@ -337,6 +345,36 @@ func newDomainsCheckCmd() *cobra.Command {
 				}()
 			}
 
+			// 5) Namecheap - live API check (if configured), with pricing
+			if namecheapClient != nil {
+				wg.Add(1)
+				go func() {
+					defer wg.Done()
+					avail, err := namecheapClient.CheckAvailability(domain)
+					if err != nil {
+						return
+					}
+					// Fetch pricing to get the actual price
+					pricing, pErr := namecheapClient.FetchPricing()
+					var regPrice, renPrice float64
+					if pErr == nil {
+						if p, ok := pricing[tld]; ok {
+							regPrice = p.RegPrice
+							renPrice = p.RenPrice
+						}
+					}
+					mu.Lock()
+					prices = append(prices, priceEntry{
+						Registrar: "Namecheap",
+						RegPrice:  regPrice,
+						RenPrice:  renPrice,
+						Available: avail.Available,
+						CanRegAPI: true,
+					})
+					mu.Unlock()
+				}()
+			}
+
 			wg.Wait()
 
 			if len(prices) == 0 {
@@ -448,6 +486,12 @@ func newDomainsRegisterCmd() *cobra.Command {
 					return nil
 				}
 				return registerViaSpaceship(domain)
+			case "namecheap":
+				if namecheapClient == nil {
+					printErrorResult("register", fmt.Errorf("Namecheap not configured"), "regctl config set namecheap_api_key YOUR_KEY")
+					return nil
+				}
+				return registerViaNamecheap(domain)
 			case "valuedomain", "value-domain":
 				if client == nil {
 					printErrorResult("register", fmt.Errorf("Value Domain not configured"), "regctl config set api_key YOUR_KEY")
@@ -457,16 +501,19 @@ func newDomainsRegisterCmd() *cobra.Command {
 			case "":
 				// Auto-select cheapest
 			default:
-				printErrorResult("register", fmt.Errorf("unknown registrar: %s", registrar), "Supported: porkbun, spaceship, valuedomain")
+				printErrorResult("register", fmt.Errorf("unknown registrar: %s", registrar), "Supported: porkbun, spaceship, namecheap, valuedomain")
 				return nil
 			}
 
-			// Auto-select: try Spaceship first (cheapest), then Porkbun, then Value Domain
+			// Auto-select: try Spaceship first (cheapest), then Porkbun, Namecheap, Value Domain
 			if spaceshipClient != nil {
 				return registerViaSpaceship(domain)
 			}
 			if porkbunClient != nil {
 				return registerViaPorkbun(domain)
+			}
+			if namecheapClient != nil {
+				return registerViaNamecheap(domain)
 			}
 			if client != nil {
 				return registerViaValueDomain(domain)
@@ -477,7 +524,7 @@ func newDomainsRegisterCmd() *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringVar(&registrar, "registrar", "", "Force a specific registrar (spaceship, porkbun, valuedomain)")
+	cmd.Flags().StringVar(&registrar, "registrar", "", "Force a specific registrar (spaceship, porkbun, namecheap, valuedomain)")
 	return cmd
 }
 
@@ -521,6 +568,30 @@ func registerViaValueDomain(domain string) error {
 	}
 
 	printSuccess(fmt.Sprintf("  Domain %s registered on Value Domain!", domain))
+	fmt.Println()
+	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
+	return nil
+}
+
+func registerViaNamecheap(domain string) error {
+	if err := namecheapClient.RegisterDomain(domain); err != nil {
+		printErrorResult("register", err, "Check availability first: regctl domains check "+domain)
+		return nil
+	}
+
+	if isStructuredOutput() {
+		printResult("register",
+			map[string]interface{}{"domain": domain, "registrar": "Namecheap", "status": "registered"},
+			fmt.Sprintf("Domain %s registered on Namecheap", domain),
+			[]string{
+				fmt.Sprintf("regctl dns list %s", domain),
+				fmt.Sprintf("regctl domains list"),
+			},
+		)
+		return nil
+	}
+
+	printSuccess(fmt.Sprintf("  Domain %s registered on Namecheap!", domain))
 	fmt.Println()
 	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
 	return nil
