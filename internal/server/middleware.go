@@ -2,6 +2,9 @@ package server
 
 import (
 	"context"
+	"crypto/sha256"
+	"fmt"
+	"net"
 	"net/http"
 	"strings"
 
@@ -105,4 +108,29 @@ func (s *Server) cors(next http.HandlerFunc) http.HandlerFunc {
 func getCustomerID(r *http.Request) string {
 	v, _ := r.Context().Value(customerIDKey).(string)
 	return v
+}
+
+// getClientIP extracts the real client IP from Fly-Client-IP, X-Forwarded-For,
+// or the connection's remote address.
+func getClientIP(r *http.Request) string {
+	// Fly.io sets this header with the true client IP
+	if ip := r.Header.Get("Fly-Client-IP"); ip != "" {
+		return ip
+	}
+	if xff := r.Header.Get("X-Forwarded-For"); xff != "" {
+		// First entry is the original client
+		if i := strings.IndexByte(xff, ','); i > 0 {
+			return strings.TrimSpace(xff[:i])
+		}
+		return strings.TrimSpace(xff)
+	}
+	host, _, _ := net.SplitHostPort(r.RemoteAddr)
+	return host
+}
+
+// hashIP returns a truncated SHA-256 hash of the IP for use as a searcher ID.
+// We hash to avoid storing raw IPs in the database.
+func hashIP(ip string) string {
+	h := sha256.Sum256([]byte(ip))
+	return fmt.Sprintf("ip_%x", h[:8])
 }

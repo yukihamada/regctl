@@ -155,21 +155,29 @@ func (s *Server) handleCheckDomain(w http.ResponseWriter, r *http.Request) {
 
 	domain := r.PathValue("domain")
 
-	// Identify the searcher (authenticated user or IP-based anon)
+	// Identify the searcher: authenticated customer ID or hashed IP
 	searcherID := getCustomerID(r)
-	if searcherID == "" {
-		searcherID = "anon"
+	isAuthenticated := searcherID != ""
+	if !isAuthenticated {
+		searcherID = hashIP(getClientIP(r))
 	}
 
-	// Rate limit: authenticated users over 1000/day get charged
-	if searcherID != "anon" && s.store != nil && s.billingEnabled {
+	// Rate limits (require store)
+	if s.store != nil {
 		dailyCount, err := s.store.GetDailyCheckCount(searcherID)
 		if err != nil {
 			log.Printf("WARN: get daily check count: %v", err)
-		} else if dailyCount >= 1000 {
+		} else if isAuthenticated && s.billingEnabled && dailyCount >= 1000 {
+			// Authenticated: charge $0.01/check over 1000/day
 			if !s.chargeBilling(w, r, billing.OpDomainCheckPaid, 0) {
 				return
 			}
+		} else if !isAuthenticated && dailyCount >= 100 {
+			// Anonymous: hard limit 100/day per IP
+			writeError(w, http.StatusTooManyRequests,
+				"rate limit exceeded (100 checks/day)",
+				"Sign up for an API key for higher limits: POST /v1/billing/signup")
+			return
 		}
 	}
 
@@ -548,7 +556,19 @@ func (s *Server) handleDiscovery(w http.ResponseWriter, r *http.Request) {
 
 // tryReferralCredit rewards the first searcher of a domain if they are
 // different from the registrant. The credit is 10% of the registration cost.
+// Requires at least 2 distinct authenticated searchers to prevent self-dealing
+// (e.g. searching with account A and registering with account B).
 func (s *Server) tryReferralCredit(domain, registrantID string, baseCostCents int64) {
+	// Anti-abuse: require at least 2 distinct authenticated searchers
+	distinctCount, err := s.store.CountDistinctSearchers(domain)
+	if err != nil {
+		log.Printf("WARN: count distinct searchers for %s: %v", domain, err)
+		return
+	}
+	if distinctCount < 2 {
+		return
+	}
+
 	firstSearcher, err := s.store.GetFirstSearcher(domain)
 	if err != nil {
 		log.Printf("WARN: get first searcher for %s: %v", domain, err)

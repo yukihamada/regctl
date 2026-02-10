@@ -151,6 +151,59 @@ func TestCleanupOldData(t *testing.T) {
 	}
 }
 
+func TestCountDistinctSearchers(t *testing.T) {
+	s := newTestStore(t)
+
+	// No searches
+	cnt, err := s.CountDistinctSearchers("test.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cnt != 0 {
+		t.Fatalf("want 0, got %d", cnt)
+	}
+
+	// IP-hashed anon users should be excluded
+	s.LogSearch("test.com", "ip_abc123", true)
+	cnt, err = s.CountDistinctSearchers("test.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cnt != 0 {
+		t.Fatalf("ip_ users should be excluded, got %d", cnt)
+	}
+
+	// One authenticated user
+	s.LogSearch("test.com", "cus_aaa", true)
+	cnt, err = s.CountDistinctSearchers("test.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cnt != 1 {
+		t.Fatalf("want 1, got %d", cnt)
+	}
+
+	// Same user again — still 1
+	s.LogSearch("test.com", "cus_aaa", true)
+	cnt, err = s.CountDistinctSearchers("test.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cnt != 1 {
+		t.Fatalf("want 1 (distinct), got %d", cnt)
+	}
+
+	// Second authenticated user
+	s.LogSearch("test.com", "cus_bbb", true)
+	cnt, err = s.CountDistinctSearchers("test.com")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cnt != 2 {
+		t.Fatalf("want 2, got %d", cnt)
+	}
+}
+
 func TestGetDiscoveryFeed_LimitCap(t *testing.T) {
 	s := newTestStore(t)
 

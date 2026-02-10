@@ -132,6 +132,7 @@ func (s *Store) GetDiscoveryFeed(limit, offset int) ([]DiscoveryEntry, error) {
 		   AND created_at >= ?
 		   AND created_at <= ?
 		 GROUP BY domain
+		 HAVING COUNT(DISTINCT searcher_id) >= 2
 		 ORDER BY cnt DESC
 		 LIMIT ? OFFSET ?`,
 		t48, t24, limit, offset,
@@ -197,6 +198,20 @@ func (s *Store) GetDailyCheckCount(searcherID string) (int, error) {
 	if err == sql.ErrNoRows {
 		return 0, nil
 	}
+	return count, err
+}
+
+// CountDistinctSearchers returns the number of distinct authenticated
+// searcher IDs (excluding IP-hashed anon users) who searched for a domain
+// where available=1.
+func (s *Store) CountDistinctSearchers(domain string) (int, error) {
+	var count int
+	err := s.db.QueryRow(
+		`SELECT COUNT(DISTINCT searcher_id) FROM search_log
+		 WHERE domain = ? AND available = 1
+		   AND searcher_id NOT LIKE 'ip_%'`,
+		domain,
+	).Scan(&count)
 	return count, err
 }
 
