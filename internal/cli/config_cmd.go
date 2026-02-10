@@ -13,13 +13,14 @@ var allConfigKeys = []string{
 	"api_key", "porkbun_api_key", "porkbun_secret_key",
 	"spaceship_api_key", "spaceship_api_secret",
 	"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id",
-	"regctl_api_key", "server_port",
+	"regctl_api_key", "regctl_billing_key", "regctl_api_url", "server_port",
 }
 
 var secretKeys = map[string]bool{
 	"api_key": true, "porkbun_api_key": true, "porkbun_secret_key": true,
 	"spaceship_api_key": true, "spaceship_api_secret": true,
-	"cloudflare_token": true, "cloudflare_global_key": true, "regctl_api_key": true,
+	"cloudflare_token": true, "cloudflare_global_key": true,
+	"regctl_api_key": true, "regctl_billing_key": true,
 }
 
 func newConfigCmd() *cobra.Command {
@@ -69,6 +70,8 @@ Valid keys:
   cloudflare_email      Cloudflare account email
   cloudflare_account_id Cloudflare account ID
   regctl_api_key        API key for the regctl HTTP server
+  regctl_billing_key    Billing API key (rk_live_... or rk_test_...)
+  regctl_api_url        API server URL (default: https://regctl-api.fly.dev)
   server_port           Port for the HTTP server (default: 8080)`,
 		Example: `  regctl config set porkbun_api_key pk1_xxxx
   regctl config set porkbun_secret_key sk1_xxxx
@@ -140,7 +143,7 @@ func newConfigShowCmd() *cobra.Command {
 				{"Porkbun", []string{"porkbun_api_key", "porkbun_secret_key"}},
 				{"Spaceship", []string{"spaceship_api_key", "spaceship_api_secret"}},
 				{"Cloudflare", []string{"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id"}},
-				{"General", []string{"regctl_api_key", "server_port"}},
+				{"General", []string{"regctl_api_key", "regctl_billing_key", "regctl_api_url", "server_port"}},
 			}
 
 			for _, s := range sections {
