@@ -661,16 +661,19 @@ heroInput.addEventListener('input',e=>{
   // Need at least "name.tld" format for availability check
   const isFullDomain=parts.length>=2&&parts[0].length>0;
 
+  // Debounce delay based on input length: 4 chars→10s, 5+→5s
+  const debounceMs=val.length>=5?5000:val.length>=4?10000:0;
+
   const match=D.find(d=>d.t===tld);
   if(!match){
     let html='<div class="sr-card"><span class="sr-na">No pricing data for <strong>.'+escHtml(tld)+'</strong>. Try searching in the table below.</span></div>';
-    if(isFullDomain){
+    if(isFullDomain&&debounceMs>0){
       html+='<div class="sr-avail loading" id="availResult">Checking availability...</div>';
     }
     heroResults.classList.add('active');
     heroResults.innerHTML=html;
-    if(isFullDomain){
-      checkTimer=setTimeout(function(){checkAvailability(val)},400);
+    if(isFullDomain&&debounceMs>0){
+      checkTimer=setTimeout(function(){checkAvailability(val)},debounceMs);
     }
     return;
   }
@@ -679,16 +682,16 @@ heroInput.addEventListener('input',e=>{
   let html=renderPrices(domainName,tld,match);
 
   // Add availability check area for full domains
-  if(isFullDomain){
+  if(isFullDomain&&debounceMs>0){
     html+='<div class="sr-avail loading" id="availResult">Checking availability...</div>';
   }
 
   heroResults.classList.add('active');
   heroResults.innerHTML=html;
 
-  // Debounced availability check
-  if(isFullDomain){
-    checkTimer=setTimeout(function(){checkAvailability(val)},400);
+  // Debounced availability check (4 chars→10s, 5+→5s)
+  if(isFullDomain&&debounceMs>0){
+    checkTimer=setTimeout(function(){checkAvailability(val)},debounceMs);
   }
 });
 
