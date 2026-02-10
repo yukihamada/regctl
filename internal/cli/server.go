@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/config"
+	"github.com/yukihamada/regctl/internal/email"
 	"github.com/yukihamada/regctl/internal/server"
 	"github.com/yukihamada/regctl/internal/storage"
 )
@@ -112,6 +113,22 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 				srvCfg.SigningSecret = signingSecret
 				srvCfg.WebhookSecret = webhookSecret
 			}
+
+			// Auth providers
+			resendKey := os.Getenv("RESEND_API_KEY")
+			if resendKey != "" {
+				srvCfg.EmailClient = email.NewClient(resendKey, "noreply@regctl.sh")
+			}
+			srvCfg.GitHubClientID = os.Getenv("GITHUB_CLIENT_ID")
+			srvCfg.GitHubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
+			srvCfg.GoogleClientID = os.Getenv("GOOGLE_CLIENT_ID")
+			srvCfg.GoogleClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
+			baseURL := os.Getenv("REGCTL_BASE_URL")
+			if baseURL == "" {
+				baseURL = "https://regctl-api.fly.dev"
+			}
+			srvCfg.BaseURL = baseURL
+			srvCfg.GoogleRedirectURI = baseURL + "/v1/auth/google/callback"
 
 			srv := server.New(srvCfg)
 

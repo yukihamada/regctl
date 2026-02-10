@@ -47,6 +47,15 @@ CREATE TABLE IF NOT EXISTS referral_credits (
     credit_cents  INTEGER NOT NULL,
     created_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
 );
+
+CREATE TABLE IF NOT EXISTS auth_codes (
+    email       TEXT NOT NULL,
+    code        TEXT NOT NULL,
+    expires_at  TEXT NOT NULL,
+    used        INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email, used);
 `
 
 // New opens (or creates) the SQLite database at dbPath and applies the schema.
@@ -228,4 +237,32 @@ func (s *Store) CleanupOldData() error {
 		return fmt.Errorf("cleanup daily_check_count: %w", err)
 	}
 	return nil
+}
+
+// StoreAuthCode saves a 6-digit verification code for the given email.
+func (s *Store) StoreAuthCode(email, code string, expiresAt time.Time) error {
+	_, err := s.db.Exec(
+		`INSERT INTO auth_codes (email, code, expires_at) VALUES (?, ?, ?)`,
+		email, code, expiresAt.UTC().Format("2006-01-02T15:04:05Z"),
+	)
+	if err != nil {
+		return fmt.Errorf("store auth code: %w", err)
+	}
+	return nil
+}
+
+// VerifyAuthCode checks whether a valid, unused code exists for the email.
+// On success it marks the code as used and returns true.
+func (s *Store) VerifyAuthCode(email, code string) (bool, error) {
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	res, err := s.db.Exec(
+		`UPDATE auth_codes SET used = 1
+		 WHERE email = ? AND code = ? AND used = 0 AND expires_at > ?`,
+		email, code, now,
+	)
+	if err != nil {
+		return false, fmt.Errorf("verify auth code: %w", err)
+	}
+	n, _ := res.RowsAffected()
+	return n > 0, nil
 }

@@ -2,6 +2,7 @@ package storage
 
 import (
 	"testing"
+	"time"
 )
 
 func newTestStore(t *testing.T) *Store {
@@ -215,5 +216,71 @@ func TestGetDiscoveryFeed_LimitCap(t *testing.T) {
 	// Just verify it doesn't error (empty feed is fine)
 	if entries == nil {
 		t.Fatal("should return non-nil slice")
+	}
+}
+
+func TestStoreAndVerifyAuthCode(t *testing.T) {
+	s := newTestStore(t)
+
+	email := "test@example.com"
+	code := "123456"
+	expiresAt := time.Now().UTC().Add(10 * time.Minute)
+
+	// Store code
+	if err := s.StoreAuthCode(email, code, expiresAt); err != nil {
+		t.Fatal(err)
+	}
+
+	// Verify with correct code
+	ok, err := s.VerifyAuthCode(email, code)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ok {
+		t.Fatal("expected verification to succeed")
+	}
+
+	// Second verification should fail (already used)
+	ok, err = s.VerifyAuthCode(email, code)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("expected used code to fail verification")
+	}
+}
+
+func TestVerifyAuthCode_WrongCode(t *testing.T) {
+	s := newTestStore(t)
+
+	email := "test@example.com"
+	if err := s.StoreAuthCode(email, "123456", time.Now().UTC().Add(10*time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+
+	ok, err := s.VerifyAuthCode(email, "999999")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("expected wrong code to fail")
+	}
+}
+
+func TestVerifyAuthCode_Expired(t *testing.T) {
+	s := newTestStore(t)
+
+	email := "test@example.com"
+	// Already expired
+	if err := s.StoreAuthCode(email, "123456", time.Now().UTC().Add(-1*time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+
+	ok, err := s.VerifyAuthCode(email, "123456")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ok {
+		t.Fatal("expected expired code to fail")
 	}
 }

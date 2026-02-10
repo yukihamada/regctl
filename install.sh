@@ -161,10 +161,18 @@ run_init() {
     echo ""
     echo "  ──────────────────────────────────────"
     echo ""
-    echo "  Next step: Run the setup wizard"
-    echo ""
-    echo "    regctl init"
-    echo ""
+
+    # Auto-run init if we have a TTY
+    if [ -t 0 ] && [ -t 1 ]; then
+        echo "  Starting setup wizard..."
+        echo ""
+        regctl init
+    else
+        echo "  Next step: Run the setup wizard"
+        echo ""
+        echo "    regctl init"
+        echo ""
+    fi
 }
 
 main

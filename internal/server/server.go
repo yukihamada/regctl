@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/yukihamada/regctl/internal/billing"
+	"github.com/yukihamada/regctl/internal/email"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 	"github.com/yukihamada/regctl/internal/storage"
 )
@@ -19,6 +20,15 @@ type Config struct {
 	WebhookSecret  string
 	StaticDir     string          // directory with static files (index.html, etc.)
 	Store         *storage.Store  // nil = search logging disabled
+
+	// Auth providers
+	EmailClient        *email.Client
+	GitHubClientID     string
+	GitHubClientSecret string
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURI  string
+	BaseURL            string // e.g. https://regctl-api.fly.dev
 }
 
 // Server is the HTTP API server.
@@ -32,20 +42,36 @@ type Server struct {
 	staticDir      string
 	store          *storage.Store
 	mux            *http.ServeMux
+
+	// Auth providers
+	emailClient        *email.Client
+	githubClientID     string
+	githubClientSecret string
+	googleClientID     string
+	googleClientSecret string
+	googleRedirectURI  string
+	baseURL            string
 }
 
 // New creates a new HTTP API server.
 func New(cfg Config) *Server {
 	s := &Server{
-		client:         cfg.Client,
-		apiKey:         cfg.APIKey,
-		billingClient:  cfg.BillingClient,
-		signingSecret:  cfg.SigningSecret,
-		webhookSecret:  cfg.WebhookSecret,
-		billingEnabled: cfg.BillingClient != nil,
-		staticDir:      cfg.StaticDir,
-		store:          cfg.Store,
-		mux:            http.NewServeMux(),
+		client:             cfg.Client,
+		apiKey:             cfg.APIKey,
+		billingClient:      cfg.BillingClient,
+		signingSecret:      cfg.SigningSecret,
+		webhookSecret:      cfg.WebhookSecret,
+		billingEnabled:     cfg.BillingClient != nil,
+		staticDir:          cfg.StaticDir,
+		store:              cfg.Store,
+		mux:                http.NewServeMux(),
+		emailClient:        cfg.EmailClient,
+		githubClientID:     cfg.GitHubClientID,
+		githubClientSecret: cfg.GitHubClientSecret,
+		googleClientID:     cfg.GoogleClientID,
+		googleClientSecret: cfg.GoogleClientSecret,
+		googleRedirectURI:  cfg.GoogleRedirectURI,
+		baseURL:            cfg.BaseURL,
 	}
 	s.routes()
 	return s
@@ -98,6 +124,33 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /v1/dns/{domain}", s.auth(s.handleAddDNS))
 	s.mux.HandleFunc("PUT /v1/dns/{domain}/{id}", s.auth(s.handleUpdateDNSRecord))
 	s.mux.HandleFunc("DELETE /v1/dns/{domain}/{id}", s.auth(s.handleDeleteDNS))
+
+	// Auth routes (no auth required — these create auth)
+	authEmailHandler := s.cors(s.handleEmailAuth)
+	s.mux.HandleFunc("POST /v1/auth/email", authEmailHandler)
+	s.mux.HandleFunc("OPTIONS /v1/auth/email", authEmailHandler)
+
+	authVerifyHandler := s.cors(s.handleVerify)
+	s.mux.HandleFunc("POST /v1/auth/verify", authVerifyHandler)
+	s.mux.HandleFunc("OPTIONS /v1/auth/verify", authVerifyHandler)
+
+	ghDeviceHandler := s.cors(s.handleGitHubDevice)
+	s.mux.HandleFunc("POST /v1/auth/github/device", ghDeviceHandler)
+	s.mux.HandleFunc("OPTIONS /v1/auth/github/device", ghDeviceHandler)
+
+	ghPollHandler := s.cors(s.handleGitHubPoll)
+	s.mux.HandleFunc("POST /v1/auth/github/poll", ghPollHandler)
+	s.mux.HandleFunc("OPTIONS /v1/auth/github/poll", ghPollHandler)
+
+	googleStartHandler := s.cors(s.handleGoogleStart)
+	s.mux.HandleFunc("POST /v1/auth/google/start", googleStartHandler)
+	s.mux.HandleFunc("OPTIONS /v1/auth/google/start", googleStartHandler)
+
+	s.mux.HandleFunc("GET /v1/auth/google/callback", s.handleGoogleCallback)
+
+	// GitHub web OAuth (redirect flow for web clients)
+	s.mux.HandleFunc("GET /v1/auth/github/web", s.handleGitHubWebRedirect)
+	s.mux.HandleFunc("GET /v1/auth/github/callback", s.handleGitHubCallback)
 
 	// Billing routes (no auth for signup/webhook, auth for topup/balance)
 	if s.billingEnabled {

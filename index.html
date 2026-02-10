@@ -216,6 +216,18 @@ tr:hover{background:rgba(88,166,255,.04)}
 .signup-pricing table{width:100%;border-collapse:collapse;margin-top:8px}
 .signup-pricing td{padding:4px 8px;border-bottom:1px solid var(--border)}
 .signup-pricing td:last-child{text-align:right;color:var(--text)}
+.auth-tabs{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.auth-tab{flex:1;padding:10px 8px;background:var(--bg);border:none;color:var(--muted);font-size:.85rem;cursor:pointer;transition:all .2s;font-weight:600;border-right:1px solid var(--border);font-family:inherit}
+.auth-tab:last-child{border-right:none}
+.auth-tab:hover{color:var(--text)}
+.auth-tab.active{background:var(--green-bg);color:var(--green)}
+.auth-panel{display:none}
+.auth-panel.active{display:block}
+.auth-code-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:1.2rem;letter-spacing:8px;text-align:center;outline:none;margin:12px 0;font-family:'SF Mono','Fira Code',monospace}
+.auth-code-input:focus{border-color:var(--green)}
+.oauth-btn{width:100%;padding:12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:1rem;font-weight:600;cursor:pointer;transition:all .2s;margin-bottom:8px;font-family:inherit}
+.oauth-btn:hover{border-color:var(--green);background:var(--green-bg)}
+.auth-status{padding:12px;background:var(--bg);border-radius:8px;color:var(--muted);font-size:.9rem;text-align:center;margin-top:12px}
 
 /* Language Toggle */
 .lang-toggle{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:4px 10px;color:var(--muted);font-size:.8rem;cursor:pointer;transition:all .2s;font-family:inherit}
@@ -456,25 +468,63 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 </section>
 
 <section id="signup" class="signup-section container" aria-label="Sign up for API access">
-<h2 data-i18n-en>API Access</h2>
-<h2 data-i18n-ja>API アクセス</h2>
-<p data-i18n-en>Get your API key and manage domains programmatically. 1 point = $1 USD.</p>
-<p data-i18n-ja>APIキーを取得してプログラムからドメインを管理。1ポイント = $1 USD。</p>
+<h2 data-i18n-en>Sign In / Sign Up</h2>
+<h2 data-i18n-ja>ログイン / 新規登録</h2>
+<p data-i18n-en>Get your API key and manage domains programmatically.</p>
+<p data-i18n-ja>APIキーを取得してプログラムからドメインを管理。</p>
 
 <div class="signup-box">
-  <label for="signupEmail">Email address</label>
-  <input type="email" id="signupEmail" placeholder="you@example.com" required>
-
-  <label><span data-i18n-en>Initial credit</span><span data-i18n-ja>初回クレジット</span></label>
-  <div class="amount-options">
-    <button class="amount-btn" data-amount="1000">$10</button>
-    <button class="amount-btn" data-amount="2500">$25</button>
-    <button class="amount-btn active" data-amount="5000">$50</button>
-    <button class="amount-btn" data-amount="10000">$100</button>
+  <div class="auth-tabs">
+    <button class="auth-tab active" data-tab="email">Email</button>
+    <button class="auth-tab" data-tab="github">GitHub</button>
+    <button class="auth-tab" data-tab="google">Google</button>
+    <button class="auth-tab" data-tab="stripe">Stripe ($)</button>
   </div>
 
-  <button class="signup-submit" id="signupBtn">Sign Up with Stripe</button>
+  <!-- Email Auth -->
+  <div class="auth-panel active" id="panel-email">
+    <label for="authEmail">Email address</label>
+    <input type="email" id="authEmail" placeholder="you@example.com" required>
+    <button class="signup-submit" id="sendCodeBtn">Send Verification Code</button>
+    <div id="codeSection" style="display:none">
+      <label>Enter 6-digit code</label>
+      <input type="text" id="authCode" class="auth-code-input" maxlength="6" placeholder="000000">
+      <button class="signup-submit" id="verifyCodeBtn">Verify</button>
+    </div>
+    <div class="auth-status" id="emailStatus" style="display:none"></div>
+  </div>
 
+  <!-- GitHub Auth -->
+  <div class="auth-panel" id="panel-github">
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:16px" data-i18n-en>Sign in with your GitHub account.</p>
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:16px" data-i18n-ja>GitHubアカウントでログインします。</p>
+    <button class="oauth-btn" id="githubBtn">Continue with GitHub</button>
+    <div class="auth-status" id="githubStatus" style="display:none"></div>
+  </div>
+
+  <!-- Google Auth -->
+  <div class="auth-panel" id="panel-google">
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:16px" data-i18n-en>Sign in with your Google account.</p>
+    <p style="color:var(--muted);font-size:.9rem;margin-bottom:16px" data-i18n-ja>Googleアカウントでログインします。</p>
+    <button class="oauth-btn" id="googleBtn">Continue with Google</button>
+    <div class="auth-status" id="googleStatus" style="display:none"></div>
+  </div>
+
+  <!-- Stripe (existing flow) -->
+  <div class="auth-panel" id="panel-stripe">
+    <label for="signupEmail">Email address</label>
+    <input type="email" id="signupEmail" placeholder="you@example.com" required>
+    <label><span data-i18n-en>Initial credit</span><span data-i18n-ja>初回クレジット</span></label>
+    <div class="amount-options">
+      <button class="amount-btn" data-amount="1000">$10</button>
+      <button class="amount-btn" data-amount="2500">$25</button>
+      <button class="amount-btn active" data-amount="5000">$50</button>
+      <button class="amount-btn" data-amount="10000">$100</button>
+    </div>
+    <button class="signup-submit" id="signupBtn">Sign Up with Stripe</button>
+  </div>
+
+  <!-- Shared result display -->
   <div class="signup-result" id="signupResult">
     <p style="color:var(--green);font-weight:600">Your API key:</p>
     <div class="apikey-box" id="apikeyDisplay" title="Click to copy"></div>
@@ -856,16 +906,162 @@ document.querySelectorAll('nav a[href^="#"]').forEach(function(a){
   });
 });
 
-// Signup flow
+// Auth tabs
 (function(){
-  const API_BASE='https://regctl-api.fly.dev';
-  const amountBtns=document.querySelectorAll('.amount-btn');
-  const signupBtn=document.getElementById('signupBtn');
-  const emailInput=document.getElementById('signupEmail');
-  const resultDiv=document.getElementById('signupResult');
-  const apikeyDisplay=document.getElementById('apikeyDisplay');
-  const cmdCopy=document.getElementById('cmdCopy');
-  let selectedAmount=5000;
+  var tabs=document.querySelectorAll('.auth-tab');
+  tabs.forEach(function(tab){
+    tab.addEventListener('click',function(){
+      tabs.forEach(function(t){t.classList.remove('active')});
+      document.querySelectorAll('.auth-panel').forEach(function(p){p.classList.remove('active')});
+      tab.classList.add('active');
+      document.getElementById('panel-'+tab.dataset.tab).classList.add('active');
+    });
+  });
+})();
+
+// Shared: show API key result
+function showAPIKey(key){
+  var resultDiv=document.getElementById('signupResult');
+  var apikeyDisplay=document.getElementById('apikeyDisplay');
+  var cmdCopy=document.getElementById('cmdCopy');
+  localStorage.setItem('regctl_billing_key',key);
+  apikeyDisplay.textContent=key;
+  cmdCopy.textContent='export REGCTL_BILLING_KEY='+key;
+  resultDiv.classList.add('active');
+  document.getElementById('signup').scrollIntoView({behavior:'smooth'});
+  apikeyDisplay.addEventListener('click',function(){
+    navigator.clipboard.writeText(key);
+    apikeyDisplay.style.borderColor='var(--blue)';
+    setTimeout(function(){apikeyDisplay.style.borderColor='var(--green)'},1000);
+  });
+  cmdCopy.addEventListener('click',function(){
+    navigator.clipboard.writeText('export REGCTL_BILLING_KEY='+key);
+    cmdCopy.style.borderColor='var(--green)';
+    setTimeout(function(){cmdCopy.style.borderColor='var(--border)'},1000);
+  });
+}
+
+// Email auth flow
+(function(){
+  var API_BASE='https://regctl-api.fly.dev';
+  var sendBtn=document.getElementById('sendCodeBtn');
+  var verifyBtn=document.getElementById('verifyCodeBtn');
+  var emailInput=document.getElementById('authEmail');
+  var codeSection=document.getElementById('codeSection');
+  var codeInput=document.getElementById('authCode');
+  var status=document.getElementById('emailStatus');
+
+  sendBtn.addEventListener('click',function(){
+    var email=emailInput.value.trim();
+    if(!email||!email.includes('@')){emailInput.focus();return;}
+    sendBtn.disabled=true;
+    sendBtn.textContent='Sending...';
+    fetch(API_BASE+'/v1/auth/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})})
+    .then(function(r){return r.json()})
+    .then(function(res){
+      if(res.ok){
+        codeSection.style.display='block';
+        status.style.display='block';
+        status.textContent='Code sent! Check your inbox.';
+        status.style.color='var(--green)';
+        codeInput.focus();
+      }else{
+        status.style.display='block';
+        status.textContent=res.error||'Failed to send code.';
+        status.style.color='var(--red,#ef4444)';
+      }
+      sendBtn.disabled=false;
+      sendBtn.textContent='Send Verification Code';
+    })
+    .catch(function(){
+      status.style.display='block';
+      status.textContent='Network error.';
+      status.style.color='var(--red,#ef4444)';
+      sendBtn.disabled=false;
+      sendBtn.textContent='Send Verification Code';
+    });
+  });
+
+  verifyBtn.addEventListener('click',function(){
+    var email=emailInput.value.trim();
+    var code=codeInput.value.trim();
+    if(!code||code.length!==6){codeInput.focus();return;}
+    verifyBtn.disabled=true;
+    verifyBtn.textContent='Verifying...';
+    fetch(API_BASE+'/v1/auth/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,code:code})})
+    .then(function(r){return r.json()})
+    .then(function(res){
+      if(res.ok&&res.data&&res.data.api_key){
+        showAPIKey(res.data.api_key);
+        status.style.display='block';
+        status.textContent='Authenticated as '+res.data.email;
+        status.style.color='var(--green)';
+      }else{
+        status.style.display='block';
+        status.textContent=res.error||'Invalid code.';
+        status.style.color='var(--red,#ef4444)';
+      }
+      verifyBtn.disabled=false;
+      verifyBtn.textContent='Verify';
+    })
+    .catch(function(){
+      status.style.display='block';
+      status.textContent='Network error.';
+      status.style.color='var(--red,#ef4444)';
+      verifyBtn.disabled=false;
+      verifyBtn.textContent='Verify';
+    });
+  });
+})();
+
+// GitHub auth (web redirect flow)
+(function(){
+  var API_BASE='https://regctl-api.fly.dev';
+  document.getElementById('githubBtn').addEventListener('click',function(){
+    window.location.href=API_BASE+'/v1/auth/github/web?redirect_uri='+encodeURIComponent(window.location.origin+window.location.pathname);
+  });
+  // Check for return from GitHub OAuth
+  var params=new URLSearchParams(window.location.search);
+  var apiKey=params.get('api_key');
+  var email=params.get('email');
+  if(apiKey){
+    showAPIKey(apiKey);
+    var ghStatus=document.getElementById('githubStatus');
+    if(email){ghStatus.style.display='block';ghStatus.textContent='Authenticated as '+email;ghStatus.style.color='var(--green)';}
+    // Clean URL
+    window.history.replaceState({},'',window.location.pathname);
+  }
+})();
+
+// Google auth
+(function(){
+  var API_BASE='https://regctl-api.fly.dev';
+  document.getElementById('googleBtn').addEventListener('click',function(){
+    var btn=this;
+    btn.disabled=true;
+    btn.textContent='Redirecting...';
+    fetch(API_BASE+'/v1/auth/google/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({redirect_uri:API_BASE+'/v1/auth/google/callback?local_redirect='+encodeURIComponent(window.location.origin+window.location.pathname)})})
+    .then(function(r){return r.json()})
+    .then(function(res){
+      if(res.ok&&res.data&&res.data.auth_url){
+        window.location.href=res.data.auth_url;
+      }else{
+        var gs=document.getElementById('googleStatus');
+        gs.style.display='block';gs.textContent=res.error||'Failed.';gs.style.color='var(--red,#ef4444)';
+        btn.disabled=false;btn.textContent='Continue with Google';
+      }
+    })
+    .catch(function(){btn.disabled=false;btn.textContent='Continue with Google';});
+  });
+})();
+
+// Stripe signup flow (existing)
+(function(){
+  var API_BASE='https://regctl-api.fly.dev';
+  var amountBtns=document.querySelectorAll('.amount-btn');
+  var signupBtn=document.getElementById('signupBtn');
+  var emailInput=document.getElementById('signupEmail');
+  var selectedAmount=5000;
 
   amountBtns.forEach(function(btn){
     btn.addEventListener('click',function(){
@@ -876,33 +1072,22 @@ document.querySelectorAll('nav a[href^="#"]').forEach(function(a){
   });
 
   signupBtn.addEventListener('click',function(){
-    const email=emailInput.value.trim();
+    var email=emailInput.value.trim();
     if(!email||!email.includes('@')){emailInput.focus();return;}
     signupBtn.disabled=true;
     signupBtn.textContent='Redirecting...';
-
-    fetch(API_BASE+'/v1/billing/signup',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({email:email,amount_cents:selectedAmount})
-    })
+    fetch(API_BASE+'/v1/billing/signup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,amount_cents:selectedAmount})})
     .then(function(r){return r.json()})
     .then(function(res){
       if(res.ok&&res.data&&res.data.checkout_url){
-        // Store session_id for return
         localStorage.setItem('regctl_session_id',res.data.session_id);
         window.location.href=res.data.checkout_url;
       }else{
-        alert(res.error||'Signup failed. Please try again.');
-        signupBtn.disabled=false;
-        signupBtn.textContent='Sign Up with Stripe';
+        alert(res.error||'Signup failed.');
+        signupBtn.disabled=false;signupBtn.textContent='Sign Up with Stripe';
       }
     })
-    .catch(function(){
-      alert('Network error. Please try again.');
-      signupBtn.disabled=false;
-      signupBtn.textContent='Sign Up with Stripe';
-    });
+    .catch(function(){alert('Network error.');signupBtn.disabled=false;signupBtn.textContent='Sign Up with Stripe';});
   });
 
   // Check for return from Stripe Checkout
@@ -913,24 +1098,8 @@ document.querySelectorAll('nav a[href^="#"]').forEach(function(a){
     .then(function(r){return r.json()})
     .then(function(res){
       if(res.ok&&res.data&&res.data.api_key){
-        var key=res.data.api_key;
-        localStorage.setItem('regctl_billing_key',key);
-        apikeyDisplay.textContent=key;
-        cmdCopy.textContent='export REGCTL_BILLING_KEY='+key;
-        resultDiv.classList.add('active');
+        showAPIKey(res.data.api_key);
         localStorage.removeItem('regctl_session_id');
-        document.getElementById('signup').scrollIntoView({behavior:'smooth'});
-
-        apikeyDisplay.addEventListener('click',function(){
-          navigator.clipboard.writeText(key);
-          apikeyDisplay.style.borderColor='var(--blue)';
-          setTimeout(function(){apikeyDisplay.style.borderColor='var(--green)'},1000);
-        });
-        cmdCopy.addEventListener('click',function(){
-          navigator.clipboard.writeText('export REGCTL_BILLING_KEY='+key);
-          cmdCopy.style.borderColor='var(--green)';
-          setTimeout(function(){cmdCopy.style.borderColor='var(--border)'},1000);
-        });
       }
     })
     .catch(function(){});

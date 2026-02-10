@@ -116,6 +116,22 @@ func CreateCustomer(email string) (*stripe.Customer, error) {
 	return c, nil
 }
 
+// FindOrCreateCustomer looks up an existing Stripe customer by email,
+// or creates a new one if none exists. Returns the customer.
+func FindOrCreateCustomer(email string) (*stripe.Customer, error) {
+	params := &stripe.CustomerListParams{}
+	params.Filters.AddFilter("email", "", email)
+	params.Filters.AddFilter("limit", "", "1")
+	iter := customer.List(params)
+	if iter.Next() {
+		return iter.Customer(), nil
+	}
+	if err := iter.Err(); err != nil {
+		return nil, fmt.Errorf("list customers: %w", err)
+	}
+	return CreateCustomer(email)
+}
+
 // CreateTopUpSession creates a Stripe Checkout session for topping up balance.
 func (c *Client) CreateTopUpSession(customerID string, amountCents int64) (*stripe.CheckoutSession, error) {
 	if amountCents < int64(MinTopUpCents) {

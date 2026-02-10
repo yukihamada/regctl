@@ -88,3 +88,82 @@ func (c *APIClient) CreateTopUp(amountCents int64) (json.RawMessage, error) {
 	}
 	return r.Data, nil
 }
+
+// RequestEmailAuth sends a verification code to the given email.
+func (c *APIClient) RequestEmailAuth(email string) error {
+	body := fmt.Sprintf(`{"email":%q}`, email)
+	_, err := c.do("POST", "/v1/auth/email", body)
+	return err
+}
+
+// VerifyEmailCode verifies the 6-digit code and returns (api_key, email, error).
+func (c *APIClient) VerifyEmailCode(email, code string) (string, string, error) {
+	body := fmt.Sprintf(`{"email":%q,"code":%q}`, email, code)
+	r, err := c.do("POST", "/v1/auth/verify", body)
+	if err != nil {
+		return "", "", err
+	}
+	var data struct {
+		APIKey string `json:"api_key"`
+		Email  string `json:"email"`
+	}
+	json.Unmarshal(r.Data, &data)
+	return data.APIKey, data.Email, nil
+}
+
+// GitHubDeviceResponse holds the GitHub device flow initial response.
+type GitHubDeviceResponse struct {
+	DeviceCode      string `json:"device_code"`
+	UserCode        string `json:"user_code"`
+	VerificationURI string `json:"verification_uri"`
+	Interval        int    `json:"interval"`
+}
+
+// StartGitHubDevice initiates the GitHub device authentication flow.
+func (c *APIClient) StartGitHubDevice() (*GitHubDeviceResponse, error) {
+	r, err := c.do("POST", "/v1/auth/github/device", "")
+	if err != nil {
+		return nil, err
+	}
+	var resp GitHubDeviceResponse
+	json.Unmarshal(r.Data, &resp)
+	return &resp, nil
+}
+
+// PollGitHubDevice polls for the GitHub device flow result.
+// Returns ("", "", nil) if still pending.
+func (c *APIClient) PollGitHubDevice(deviceCode string) (string, string, error) {
+	body := fmt.Sprintf(`{"device_code":%q}`, deviceCode)
+	r, err := c.do("POST", "/v1/auth/github/poll", body)
+	if err != nil {
+		return "", "", err
+	}
+	var data struct {
+		APIKey string `json:"api_key"`
+		Email  string `json:"email"`
+		Status string `json:"status"`
+	}
+	json.Unmarshal(r.Data, &data)
+	if data.APIKey == "" {
+		return "", "", nil // still pending
+	}
+	return data.APIKey, data.Email, nil
+}
+
+// GoogleAuthResponse holds the Google OAuth start response.
+type GoogleAuthResponse struct {
+	AuthURL string `json:"auth_url"`
+	State   string `json:"state"`
+}
+
+// StartGoogleAuth initiates the Google OAuth flow.
+func (c *APIClient) StartGoogleAuth(redirectURI string) (*GoogleAuthResponse, error) {
+	body := fmt.Sprintf(`{"redirect_uri":%q}`, redirectURI)
+	r, err := c.do("POST", "/v1/auth/google/start", body)
+	if err != nil {
+		return nil, err
+	}
+	var resp GoogleAuthResponse
+	json.Unmarshal(r.Data, &resp)
+	return &resp, nil
+}
