@@ -65,7 +65,7 @@ func (c *APIClient) do(method, path string, body string) (*apiResult, error) {
 		if result.Hint != "" {
 			msg += " (" + result.Hint + ")"
 		}
-		return nil, fmt.Errorf(msg)
+		return nil, fmt.Errorf("%s", msg)
 	}
 	return &result, nil
 }

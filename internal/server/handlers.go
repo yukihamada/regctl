@@ -89,6 +89,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 		{"method": "PUT", "path": "/v1/dns/{domain}/{id}", "description": "Update a DNS record"},
 		{"method": "DELETE", "path": "/v1/dns/{domain}/{id}", "description": "Delete a DNS record"},
 		{"method": "GET", "path": "/v1/rdap/{domain}", "description": "RDAP/WHOIS lookup (no auth)"},
+		{"method": "GET", "path": "/v1/discovery", "description": "Discovery feed of available domains (no auth)"},
 	}
 
 	if s.billingEnabled {
@@ -151,13 +152,40 @@ func (s *Server) handleCheckDomain(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
-	// Domain check is free — no billing charge
+
 	domain := r.PathValue("domain")
+
+	// Identify the searcher (authenticated user or IP-based anon)
+	searcherID := getCustomerID(r)
+	if searcherID == "" {
+		searcherID = "anon"
+	}
+
+	// Rate limit: authenticated users over 1000/day get charged
+	if searcherID != "anon" && s.store != nil && s.billingEnabled {
+		dailyCount, err := s.store.GetDailyCheckCount(searcherID)
+		if err != nil {
+			log.Printf("WARN: get daily check count: %v", err)
+		} else if dailyCount >= 1000 {
+			if !s.chargeBilling(w, r, billing.OpDomainCheckPaid, 0) {
+				return
+			}
+		}
+	}
+
 	avail, err := s.client.CheckAvailability(domain)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, err.Error(), "")
 		return
 	}
+
+	// Log the search (best-effort)
+	if s.store != nil {
+		if _, err := s.store.LogSearch(domain, searcherID, avail.Available); err != nil {
+			log.Printf("WARN: log search: %v", err)
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"domain":    domain,
 		"available": avail.Available,
@@ -215,6 +243,12 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 			"Check availability first: GET /v1/domains/check/"+req.Domain)
 		return
 	}
+
+	// Referral credit: reward the first searcher if different from registrant
+	if s.store != nil && s.billingEnabled && customerID != "" {
+		s.tryReferralCredit(req.Domain, customerID, baseCostCents)
+	}
+
 	writeJSON(w, http.StatusCreated, map[string]string{
 		"domain": req.Domain,
 		"status": "registered",
@@ -475,6 +509,74 @@ func (s *Server) handleBulkCheck(w http.ResponseWriter, r *http.Request) {
 		"results": results,
 		"count":   len(results),
 	})
+}
+
+func (s *Server) handleDiscovery(w http.ResponseWriter, r *http.Request) {
+	if s.store == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"domains": []interface{}{},
+			"count":   0,
+		})
+		return
+	}
+
+	limit := 50
+	offset := 0
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			limit = n
+		}
+	}
+	if v := r.URL.Query().Get("offset"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			offset = n
+		}
+	}
+
+	entries, err := s.store.GetDiscoveryFeed(limit, offset)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "failed to fetch discovery feed", "")
+		log.Printf("ERROR: discovery feed: %v", err)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"domains": entries,
+		"count":   len(entries),
+	})
+}
+
+// tryReferralCredit rewards the first searcher of a domain if they are
+// different from the registrant. The credit is 10% of the registration cost.
+func (s *Server) tryReferralCredit(domain, registrantID string, baseCostCents int64) {
+	firstSearcher, err := s.store.GetFirstSearcher(domain)
+	if err != nil {
+		log.Printf("WARN: get first searcher for %s: %v", domain, err)
+		return
+	}
+	if firstSearcher == "" || firstSearcher == registrantID {
+		return
+	}
+
+	totalCost := billing.CalculateCostCents(billing.OpDomainRegister, baseCostCents)
+	creditCents := totalCost / 10 // 10% of registration cost
+	if creditCents <= 0 {
+		return
+	}
+
+	inserted, err := s.store.RecordReferralCredit(domain, firstSearcher, registrantID, creditCents)
+	if err != nil {
+		log.Printf("WARN: record referral credit for %s: %v", domain, err)
+		return
+	}
+	if !inserted {
+		return // already credited
+	}
+
+	desc := fmt.Sprintf("Referral: %s registered by %s", domain, registrantID)
+	if err := billing.AddBalance(firstSearcher, creditCents, desc); err != nil {
+		log.Printf("WARN: add referral balance for %s: %v", firstSearcher, err)
+	}
 }
 
 func (s *Server) handleRDAP(w http.ResponseWriter, r *http.Request) {

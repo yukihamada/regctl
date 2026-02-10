@@ -7,6 +7,7 @@ import (
 
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
+	"github.com/yukihamada/regctl/internal/storage"
 )
 
 // Config holds all configuration for the HTTP API server.
@@ -16,7 +17,8 @@ type Config struct {
 	BillingClient *billing.Client // nil = billing disabled
 	SigningSecret  string
 	WebhookSecret  string
-	StaticDir     string         // directory with static files (index.html, etc.)
+	StaticDir     string          // directory with static files (index.html, etc.)
+	Store         *storage.Store  // nil = search logging disabled
 }
 
 // Server is the HTTP API server.
@@ -28,6 +30,7 @@ type Server struct {
 	webhookSecret  string
 	billingEnabled bool
 	staticDir      string
+	store          *storage.Store
 	mux            *http.ServeMux
 }
 
@@ -41,6 +44,7 @@ func New(cfg Config) *Server {
 		webhookSecret:  cfg.WebhookSecret,
 		billingEnabled: cfg.BillingClient != nil,
 		staticDir:      cfg.StaticDir,
+		store:          cfg.Store,
 		mux:            http.NewServeMux(),
 	}
 	s.routes()
@@ -64,8 +68,8 @@ func (s *Server) routes() {
 	// Health check (no auth)
 	s.mux.HandleFunc("GET /health", s.handleHealth)
 
-	// Domain availability check (no auth, free, CORS enabled)
-	checkHandler := s.cors(s.handleCheckDomain)
+	// Domain availability check (optional auth for rate-limit tracking, CORS enabled)
+	checkHandler := s.cors(s.optionalAuth(s.handleCheckDomain))
 	s.mux.HandleFunc("GET /v1/domains/check/{domain}", checkHandler)
 	s.mux.HandleFunc("OPTIONS /v1/domains/check/{domain}", checkHandler)
 
@@ -78,6 +82,11 @@ func (s *Server) routes() {
 	rdapHandler := s.cors(s.handleRDAP)
 	s.mux.HandleFunc("GET /v1/rdap/{domain}", rdapHandler)
 	s.mux.HandleFunc("OPTIONS /v1/rdap/{domain}", rdapHandler)
+
+	// Discovery feed (no auth, CORS enabled)
+	discoveryHandler := s.cors(s.handleDiscovery)
+	s.mux.HandleFunc("GET /v1/discovery", discoveryHandler)
+	s.mux.HandleFunc("OPTIONS /v1/discovery", discoveryHandler)
 
 	// Authenticated API routes
 	s.mux.HandleFunc("GET /v1/domains", s.auth(s.handleListDomains))

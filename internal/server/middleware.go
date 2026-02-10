@@ -63,6 +63,29 @@ func (s *Server) auth(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
+// optionalAuth extracts the customer ID from the Authorization header if
+// present, but does not reject unauthenticated requests. The customer ID
+// (or empty string) is stored in the request context.
+func (s *Server) optionalAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader != "" {
+			parts := strings.SplitN(authHeader, " ", 2)
+			if len(parts) == 2 && parts[0] == "Bearer" {
+				token := parts[1]
+				if billing.IsBillingKey(token) && s.billingEnabled {
+					if customerID, err := billing.ValidateAPIKey(token, s.signingSecret); err == nil {
+						ctx := context.WithValue(r.Context(), customerIDKey, customerID)
+						next(w, r.WithContext(ctx))
+						return
+					}
+				}
+			}
+		}
+		next(w, r)
+	}
+}
+
 // cors wraps a handler with CORS headers for public endpoints.
 func (s *Server) cors(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {

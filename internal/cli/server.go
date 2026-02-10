@@ -2,13 +2,16 @@ package cli
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/config"
 	"github.com/yukihamada/regctl/internal/server"
+	"github.com/yukihamada/regctl/internal/storage"
 )
 
 func newServerCmd() *cobra.Command {
@@ -62,10 +65,33 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 				}
 			}
 
+			// Initialize SQLite store for search logging
+			dbPath := os.Getenv("REGCTL_DB_PATH")
+			if dbPath == "" {
+				dbPath = "/data/regctl.db"
+			}
+			var store *storage.Store
+			store, err := storage.New(dbPath)
+			if err != nil {
+				log.Printf("WARN: failed to open database at %s: %v (search logging disabled)", dbPath, err)
+			} else {
+				// Start background cleanup goroutine
+				go func() {
+					ticker := time.NewTicker(6 * time.Hour)
+					defer ticker.Stop()
+					for range ticker.C {
+						if err := store.CleanupOldData(); err != nil {
+							log.Printf("WARN: cleanup: %v", err)
+						}
+					}
+				}()
+			}
+
 			srvCfg := server.Config{
 				Client:    client,
 				APIKey:    cfg.RegctlKey,
 				StaticDir: staticDir,
+				Store:     store,
 			}
 
 			// Initialize billing if Stripe env vars are set
@@ -103,6 +129,9 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			}
 			if srvCfg.BillingClient != nil {
 				color.Green("  Billing: enabled (Stripe)")
+			}
+			if store != nil {
+				color.Green("  Store:   enabled (%s)", dbPath)
 			}
 			fmt.Println()
 			fmt.Println("  Press Ctrl+C to stop.")
