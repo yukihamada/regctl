@@ -11,6 +11,7 @@ import (
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/config"
 	"github.com/yukihamada/regctl/internal/email"
+	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/server"
 	"github.com/yukihamada/regctl/internal/storage"
 )
@@ -136,6 +137,16 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			srvCfg.FlyRegion = os.Getenv("FLY_REGION")
 			srvCfg.InternalSecret = os.Getenv("REGCTL_INTERNAL_SECRET")
 
+			// Multi-registrar support
+			var registrars []provider.Registrar
+			if spaceshipClient != nil {
+				registrars = append(registrars, spaceshipClient)
+			}
+			if porkbunClient != nil {
+				registrars = append(registrars, porkbunClient)
+			}
+			srvCfg.Registrars = registrars
+
 			srv := server.New(srvCfg)
 
 			fmt.Println()
@@ -155,6 +166,13 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			}
 			if store != nil {
 				color.Green("  Store:   enabled (%s)", dbPath)
+			}
+			if len(registrars) > 0 {
+				names := make([]string, len(registrars))
+				for i, r := range registrars {
+					names[i] = r.Name()
+				}
+				color.Green("  Registrars: %s", fmt.Sprintf("%v", names))
 			}
 			fmt.Println()
 			fmt.Println("  Press Ctrl+C to stop.")

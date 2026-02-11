@@ -8,6 +8,7 @@ import (
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/email"
 	"github.com/yukihamada/regctl/internal/flymachines"
+	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 	"github.com/yukihamada/regctl/internal/storage"
 )
@@ -36,6 +37,9 @@ type Config struct {
 	FlyAppName     string
 	FlyRegion      string
 	InternalSecret string
+
+	// Multi-registrar support
+	Registrars []provider.Registrar
 }
 
 // Server is the HTTP API server.
@@ -63,6 +67,9 @@ type Server struct {
 	flyClient      *flymachines.Client
 	flyAppName     string
 	internalSecret string
+
+	// Multi-registrar
+	registrars []provider.Registrar
 }
 
 // New creates a new HTTP API server.
@@ -86,6 +93,7 @@ func New(cfg Config) *Server {
 		baseURL:            cfg.BaseURL,
 		flyAppName:         cfg.FlyAppName,
 		internalSecret:     cfg.InternalSecret,
+		registrars:         cfg.Registrars,
 	}
 	if cfg.FlyAPIToken != "" && cfg.FlyAppName != "" {
 		region := cfg.FlyRegion

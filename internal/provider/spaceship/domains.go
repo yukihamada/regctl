@@ -7,9 +7,18 @@ import (
 	"github.com/yukihamada/regctl/internal/provider"
 )
 
+type availResponseDomain struct {
+	Domain         string `json:"domain"`
+	Result         string `json:"result"` // "available", "unavailable", "unknown"
+	PremiumPricing []struct {
+		Operation string  `json:"operation"`
+		Price     float64 `json:"price"`
+		Currency  string  `json:"currency"`
+	} `json:"premiumPricing"`
+}
+
 type availResponse struct {
-	Available bool   `json:"available"`
-	Domain    string `json:"domain"`
+	Domains []availResponseDomain `json:"domains"`
 }
 
 type domainItem struct {
@@ -33,16 +42,44 @@ type asyncStatus struct {
 
 // CheckAvailability checks if a domain is available on Spaceship.
 func (c *Client) CheckAvailability(domain string) (*provider.DomainAvailability, error) {
-	url := fmt.Sprintf("%s/domains/%s/available", baseURL, domain)
+	url := fmt.Sprintf("%s/domains/available", baseURL)
+	body := map[string]interface{}{
+		"domains": []string{domain},
+	}
 	var resp availResponse
-	if err := c.doRequest("GET", url, nil, &resp); err != nil {
+	if err := c.doRequest("POST", url, body, &resp); err != nil {
 		return nil, err
+	}
+	if len(resp.Domains) == 0 {
+		return nil, fmt.Errorf("spaceship: no result for %s", domain)
+	}
+
+	d := resp.Domains[0]
+	available := d.Result == "available"
+
+	// Extract TLD and look up static pricing
+	tld := domain
+	for j := 0; j < len(domain); j++ {
+		if domain[j] == '.' {
+			tld = domain[j+1:]
+			break
+		}
+	}
+	regPrice, renPrice := GetStaticPrice(tld)
+
+	// Premium pricing from API overrides static
+	for _, pp := range d.PremiumPricing {
+		if pp.Operation == "register" && pp.Price > 0 {
+			regPrice = pp.Price
+		}
 	}
 
 	return &provider.DomainAvailability{
 		Registrar: "Spaceship",
 		Domain:    domain,
-		Available: resp.Available,
+		Available: available,
+		RegPrice:  regPrice,
+		RenPrice:  renPrice,
 		Currency:  "USD",
 	}, nil
 }

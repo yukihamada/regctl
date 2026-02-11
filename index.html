@@ -174,6 +174,12 @@ tr:hover{background:rgba(88,166,255,.04)}
 .tg{background:rgba(63,185,80,.15);color:var(--green)}
 .ty{background:rgba(210,153,34,.15);color:var(--yellow)}
 .tr{background:rgba(248,81,73,.15);color:var(--red)}
+.td-price{position:relative}
+.price-tip{display:none;position:absolute;left:0;top:100%;z-index:10;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;white-space:nowrap;font-size:.8rem;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.td-price:hover .price-tip{display:block}
+.price-tip span{display:block;padding:2px 0}
+.price-tip .tip-best{color:var(--green);font-weight:600}
+.price-tip .tip-label{color:var(--muted);font-size:.7rem;margin-bottom:2px}
 
 /* Features */
 .features{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:20px}
@@ -370,10 +376,8 @@ footer a:hover{text-decoration:underline}
 <thead>
 <tr>
 <th scope="col" data-sort="tld">TLD <span class="sort-icon"></span></th>
-<th scope="col" data-sort="spaceship">Spaceship <span class="tag tg">API</span> <span class="sort-icon"></span></th>
-<th scope="col" data-sort="porkbun">Porkbun <span class="tag tg">API</span> <span class="sort-icon"></span></th>
-<th scope="col" data-sort="cloudflare">Cloudflare <span class="tag ty">at-cost</span><span class="tag tr">no reg API</span> <span class="sort-icon"></span></th>
-<th scope="col" data-sort="best">Best (API) <span class="sort-icon"></span></th>
+<th scope="col" data-sort="best">Price/yr <span class="sort-icon"></span></th>
+<th scope="col" data-sort="registrar">Registrar <span class="sort-icon"></span></th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -381,7 +385,7 @@ footer a:hover{text-decoration:underline}
 </div>
 </div>
 <p class="sub" style="margin-top:10px">
-Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost pricing, transfer only (no new registration API).
+Showing cheapest renewal price. Hover a row to compare all registrar prices.
 </p>
 </section>
 
@@ -699,7 +703,14 @@ const ct=document.getElementById('count');
 document.querySelectorAll('.tld-count').forEach(function(el){el.textContent=D.length});
 
 // Helpers
-function fmt(v,best){if(v==null)return'<td class="na">\u2014</td>';return`<td${best?' class="best"':''}>$${v.toFixed(2)}</td>`}
+function getBestAll(d){
+  const all=[];
+  if(d.s!=null)all.push({k:'Spaceship',v:d.s,api:true});
+  if(d.p!=null)all.push({k:'Porkbun',v:d.p,api:true});
+  if(d.c!=null)all.push({k:'Cloudflare',v:d.c,api:false});
+  all.sort((a,b)=>a.v-b.v);
+  return all;
+}
 
 function getBestApi(d){
   const api=[];
@@ -710,15 +721,25 @@ function getBestApi(d){
 }
 
 function getSortValue(d,col){
-  const best=getBestApi(d);
+  const all=getBestAll(d);
   switch(col){
     case'tld':return d.t;
-    case'spaceship':return d.s!=null?d.s:Infinity;
-    case'porkbun':return d.p!=null?d.p:Infinity;
-    case'cloudflare':return d.c!=null?d.c:Infinity;
-    case'best':return best?best.v:Infinity;
+    case'best':return all.length?all[0].v:Infinity;
+    case'registrar':return all.length?all[0].k:'';
     default:return 0;
   }
+}
+
+function buildTip(d){
+  const all=getBestAll(d);
+  if(all.length<=1)return'';
+  let h='<div class="price-tip"><span class="tip-label">All registrar prices:</span>';
+  for(const p of all){
+    const cls=p===all[0]?'tip-best':'';
+    h+=`<span class="${cls}">${p.k}: $${p.v.toFixed(2)}${!p.api?' (transfer only)':''}</span>`;
+  }
+  h+='</div>';
+  return h;
 }
 
 function render(){
@@ -747,12 +768,13 @@ function render(){
 
   ct.textContent=f.length+' TLDs';
   const h=[];
-  const names={S:'Spaceship',P:'Porkbun',C:'Cloudflare'};
   for(const d of f){
-    const best=getBestApi(d);
-    const bestKey=best?best.k:null;
-    const bl=bestKey?names[bestKey]:(d.c?'Cloudflare':'\u2014');
-    h.push(`<tr><td><strong>.${d.t}</strong></td>${fmt(d.s,bestKey==='S')}${fmt(d.p,bestKey==='P')}${fmt(d.c,false)}<td class="${bestKey?'best':''}">${bl}</td></tr>`);
+    const all=getBestAll(d);
+    const best=all.length?all[0]:null;
+    const price=best?`$${best.v.toFixed(2)}`:'\u2014';
+    const reg=best?best.k:'\u2014';
+    const tip=buildTip(d);
+    h.push(`<tr><td><strong>.${d.t}</strong></td><td class="td-price${best?' best':''}">${price}${tip}</td><td>${reg}</td></tr>`);
   }
   tb.innerHTML=h.join('');
 }
@@ -882,11 +904,13 @@ function checkAvailability(domain){
       var d=res.data;
       if(d.available){
         el.className='sr-avail available';
-        var priceInfo=d.price?' &mdash; '+d.currency+' '+d.price:'';
-        var html='<strong>'+escHtml(domain)+'</strong> is available!'+priceInfo;
+        var priceInfo=d.price?' &mdash; $'+d.price:'';
+        var regInfo=d.registrar?' via '+d.registrar:'';
+        var html='<strong>'+escHtml(domain)+'</strong> is available!'+priceInfo+regInfo;
         var apiKey=localStorage.getItem('regctl_billing_key');
+        var regParam=d.registrar?',\''+escHtml(d.registrar).replace(/'/g,"\\'")+'\'':'';
         if(apiKey){
-          html+='<br><button class="sr-register-btn" onclick="registerDomain(\''+escHtml(domain).replace(/'/g,"\\'")+'\')"><span data-i18n-en>Register Now</span><span data-i18n-ja>今すぐ登録</span></button>';
+          html+='<br><button class="sr-register-btn" onclick="registerDomain(\''+escHtml(domain).replace(/'/g,"\\'")+'\'' +regParam+')"><span data-i18n-en>Register Now</span><span data-i18n-ja>今すぐ登録</span></button>';
           html+='<div class="sr-register-msg" id="registerMsg"></div>';
         }else{
           html+='<br><a href="#signup" class="sr-register-btn" style="text-decoration:none;display:inline-block"><span data-i18n-en>Sign Up &amp; Register</span><span data-i18n-ja>登録して取得</span></a>';
@@ -915,7 +939,7 @@ function applyLang(el){
   el.querySelectorAll('[data-i18n-ja]').forEach(function(e){e.style.display=lang==='en'?'none':'';});
 }
 
-function registerDomain(domain){
+function registerDomain(domain,provider){
   var btn=document.querySelector('.sr-register-btn');
   var msg=document.getElementById('registerMsg');
   if(!btn||!msg)return;
@@ -925,10 +949,12 @@ function registerDomain(domain){
   btn.textContent='Registering...';
   msg.className='sr-register-msg';
   msg.textContent='';
+  var reqBody={domain:domain,years:1};
+  if(provider)reqBody.provider=provider;
   fetch(CHECK_API+'/v1/domains',{
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer '+apiKey},
-    body:JSON.stringify({domain:domain,years:1})
+    body:JSON.stringify(reqBody)
   })
   .then(function(r){return r.json()})
   .then(function(res){

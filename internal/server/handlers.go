@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/yukihamada/regctl/internal/billing"
+	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 )
 
@@ -78,6 +79,110 @@ func (s *Server) refundBilling(r *http.Request, op billing.OperationType, baseCo
 	}
 }
 
+// hasProvider returns true if either legacy client or multi-registrar providers are available.
+func (s *Server) hasProvider() bool {
+	return s.client != nil || len(s.registrars) > 0
+}
+
+// checkAvailMulti checks domain availability across all configured registrars.
+// Returns the cheapest available option. Available results always beat unavailable ones.
+// Results with price=0 are treated as "unsupported TLD" and deprioritized.
+func (s *Server) checkAvailMulti(domain string) (*provider.DomainAvailability, error) {
+	if len(s.registrars) == 0 {
+		return nil, fmt.Errorf("no registrar configured")
+	}
+	var results []*provider.DomainAvailability
+	var lastErr error
+	for _, reg := range s.registrars {
+		avail, err := reg.CheckAvailability(domain)
+		if err != nil {
+			log.Printf("DEBUG: %s check %s: %v", reg.Name(), domain, err)
+			lastErr = err
+			continue
+		}
+		log.Printf("DEBUG: %s check %s: available=%v price=%.2f", reg.Name(), domain, avail.Available, avail.RegPrice)
+		results = append(results, avail)
+	}
+	if len(results) == 0 {
+		if lastErr != nil {
+			return nil, lastErr
+		}
+		return nil, fmt.Errorf("no registrar could check this domain")
+	}
+
+	// Pick best result: available with price > available without > unavailable with price > unavailable without
+	var best *provider.DomainAvailability
+	for _, avail := range results {
+		if best == nil {
+			best = avail
+			continue
+		}
+		// Available always beats unavailable
+		if avail.Available && !best.Available {
+			best = avail
+			continue
+		}
+		// Don't replace available with unavailable
+		if !avail.Available && best.Available {
+			continue
+		}
+		// Among same availability status, prefer one with valid price
+		if avail.RegPrice > 0 && best.RegPrice <= 0 {
+			best = avail
+			continue
+		}
+		// Among available with valid prices, prefer cheapest
+		if avail.Available && best.Available && avail.RegPrice > 0 && best.RegPrice > 0 && avail.RegPrice < best.RegPrice {
+			best = avail
+		}
+	}
+	return best, nil
+}
+
+// getRegistrar returns the registrar with the given name, or nil.
+func (s *Server) getRegistrar(name string) provider.Registrar {
+	for _, reg := range s.registrars {
+		if strings.EqualFold(reg.Name(), name) {
+			return reg
+		}
+	}
+	return nil
+}
+
+// registerDomainMulti registers a domain using the cheapest registrar or a specified one.
+func (s *Server) registerDomainMulti(domain, preferredReg string) (string, error) {
+	if preferredReg != "" {
+		reg := s.getRegistrar(preferredReg)
+		if reg == nil {
+			return "", fmt.Errorf("registrar %q not configured", preferredReg)
+		}
+		if err := reg.RegisterDomain(domain); err != nil {
+			return "", err
+		}
+		return reg.Name(), nil
+	}
+	// Try cheapest first (skip registrars with price 0 = unsupported TLD)
+	var cheapest provider.Registrar
+	var cheapestPrice float64
+	for _, reg := range s.registrars {
+		avail, err := reg.CheckAvailability(domain)
+		if err != nil || !avail.Available || avail.RegPrice <= 0 {
+			continue
+		}
+		if cheapest == nil || avail.RegPrice < cheapestPrice {
+			cheapest = reg
+			cheapestPrice = avail.RegPrice
+		}
+	}
+	if cheapest == nil {
+		return "", fmt.Errorf("domain not available or no registrar supports this TLD")
+	}
+	if err := cheapest.RegisterDomain(domain); err != nil {
+		return "", err
+	}
+	return cheapest.Name(), nil
+}
+
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	endpoints := []map[string]string{
 		{"method": "GET", "path": "/v1/domains", "description": "List all domains"},
@@ -115,22 +220,48 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleListDomains(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
+	if !s.hasProvider() {
 		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
 	if !s.chargeBilling(w, r, billing.OpDomainList, 0) {
 		return
 	}
-	domains, err := s.client.ListDomains()
-	if err != nil {
-		s.refundBilling(r, billing.OpDomainList, 0)
-		writeError(w, http.StatusInternalServerError, err.Error(), "Check your VALUEDOMAIN_API_KEY")
-		return
+
+	// Aggregate domains from all registrars
+	var allDomains []provider.Domain
+	if len(s.registrars) > 0 {
+		for _, reg := range s.registrars {
+			domains, err := reg.ListDomains()
+			if err != nil {
+				log.Printf("WARN: list domains from %s: %v", reg.Name(), err)
+				continue
+			}
+			allDomains = append(allDomains, domains...)
+		}
+	}
+	// Also include legacy client
+	if s.client != nil {
+		domains, err := s.client.ListDomains()
+		if err != nil {
+			log.Printf("WARN: list domains from ValueDomain: %v", err)
+		} else {
+			for _, d := range domains {
+				allDomains = append(allDomains, provider.Domain{
+					Name:      d.Name,
+					Registrar: "ValueDomain",
+					Status:    d.Status,
+					ExpiresAt: d.ExpiresAt,
+				})
+			}
+		}
+	}
+	if allDomains == nil {
+		allDomains = []provider.Domain{}
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"domains": domains,
-		"count":   len(domains),
+		"domains": allDomains,
+		"count":   len(allDomains),
 	})
 }
 
@@ -154,7 +285,7 @@ func (s *Server) handleGetDomain(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleCheckDomain(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
+	if !s.hasProvider() {
 		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
@@ -187,36 +318,65 @@ func (s *Server) handleCheckDomain(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	avail, err := s.client.CheckAvailability(domain)
-	if err != nil {
-		writeError(w, http.StatusInternalServerError, err.Error(), "")
-		return
+	// Try multi-registrar first, fall back to legacy client
+	var available bool
+	var premium bool
+	var price float64
+	var currency string
+	var registrar string
+
+	if len(s.registrars) > 0 {
+		avail, err := s.checkAvailMulti(domain)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "")
+			return
+		}
+		available = avail.Available
+		premium = avail.Premium
+		price = avail.RegPrice
+		currency = avail.Currency
+		registrar = avail.Registrar
+	} else {
+		avail, err := s.client.CheckAvailability(domain)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "")
+			return
+		}
+		available = avail.Available
+		premium = avail.Premium
+		price = avail.Price
+		currency = avail.Currency
 	}
 
 	// Log the search (best-effort)
 	if s.store != nil {
-		if _, err := s.store.LogSearch(domain, searcherID, avail.Available); err != nil {
+		if _, err := s.store.LogSearch(domain, searcherID, available); err != nil {
 			log.Printf("WARN: log search: %v", err)
 		}
 	}
 
-	writeJSON(w, http.StatusOK, map[string]interface{}{
+	result := map[string]interface{}{
 		"domain":    domain,
-		"available": avail.Available,
-		"premium":   avail.Premium,
-		"price":     avail.Price,
-		"currency":  avail.Currency,
-	})
+		"available": available,
+		"premium":   premium,
+		"price":     price,
+		"currency":  currency,
+	}
+	if registrar != "" {
+		result["registrar"] = registrar
+	}
+	writeJSON(w, http.StatusOK, result)
 }
 
 func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
+	if !s.hasProvider() {
 		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
 	var req struct {
-		Domain string `json:"domain"`
-		Years  int    `json:"years"`
+		Domain   string `json:"domain"`
+		Years    int    `json:"years"`
+		Provider string `json:"provider"` // optional: "Spaceship", "Porkbun"
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536)).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid request body",
@@ -236,26 +396,53 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 	customerID := getCustomerID(r)
 	var baseCostCents int64
 	if customerID != "" && s.billingEnabled {
-		avail, err := s.client.CheckAvailability(req.Domain)
-		if err != nil {
-			writeError(w, http.StatusInternalServerError, err.Error(),
-				"Check availability first: GET /v1/domains/check/"+req.Domain)
-			return
+		var price float64
+		if len(s.registrars) > 0 {
+			avail, err := s.checkAvailMulti(req.Domain)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, err.Error(),
+					"Check availability first: GET /v1/domains/check/"+req.Domain)
+				return
+			}
+			price = avail.RegPrice
+		} else if s.client != nil {
+			avail, err := s.client.CheckAvailability(req.Domain)
+			if err != nil {
+				writeError(w, http.StatusInternalServerError, err.Error(),
+					"Check availability first: GET /v1/domains/check/"+req.Domain)
+				return
+			}
+			price = avail.Price
 		}
-		// Convert price to cents (price is in JPY or the registrar's currency)
-		baseCostCents = int64(avail.Price)
+		baseCostCents = int64(price * 100) // USD to cents
 		if !s.chargeBilling(w, r, billing.OpDomainRegister, baseCostCents) {
 			return
 		}
 	}
 
-	if err := s.client.RegisterDomain(req.Domain, req.Years); err != nil {
-		if customerID != "" && s.billingEnabled {
-			s.refundBilling(r, billing.OpDomainRegister, baseCostCents)
+	// Register using multi-registrar or legacy client
+	var usedRegistrar string
+	if len(s.registrars) > 0 {
+		reg, err := s.registerDomainMulti(req.Domain, req.Provider)
+		if err != nil {
+			if customerID != "" && s.billingEnabled {
+				s.refundBilling(r, billing.OpDomainRegister, baseCostCents)
+			}
+			writeError(w, http.StatusInternalServerError, err.Error(),
+				"Check availability first: GET /v1/domains/check/"+req.Domain)
+			return
 		}
-		writeError(w, http.StatusInternalServerError, err.Error(),
-			"Check availability first: GET /v1/domains/check/"+req.Domain)
-		return
+		usedRegistrar = reg
+	} else {
+		if err := s.client.RegisterDomain(req.Domain, req.Years); err != nil {
+			if customerID != "" && s.billingEnabled {
+				s.refundBilling(r, billing.OpDomainRegister, baseCostCents)
+			}
+			writeError(w, http.StatusInternalServerError, err.Error(),
+				"Check availability first: GET /v1/domains/check/"+req.Domain)
+			return
+		}
+		usedRegistrar = "ValueDomain"
 	}
 
 	// Referral credit: reward the first searcher if different from registrant
@@ -263,10 +450,14 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 		s.tryReferralCredit(req.Domain, customerID, baseCostCents)
 	}
 
-	writeJSON(w, http.StatusCreated, map[string]string{
+	result := map[string]string{
 		"domain": req.Domain,
 		"status": "registered",
-	})
+	}
+	if usedRegistrar != "" {
+		result["registrar"] = usedRegistrar
+	}
+	writeJSON(w, http.StatusCreated, result)
 }
 
 func (s *Server) handleListDNS(w http.ResponseWriter, r *http.Request) {
@@ -477,7 +668,7 @@ func (s *Server) handleUpdateDNSRecord(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleBulkCheck(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
+	if !s.hasProvider() {
 		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
@@ -501,23 +692,40 @@ func (s *Server) handleBulkCheck(w http.ResponseWriter, r *http.Request) {
 		Premium   bool    `json:"premium,omitempty"`
 		Price     float64 `json:"price,omitempty"`
 		Currency  string  `json:"currency,omitempty"`
+		Registrar string  `json:"registrar,omitempty"`
 		Error     string  `json:"error,omitempty"`
 	}
 
 	results := make([]result, 0, len(req.Domains))
 	for _, domain := range req.Domains {
-		avail, err := s.client.CheckAvailability(domain)
-		if err != nil {
-			results = append(results, result{Domain: domain, Error: err.Error()})
-			continue
+		if len(s.registrars) > 0 {
+			avail, err := s.checkAvailMulti(domain)
+			if err != nil {
+				results = append(results, result{Domain: domain, Error: err.Error()})
+				continue
+			}
+			results = append(results, result{
+				Domain:    domain,
+				Available: avail.Available,
+				Premium:   avail.Premium,
+				Price:     avail.RegPrice,
+				Currency:  avail.Currency,
+				Registrar: avail.Registrar,
+			})
+		} else {
+			avail, err := s.client.CheckAvailability(domain)
+			if err != nil {
+				results = append(results, result{Domain: domain, Error: err.Error()})
+				continue
+			}
+			results = append(results, result{
+				Domain:    domain,
+				Available: avail.Available,
+				Premium:   avail.Premium,
+				Price:     avail.Price,
+				Currency:  avail.Currency,
+			})
 		}
-		results = append(results, result{
-			Domain:    domain,
-			Available: avail.Available,
-			Premium:   avail.Premium,
-			Price:     avail.Price,
-			Currency:  avail.Currency,
-		})
 	}
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"results": results,
