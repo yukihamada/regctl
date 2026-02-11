@@ -211,6 +211,33 @@ func (s *Server) handleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Handle site_sponsor: record in DB and reactivate site if suspended
+	if result.Type == "site_sponsor" && s.store != nil {
+		site, err := s.store.GetSite(result.Domain)
+		if err == nil && site != nil {
+			if err := s.store.AddSponsor(site.ID, result.SponsorEmail, result.SponsorCustomerID,
+				result.AmountCents, result.SiteCreditCents, result.SponsorTokenCents, ""); err != nil {
+				log.Printf("webhook: record sponsor: %v", err)
+			}
+			// Reactivate suspended site
+			if site.Status == "suspended" {
+				if err := s.store.UpdateSiteStatus(result.Domain, "active"); err != nil {
+					log.Printf("webhook: reactivate site: %v", err)
+				}
+				if s.flyClient != nil && site.MachineID != "" {
+					env := map[string]string{
+						"SITE_DOMAIN":    result.Domain,
+						"SITE_SUSPENDED": "false",
+						"REGCTL_API_URL": s.baseURL,
+					}
+					if err := s.flyClient.UpdateMachine(site.MachineID, env); err != nil {
+						log.Printf("webhook: restart machine: %v", err)
+					}
+				}
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusOK, map[string]string{
 		"status": "processed",
 		"type":   result.Type,

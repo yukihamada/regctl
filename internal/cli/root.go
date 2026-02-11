@@ -61,9 +61,11 @@ func NewRootCmd(version string) *cobra.Command {
 				return nil
 			}
 
-			// Billing commands need config but not providers
+			// Billing/hosting commands need config but not providers
 			billingCmds := map[string]bool{
 				"billing": true, "balance": true, "topup": true,
+				"hosting": true, "create": true, "deploy": true,
+				"status": true, "list": true, "delete": true,
 			}
 
 			var err error
@@ -131,6 +133,7 @@ func NewRootCmd(version string) *cobra.Command {
 		newDomainsCmd(),
 		newDNSCmd(),
 		newSitesCmd(),
+		newHostingCmd(),
 		newLaunchCmd(),
 		newConfigCmd(),
 		newServerCmd(),

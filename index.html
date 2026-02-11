@@ -313,6 +313,7 @@ footer a:hover{text-decoration:underline}
     <a href="#discovery" class="hide-mobile"><span data-i18n-en>Discovery</span><span data-i18n-ja>発見</span></a>
     <a href="#how-it-works" class="hide-mobile"><span data-i18n-en>How it Works</span><span data-i18n-ja>使い方</span></a>
     <a href="#signup" class="hide-mobile"><span data-i18n-en>Sign Up</span><span data-i18n-ja>登録</span></a>
+    <a href="#hosting" class="hide-mobile"><span data-i18n-en>Hosting</span><span data-i18n-ja>ホスティング</span></a>
     <div class="tts-toggle" id="ttsToggleWrap" hidden><label class="tts-label" for="ttsSwitch"><span data-i18n-en>🔊 TTS</span><span data-i18n-ja>🔊 読上</span></label><input type="checkbox" class="tts-switch" id="ttsSwitch"></div>
     <button class="lang-toggle" id="langToggle" aria-label="Switch language">JA</button>
     <a href="https://github.com/yukihamada/regctl" class="nav-gh" aria-label="GitHub repository"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
@@ -598,8 +599,75 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
       <tr><td data-i18n-en>dns list</td><td data-i18n-ja>DNS一覧</td><td>$0.05</td></tr>
       <tr><td data-i18n-en>dns add / delete</td><td data-i18n-ja>DNS追加 / 削除</td><td>$0.10</td></tr>
       <tr><td data-i18n-en>referral reward</td><td data-i18n-ja>リファラル報酬</td><td data-i18n-en>10% of registration</td><td data-i18n-ja>登録費用の10%</td></tr>
+      <tr><td colspan="4" style="border-top:1px solid var(--border);padding-top:8px;font-weight:600" data-i18n-en>Hosting</td><td data-i18n-ja style="border-top:1px solid var(--border);padding-top:8px;font-weight:600">ホスティング</td></tr>
+      <tr><td data-i18n-en>site create</td><td data-i18n-ja>サイト作成</td><td>$0.50</td></tr>
+      <tr><td data-i18n-en>site deploy</td><td data-i18n-ja>デプロイ</td><td>$0.10</td></tr>
+      <tr><td data-i18n-en>requests (free tier)</td><td data-i18n-ja>リクエスト（無料枠）</td><td data-i18n-en>1,000/day free</td><td data-i18n-ja>1,000回/日 無料</td></tr>
+      <tr><td data-i18n-en>requests (over limit)</td><td data-i18n-ja>リクエスト（超過分）</td><td>$0.001/req</td></tr>
+      <tr><td data-i18n-en>sponsor bonus</td><td data-i18n-ja>スポンサーボーナス</td><td data-i18n-en>80% to site, 100% to sponsor tokens</td><td data-i18n-ja>80%サイトへ、100%スポンサートークン</td></tr>
     </table>
   </div>
+</div>
+</section>
+
+<section id="hosting" class="container" style="padding:40px 0;border-top:1px solid var(--border)">
+<h2 style="font-size:1.5rem;font-weight:800;margin-bottom:8px" data-i18n-en>Hosting</h2>
+<h2 style="font-size:1.5rem;font-weight:800;margin-bottom:8px" data-i18n-ja>ホスティング</h2>
+<p style="color:var(--muted);margin-bottom:24px" data-i18n-en>Deploy static sites with one command. Pay-per-use pricing. When credits run out, sponsors can pay to keep your site alive.</p>
+<p style="color:var(--muted);margin-bottom:24px" data-i18n-ja>ワンコマンドで静的サイトをデプロイ。従量課金。クレジットが切れたらスポンサーがサイトを復活できます。</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:32px">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--green)">1. Create</h3>
+    <code style="display:block;margin-bottom:8px">regctl hosting create mysite.com</code>
+    <p style="color:var(--muted);font-size:.85rem" data-i18n-en>Creates a Fly Machine with Caddy + HTTPS. $0.50 one-time.</p>
+    <p style="color:var(--muted);font-size:.85rem" data-i18n-ja>CaddyとHTTPS付きのFly Machineを作成。$0.50（一回）</p>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--blue)">2. Deploy</h3>
+    <code style="display:block;margin-bottom:8px">regctl hosting deploy mysite.com .</code>
+    <p style="color:var(--muted);font-size:.85rem" data-i18n-en>Upload your static files. $0.10 per deploy.</p>
+    <p style="color:var(--muted);font-size:.85rem" data-i18n-ja>静的ファイルをアップロード。デプロイごとに$0.10</p>
+  </div>
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px">
+    <h3 style="font-size:1rem;font-weight:700;margin-bottom:8px;color:var(--yellow)">3. Sponsor</h3>
+    <p style="color:var(--muted);font-size:.85rem" data-i18n-en>When credits run out, visitors see a sponsor page. Anyone can pay to revive the site and earn regctl tokens.</p>
+    <p style="color:var(--muted);font-size:.85rem" data-i18n-ja>クレジットが切れると訪問者にスポンサーページが表示。誰でも支払ってサイトを復活でき、regctlトークンを獲得。</p>
+  </div>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px">
+  <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px" data-i18n-en>Sponsor a Site</h3>
+  <h3 style="font-size:1rem;font-weight:700;margin-bottom:12px" data-i18n-ja>サイトをスポンサーする</h3>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+    <input type="text" id="sponsorDomain" placeholder="example.com" style="flex:1;min-width:200px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem">
+    <input type="email" id="sponsorEmail" placeholder="you@email.com" style="flex:1;min-width:200px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem">
+    <div style="display:flex;gap:4px">
+      <button class="amount-btn" data-sponsor-amount="500" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:.85rem">$5</button>
+      <button class="amount-btn active" data-sponsor-amount="1000" style="padding:6px 12px;background:var(--green-bg);border:1px solid var(--green);border-radius:4px;color:var(--green);cursor:pointer;font-size:.85rem">$10</button>
+      <button class="amount-btn" data-sponsor-amount="2500" style="padding:6px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);cursor:pointer;font-size:.85rem">$25</button>
+    </div>
+    <button id="sponsorBtn" style="padding:8px 20px;background:var(--green);color:#000;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.9rem" data-i18n-en>Sponsor</button>
+    <button id="sponsorBtn" style="padding:8px 20px;background:var(--green);color:#000;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.9rem;display:none" data-i18n-ja>スポンサーする</button>
+  </div>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:8px" data-i18n-en>80% goes to site owner's hosting credit. You get 100% back as regctl tokens for domains & hosting.</p>
+  <p style="color:var(--muted);font-size:.8rem;margin-top:8px" data-i18n-ja>80%がサイトオーナーのホスティングクレジットに。あなたは100%をregctlトークンとして獲得（ドメインやホスティングに使用可能）。</p>
+  <div id="sponsorStatus" style="display:none;margin-top:8px;padding:8px;border-radius:4px;font-size:.9rem"></div>
+</div>
+
+<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px">
+  <h3 style="font-size:.95rem;font-weight:700;margin-bottom:8px" data-i18n-en>Hosting Pricing</h3>
+  <h3 style="font-size:.95rem;font-weight:700;margin-bottom:8px" data-i18n-ja>ホスティング料金</h3>
+  <table style="width:100%;font-size:.85rem;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:4px 8px"></th><th style="text-align:left;padding:4px 8px">Free</th><th style="text-align:left;padding:4px 8px">Paid</th></tr></thead>
+    <tbody>
+      <tr><td style="padding:4px 8px;color:var(--muted)" data-i18n-en>Requests/day</td><td style="padding:4px 8px" data-i18n-ja>リクエスト/日</td><td style="padding:4px 8px">1,000</td><td style="padding:4px 8px">10,000 (+$0.001/req)</td></tr>
+      <tr><td style="padding:4px 8px;color:var(--muted)" data-i18n-en>Storage</td><td style="padding:4px 8px" data-i18n-ja>ストレージ</td><td style="padding:4px 8px">50MB</td><td style="padding:4px 8px">500MB</td></tr>
+      <tr><td style="padding:4px 8px;color:var(--muted)" data-i18n-en>Create</td><td style="padding:4px 8px" data-i18n-ja>作成</td><td style="padding:4px 8px">$0.50</td><td style="padding:4px 8px">$0.50</td></tr>
+      <tr><td style="padding:4px 8px;color:var(--muted)" data-i18n-en>Deploy</td><td style="padding:4px 8px" data-i18n-ja>デプロイ</td><td style="padding:4px 8px">$0.10</td><td style="padding:4px 8px">$0.10</td></tr>
+      <tr><td style="padding:4px 8px;color:var(--muted)" data-i18n-en>Out of credit</td><td style="padding:4px 8px" data-i18n-ja>残高ゼロ</td><td colspan="2" style="padding:4px 8px" data-i18n-en>Sponsor page shown</td><td data-i18n-ja style="padding:4px 8px">スポンサーページ表示</td></tr>
+    </tbody>
+  </table>
 </div>
 </section>
 
@@ -1454,6 +1522,48 @@ function showAPIKey(key){
 
 // Initial render
 render();
+
+// --- Sponsor logic ---
+(function(){
+  var sponsorAmountCents=1000;
+  document.querySelectorAll('[data-sponsor-amount]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      document.querySelectorAll('[data-sponsor-amount]').forEach(function(b){
+        b.style.background='var(--surface2)';b.style.borderColor='var(--border)';b.style.color='var(--text)';
+      });
+      btn.style.background='var(--green-bg)';btn.style.borderColor='var(--green)';btn.style.color='var(--green)';
+      sponsorAmountCents=parseInt(btn.dataset.sponsorAmount);
+    });
+  });
+  var sponsorBtns=document.querySelectorAll('#sponsorBtn');
+  sponsorBtns.forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var domain=document.getElementById('sponsorDomain').value.trim();
+      var email=document.getElementById('sponsorEmail').value.trim();
+      var status=document.getElementById('sponsorStatus');
+      if(!domain||!email){
+        status.style.display='block';status.style.background='rgba(248,81,73,.15)';status.style.color='var(--red)';
+        status.textContent='Please enter domain and email.';return;
+      }
+      status.style.display='block';status.style.background='var(--blue-bg)';status.style.color='var(--blue)';
+      status.textContent='Creating checkout session...';
+      fetch(API+'/v1/sites/'+encodeURIComponent(domain)+'/sponsor',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email:email,amount_cents:sponsorAmountCents})
+      }).then(function(r){return r.json()}).then(function(j){
+        if(j.ok&&j.data&&j.data.checkout_url){
+          window.location.href=j.data.checkout_url;
+        }else{
+          status.style.background='rgba(248,81,73,.15)';status.style.color='var(--red)';
+          status.textContent=j.error||'Failed to create checkout session';
+        }
+      }).catch(function(e){
+        status.style.background='rgba(248,81,73,.15)';status.style.color='var(--red)';
+        status.textContent='Network error: '+e.message;
+      });
+    });
+  });
+})();
 </script>
 </body>
 </html>

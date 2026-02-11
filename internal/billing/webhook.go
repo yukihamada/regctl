@@ -13,9 +13,18 @@ import (
 
 // WebhookResult contains the result of processing a webhook event.
 type WebhookResult struct {
-	Type       string // "signup" or "topup"
+	Type       string // "signup", "topup", or "site_sponsor"
 	CustomerID string
 	APIKey     string // only set for signup
+
+	// site_sponsor fields
+	Domain             string
+	OwnerCustomerID    string
+	SponsorEmail       string
+	SponsorCustomerID  string
+	AmountCents        int64
+	SiteCreditCents    int64
+	SponsorTokenCents  int64
 }
 
 // processedEvents tracks webhook event IDs to prevent duplicate processing.
@@ -100,6 +109,44 @@ func HandleWebhook(payload []byte, sigHeader, webhookSecret, signingSecret strin
 		return &WebhookResult{
 			Type:       "topup",
 			CustomerID: customerID,
+		}, nil
+
+	case "site_sponsor":
+		domain := session.Metadata["domain"]
+		ownerCustomerID := session.Metadata["owner_customer_id"]
+		sponsorEmail := session.Metadata["sponsor_email"]
+		if domain == "" || ownerCustomerID == "" || sponsorEmail == "" {
+			return nil, errors.New("missing site_sponsor metadata")
+		}
+
+		siteCreditCents := amountCents * int64(SponsorSitePct) / 100
+		sponsorTokenCents := amountCents * int64(SponsorTokenPct) / 100
+
+		// Add credit to site owner
+		if err := AddBalance(ownerCustomerID, siteCreditCents,
+			fmt.Sprintf("Sponsor from %s for %s", sponsorEmail, domain)); err != nil {
+			return nil, fmt.Errorf("add site credit: %w", err)
+		}
+
+		// Find or create sponsor customer and add tokens
+		sponsorCustomer, err := FindOrCreateCustomer(sponsorEmail)
+		if err != nil {
+			return nil, fmt.Errorf("find/create sponsor: %w", err)
+		}
+		if err := AddBalance(sponsorCustomer.ID, sponsorTokenCents,
+			fmt.Sprintf("Sponsor token for %s", domain)); err != nil {
+			return nil, fmt.Errorf("add sponsor token: %w", err)
+		}
+
+		return &WebhookResult{
+			Type:              "site_sponsor",
+			Domain:            domain,
+			OwnerCustomerID:   ownerCustomerID,
+			SponsorEmail:      sponsorEmail,
+			SponsorCustomerID: sponsorCustomer.ID,
+			AmountCents:       amountCents,
+			SiteCreditCents:   siteCreditCents,
+			SponsorTokenCents: sponsorTokenCents,
 		}, nil
 
 	default:

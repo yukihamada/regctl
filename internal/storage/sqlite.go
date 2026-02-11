@@ -56,6 +56,41 @@ CREATE TABLE IF NOT EXISTS auth_codes (
     created_at  TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
 );
 CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email, used);
+
+CREATE TABLE IF NOT EXISTS sites (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain       TEXT NOT NULL UNIQUE,
+    customer_id  TEXT NOT NULL,
+    machine_id   TEXT NOT NULL DEFAULT '',
+    app_name     TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'provisioning',
+    tier         TEXT NOT NULL DEFAULT 'free',
+    max_req_day  INTEGER NOT NULL DEFAULT 1000,
+    created_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    updated_at   TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
+
+CREATE TABLE IF NOT EXISTS site_usage (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_id         INTEGER NOT NULL,
+    usage_date      TEXT NOT NULL,
+    request_count   INTEGER NOT NULL DEFAULT 0,
+    bandwidth_bytes INTEGER NOT NULL DEFAULT 0,
+    billed_cents    INTEGER NOT NULL DEFAULT 0,
+    UNIQUE(site_id, usage_date)
+);
+
+CREATE TABLE IF NOT EXISTS site_sponsors (
+    id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+    site_id             INTEGER NOT NULL,
+    sponsor_email       TEXT NOT NULL,
+    sponsor_customer_id TEXT NOT NULL DEFAULT '',
+    amount_cents        INTEGER NOT NULL,
+    site_credit_cents   INTEGER NOT NULL DEFAULT 0,
+    sponsor_token_cents INTEGER NOT NULL DEFAULT 0,
+    stripe_session      TEXT NOT NULL DEFAULT '',
+    created_at          TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
 `
 
 // New opens (or creates) the SQLite database at dbPath and applies the schema.
@@ -265,4 +300,282 @@ func (s *Store) VerifyAuthCode(email, code string) (bool, error) {
 	}
 	n, _ := res.RowsAffected()
 	return n > 0, nil
+}
+
+// Site represents a hosted site.
+type Site struct {
+	ID         int64  `json:"id"`
+	Domain     string `json:"domain"`
+	CustomerID string `json:"customer_id"`
+	MachineID  string `json:"machine_id"`
+	AppName    string `json:"app_name"`
+	Status     string `json:"status"`
+	Tier       string `json:"tier"`
+	MaxReqDay  int    `json:"max_req_day"`
+	CreatedAt  string `json:"created_at"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
+// SiteUsage represents daily usage for a site.
+type SiteUsage struct {
+	ID             int64  `json:"id"`
+	SiteID         int64  `json:"site_id"`
+	UsageDate      string `json:"usage_date"`
+	RequestCount   int64  `json:"request_count"`
+	BandwidthBytes int64  `json:"bandwidth_bytes"`
+	BilledCents    int64  `json:"billed_cents"`
+}
+
+// SiteSponsor represents a sponsor payment for a site.
+type SiteSponsor struct {
+	ID                int64  `json:"id"`
+	SiteID            int64  `json:"site_id"`
+	SponsorEmail      string `json:"sponsor_email"`
+	SponsorCustomerID string `json:"sponsor_customer_id"`
+	AmountCents       int64  `json:"amount_cents"`
+	SiteCreditCents   int64  `json:"site_credit_cents"`
+	SponsorTokenCents int64  `json:"sponsor_token_cents"`
+	StripeSession     string `json:"stripe_session"`
+	CreatedAt         string `json:"created_at"`
+}
+
+// CreateSite inserts a new site record.
+func (s *Store) CreateSite(domain, customerID, machineID, appName string) (*Site, error) {
+	res, err := s.db.Exec(
+		`INSERT INTO sites (domain, customer_id, machine_id, app_name, status)
+		 VALUES (?, ?, ?, ?, 'provisioning')`,
+		domain, customerID, machineID, appName,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create site: %w", err)
+	}
+	id, _ := res.LastInsertId()
+	return s.getSiteByID(id)
+}
+
+func (s *Store) getSiteByID(id int64) (*Site, error) {
+	var site Site
+	err := s.db.QueryRow(
+		`SELECT id, domain, customer_id, machine_id, app_name, status, tier, max_req_day, created_at, updated_at
+		 FROM sites WHERE id = ?`, id,
+	).Scan(&site.ID, &site.Domain, &site.CustomerID, &site.MachineID, &site.AppName,
+		&site.Status, &site.Tier, &site.MaxReqDay, &site.CreatedAt, &site.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("get site by id: %w", err)
+	}
+	return &site, nil
+}
+
+// GetSite returns a site by domain.
+func (s *Store) GetSite(domain string) (*Site, error) {
+	var site Site
+	err := s.db.QueryRow(
+		`SELECT id, domain, customer_id, machine_id, app_name, status, tier, max_req_day, created_at, updated_at
+		 FROM sites WHERE domain = ?`, domain,
+	).Scan(&site.ID, &site.Domain, &site.CustomerID, &site.MachineID, &site.AppName,
+		&site.Status, &site.Tier, &site.MaxReqDay, &site.CreatedAt, &site.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get site: %w", err)
+	}
+	return &site, nil
+}
+
+// GetSitesByCustomer returns all sites owned by a customer.
+func (s *Store) GetSitesByCustomer(customerID string) ([]Site, error) {
+	rows, err := s.db.Query(
+		`SELECT id, domain, customer_id, machine_id, app_name, status, tier, max_req_day, created_at, updated_at
+		 FROM sites WHERE customer_id = ? ORDER BY created_at DESC`, customerID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("list sites: %w", err)
+	}
+	defer rows.Close()
+
+	var sites []Site
+	for rows.Next() {
+		var site Site
+		if err := rows.Scan(&site.ID, &site.Domain, &site.CustomerID, &site.MachineID, &site.AppName,
+			&site.Status, &site.Tier, &site.MaxReqDay, &site.CreatedAt, &site.UpdatedAt); err != nil {
+			return nil, err
+		}
+		sites = append(sites, site)
+	}
+	if sites == nil {
+		sites = []Site{}
+	}
+	return sites, rows.Err()
+}
+
+// UpdateSiteStatus updates a site's status.
+func (s *Store) UpdateSiteStatus(domain, status string) error {
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	_, err := s.db.Exec(
+		`UPDATE sites SET status = ?, updated_at = ? WHERE domain = ?`,
+		status, now, domain,
+	)
+	if err != nil {
+		return fmt.Errorf("update site status: %w", err)
+	}
+	return nil
+}
+
+// UpdateSiteMachine updates a site's machine_id.
+func (s *Store) UpdateSiteMachine(domain, machineID string) error {
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	_, err := s.db.Exec(
+		`UPDATE sites SET machine_id = ?, updated_at = ? WHERE domain = ?`,
+		machineID, now, domain,
+	)
+	if err != nil {
+		return fmt.Errorf("update site machine: %w", err)
+	}
+	return nil
+}
+
+// DeleteSite removes a site record.
+func (s *Store) DeleteSite(domain string) error {
+	_, err := s.db.Exec(`DELETE FROM sites WHERE domain = ?`, domain)
+	if err != nil {
+		return fmt.Errorf("delete site: %w", err)
+	}
+	return nil
+}
+
+// IncrementUsage atomically increments request count for a site on a given date.
+func (s *Store) IncrementUsage(siteID int64, date string, requestCount int64, bandwidthBytes int64) error {
+	_, err := s.db.Exec(
+		`INSERT INTO site_usage (site_id, usage_date, request_count, bandwidth_bytes)
+		 VALUES (?, ?, ?, ?)
+		 ON CONFLICT(site_id, usage_date) DO UPDATE SET
+		   request_count = request_count + excluded.request_count,
+		   bandwidth_bytes = bandwidth_bytes + excluded.bandwidth_bytes`,
+		siteID, date, requestCount, bandwidthBytes,
+	)
+	if err != nil {
+		return fmt.Errorf("increment usage: %w", err)
+	}
+	return nil
+}
+
+// GetTodayUsage returns today's usage for a site.
+func (s *Store) GetTodayUsage(siteID int64) (*SiteUsage, error) {
+	today := time.Now().UTC().Format("2006-01-02")
+	var u SiteUsage
+	err := s.db.QueryRow(
+		`SELECT id, site_id, usage_date, request_count, bandwidth_bytes, billed_cents
+		 FROM site_usage WHERE site_id = ? AND usage_date = ?`, siteID, today,
+	).Scan(&u.ID, &u.SiteID, &u.UsageDate, &u.RequestCount, &u.BandwidthBytes, &u.BilledCents)
+	if err == sql.ErrNoRows {
+		return &SiteUsage{SiteID: siteID, UsageDate: today}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("get today usage: %w", err)
+	}
+	return &u, nil
+}
+
+// GetUsage returns usage records for a site within a date range.
+func (s *Store) GetUsage(siteID int64, from, to string) ([]SiteUsage, error) {
+	rows, err := s.db.Query(
+		`SELECT id, site_id, usage_date, request_count, bandwidth_bytes, billed_cents
+		 FROM site_usage WHERE site_id = ? AND usage_date >= ? AND usage_date <= ?
+		 ORDER BY usage_date DESC`, siteID, from, to,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get usage: %w", err)
+	}
+	defer rows.Close()
+
+	var usage []SiteUsage
+	for rows.Next() {
+		var u SiteUsage
+		if err := rows.Scan(&u.ID, &u.SiteID, &u.UsageDate, &u.RequestCount, &u.BandwidthBytes, &u.BilledCents); err != nil {
+			return nil, err
+		}
+		usage = append(usage, u)
+	}
+	if usage == nil {
+		usage = []SiteUsage{}
+	}
+	return usage, rows.Err()
+}
+
+// UpdateUsageBilled marks usage as billed.
+func (s *Store) UpdateUsageBilled(siteID int64, date string, billedCents int64) error {
+	_, err := s.db.Exec(
+		`UPDATE site_usage SET billed_cents = ? WHERE site_id = ? AND usage_date = ?`,
+		billedCents, siteID, date,
+	)
+	if err != nil {
+		return fmt.Errorf("update usage billed: %w", err)
+	}
+	return nil
+}
+
+// AddSponsor records a sponsor payment.
+func (s *Store) AddSponsor(siteID int64, email, sponsorCustomerID string, amountCents, siteCreditCents, sponsorTokenCents int64, stripeSession string) error {
+	_, err := s.db.Exec(
+		`INSERT INTO site_sponsors (site_id, sponsor_email, sponsor_customer_id, amount_cents, site_credit_cents, sponsor_token_cents, stripe_session)
+		 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+		siteID, email, sponsorCustomerID, amountCents, siteCreditCents, sponsorTokenCents, stripeSession,
+	)
+	if err != nil {
+		return fmt.Errorf("add sponsor: %w", err)
+	}
+	return nil
+}
+
+// GetSponsors returns sponsor records for a site.
+func (s *Store) GetSponsors(siteID int64) ([]SiteSponsor, error) {
+	rows, err := s.db.Query(
+		`SELECT id, site_id, sponsor_email, sponsor_customer_id, amount_cents, site_credit_cents, sponsor_token_cents, stripe_session, created_at
+		 FROM site_sponsors WHERE site_id = ? ORDER BY created_at DESC`, siteID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get sponsors: %w", err)
+	}
+	defer rows.Close()
+
+	var sponsors []SiteSponsor
+	for rows.Next() {
+		var sp SiteSponsor
+		if err := rows.Scan(&sp.ID, &sp.SiteID, &sp.SponsorEmail, &sp.SponsorCustomerID,
+			&sp.AmountCents, &sp.SiteCreditCents, &sp.SponsorTokenCents, &sp.StripeSession, &sp.CreatedAt); err != nil {
+			return nil, err
+		}
+		sponsors = append(sponsors, sp)
+	}
+	if sponsors == nil {
+		sponsors = []SiteSponsor{}
+	}
+	return sponsors, rows.Err()
+}
+
+// GetAllActiveSites returns all sites with status 'active'.
+func (s *Store) GetAllActiveSites() ([]Site, error) {
+	rows, err := s.db.Query(
+		`SELECT id, domain, customer_id, machine_id, app_name, status, tier, max_req_day, created_at, updated_at
+		 FROM sites WHERE status = 'active' ORDER BY id`,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get active sites: %w", err)
+	}
+	defer rows.Close()
+
+	var sites []Site
+	for rows.Next() {
+		var site Site
+		if err := rows.Scan(&site.ID, &site.Domain, &site.CustomerID, &site.MachineID, &site.AppName,
+			&site.Status, &site.Tier, &site.MaxReqDay, &site.CreatedAt, &site.UpdatedAt); err != nil {
+			return nil, err
+		}
+		sites = append(sites, site)
+	}
+	if sites == nil {
+		sites = []Site{}
+	}
+	return sites, rows.Err()
 }

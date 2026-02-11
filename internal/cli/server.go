@@ -130,6 +130,12 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			srvCfg.BaseURL = baseURL
 			srvCfg.GoogleRedirectURI = baseURL + "/v1/auth/google/callback"
 
+			// Fly Machines hosting
+			srvCfg.FlyAPIToken = os.Getenv("FLY_API_TOKEN")
+			srvCfg.FlyAppName = os.Getenv("FLY_APP_NAME")
+			srvCfg.FlyRegion = os.Getenv("FLY_REGION")
+			srvCfg.InternalSecret = os.Getenv("REGCTL_INTERNAL_SECRET")
+
 			srv := server.New(srvCfg)
 
 			fmt.Println()

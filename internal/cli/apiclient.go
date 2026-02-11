@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -212,4 +213,69 @@ func (c *APIClient) StartGoogleAuth(redirectURI string) (*GoogleAuthResponse, er
 	var resp GoogleAuthResponse
 	json.Unmarshal(r.Data, &resp)
 	return &resp, nil
+}
+
+// CreateSite creates a new hosted site.
+func (c *APIClient) CreateSite(domain string) (json.RawMessage, error) {
+	body := fmt.Sprintf(`{"domain":%q}`, domain)
+	r, err := c.do("POST", "/v1/sites", body)
+	if err != nil {
+		return nil, err
+	}
+	return r.Data, nil
+}
+
+// ListSites returns the caller's hosted sites.
+func (c *APIClient) ListSites() (json.RawMessage, error) {
+	r, err := c.do("GET", "/v1/sites", "")
+	if err != nil {
+		return nil, err
+	}
+	return r.Data, nil
+}
+
+// GetSiteStatus returns a site's details and usage.
+func (c *APIClient) GetSiteStatus(domain string) (json.RawMessage, error) {
+	r, err := c.do("GET", "/v1/sites/"+domain, "")
+	if err != nil {
+		return nil, err
+	}
+	return r.Data, nil
+}
+
+// DeleteSite deletes a hosted site.
+func (c *APIClient) DeleteSite(domain string) error {
+	_, err := c.do("DELETE", "/v1/sites/"+domain, "")
+	return err
+}
+
+// DeploySite uploads a tar.gz file to a site.
+func (c *APIClient) DeploySite(domain string, data []byte) (json.RawMessage, error) {
+	req, err := http.NewRequest("POST", c.baseURL+"/v1/sites/"+domain+"/deploy", bytes.NewReader(data))
+	if err != nil {
+		return nil, err
+	}
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+	req.Header.Set("Content-Type", "application/gzip")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("deploy request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var result apiResult
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, fmt.Errorf("decode response: %w", err)
+	}
+	if !result.OK {
+		msg := result.Error
+		if result.Hint != "" {
+			msg += " (" + result.Hint + ")"
+		}
+		return nil, fmt.Errorf("%s", msg)
+	}
+	return result.Data, nil
 }

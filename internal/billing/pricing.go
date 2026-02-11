@@ -15,6 +15,9 @@ const (
 	OpNSUpdate       OperationType = "ns_update"       // fixed fee
 	OpDNSUpdate        OperationType = "dns_update"        // fixed fee
 	OpDomainCheckPaid  OperationType = "domain_check_paid" // paid check over free quota
+	OpSiteCreate     OperationType = "site_create"     // $0.50
+	OpSiteDeploy     OperationType = "site_deploy"     // $0.10
+	OpSiteRequest    OperationType = "site_request"    // $0.001 per req (batch)
 )
 
 const (
@@ -23,6 +26,14 @@ const (
 	ListFeeCents     = 5  // $0.05 for list/info operations
 	MinTopUpCents    = 500 // $5.00 minimum top-up
 	CheckFeeCents    = 1   // $0.01 per check over free quota
+
+	SiteCreateFeeCents = 50  // $0.50
+	SiteDeployFeeCents = 10  // $0.10
+	FreeTierMaxReqDay  = 1000
+	PaidTierFreeReqDay = 10000
+	PaidReqCostMills   = 1    // $0.001/req
+	SponsorSitePct     = 80   // 80% → site owner
+	SponsorTokenPct    = 100  // 100% → sponsor's tokens
 )
 
 // CalculateCostCents returns the cost in cents for the given operation.
@@ -40,6 +51,12 @@ func CalculateCostCents(op OperationType, baseCostCents int64) int64 {
 		return ListFeeCents
 	case OpDNSAdd, OpDNSDelete, OpDomainRenew, OpNSUpdate, OpDNSUpdate:
 		return FixedFeeCents
+	case OpSiteCreate:
+		return SiteCreateFeeCents
+	case OpSiteDeploy:
+		return SiteDeployFeeCents
+	case OpSiteRequest:
+		return baseCostCents // pass through the pre-calculated batch cost
 	default:
 		return 0
 	}

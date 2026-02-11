@@ -7,6 +7,7 @@ import (
 
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/email"
+	"github.com/yukihamada/regctl/internal/flymachines"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 	"github.com/yukihamada/regctl/internal/storage"
 )
@@ -29,6 +30,12 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURI  string
 	BaseURL            string // e.g. https://regctl-api.fly.dev
+
+	// Fly Machines hosting
+	FlyAPIToken    string
+	FlyAppName     string
+	FlyRegion      string
+	InternalSecret string
 }
 
 // Server is the HTTP API server.
@@ -51,6 +58,11 @@ type Server struct {
 	googleClientSecret string
 	googleRedirectURI  string
 	baseURL            string
+
+	// Fly Machines hosting
+	flyClient      *flymachines.Client
+	flyAppName     string
+	internalSecret string
 }
 
 // New creates a new HTTP API server.
@@ -72,8 +84,18 @@ func New(cfg Config) *Server {
 		googleClientSecret: cfg.GoogleClientSecret,
 		googleRedirectURI:  cfg.GoogleRedirectURI,
 		baseURL:            cfg.BaseURL,
+		flyAppName:         cfg.FlyAppName,
+		internalSecret:     cfg.InternalSecret,
+	}
+	if cfg.FlyAPIToken != "" && cfg.FlyAppName != "" {
+		region := cfg.FlyRegion
+		if region == "" {
+			region = "nrt"
+		}
+		s.flyClient = flymachines.NewClient(cfg.FlyAPIToken, cfg.FlyAppName, region)
 	}
 	s.routes()
+	s.startDailyBillingWorker()
 	return s
 }
 
@@ -163,6 +185,20 @@ func (s *Server) routes() {
 		s.mux.HandleFunc("GET /v1/billing/session/{session_id}", s.handleGetSession)
 		s.mux.HandleFunc("POST /webhooks/stripe", s.handleStripeWebhook)
 	}
+
+	// Hosting routes
+	s.mux.HandleFunc("POST /v1/sites", s.auth(s.handleCreateSite))
+	s.mux.HandleFunc("GET /v1/sites", s.auth(s.handleListSites))
+	s.mux.HandleFunc("GET /v1/sites/{domain}", s.auth(s.handleGetSite))
+	s.mux.HandleFunc("DELETE /v1/sites/{domain}", s.auth(s.handleDeleteSite))
+	s.mux.HandleFunc("POST /v1/sites/{domain}/deploy", s.auth(s.handleDeploySite))
+	s.mux.HandleFunc("GET /v1/sites/{domain}/usage", s.auth(s.handleSiteUsage))
+
+	sponsorHandler := s.cors(s.handleSponsorSite)
+	s.mux.HandleFunc("POST /v1/sites/{domain}/sponsor", sponsorHandler)
+	s.mux.HandleFunc("OPTIONS /v1/sites/{domain}/sponsor", sponsorHandler)
+
+	s.mux.HandleFunc("POST /v1/internal/site-requests", s.handleSiteRequestBatch)
 
 	// Curl-friendly prices endpoint (no auth, CORS enabled)
 	pricesTextHandler := s.cors(s.handlePricesText)
