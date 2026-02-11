@@ -1,15 +1,21 @@
 package server
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/yukihamada/regctl/internal/provider"
 )
+
+const nanobotAPI = "https://chatweb.ai/api/v1/chat"
 
 // Fly app IPs for regctl-api (from `fly ips list --app regctl-api`)
 const (
@@ -165,4 +171,127 @@ func isAPIDomain(host string) bool {
 		strings.HasPrefix(host, "[::") ||
 		host == "::1" ||
 		host == ""
+}
+
+const siteGenPrompt = `You are a professional web designer. Generate a complete, self-contained HTML page.
+
+Rules:
+- Output ONLY valid HTML (<!DOCTYPE html> to </html>). No markdown, no explanation.
+- All CSS must be inline in a <style> tag. No external stylesheets or CDNs.
+- All JS must be inline in a <script> tag. No external scripts.
+- Make it responsive, modern, and visually polished.
+- Use a dark theme (#0a0a0a background) unless the user requests otherwise.
+- Include proper meta tags (charset, viewport).
+- The site is for the domain: %s
+
+User's request: %s`
+
+// handleGenerateSite generates a website using AI from a text description.
+func (s *Server) handleGenerateSite(w http.ResponseWriter, r *http.Request) {
+	domain := r.PathValue("domain")
+
+	var req struct {
+		Prompt string `json:"prompt"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536)).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid JSON body", "")
+		return
+	}
+	if req.Prompt == "" {
+		writeError(w, http.StatusBadRequest, "prompt is required", "Describe what kind of site you want")
+		return
+	}
+
+	// Call nanobot API
+	prompt := fmt.Sprintf(siteGenPrompt, domain, req.Prompt)
+	chatReq := map[string]interface{}{
+		"message":    prompt,
+		"session_id": "regctl-site-" + domain,
+		"model":      "claude-sonnet-4-5-20250929",
+		"device":     "pc",
+	}
+	body, err := json.Marshal(chatReq)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, "marshal: "+err.Error(), "")
+		return
+	}
+
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Post(nanobotAPI, "application/json", bytes.NewReader(body))
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "AI service error: "+err.Error(), "")
+		return
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		writeError(w, http.StatusBadGateway, "read AI response: "+err.Error(), "")
+		return
+	}
+
+	var chatResp struct {
+		Response string `json:"response"`
+	}
+	if err := json.Unmarshal(respBody, &chatResp); err != nil {
+		writeError(w, http.StatusBadGateway, "parse AI response: "+err.Error(), "")
+		return
+	}
+
+	html := chatResp.Response
+	if html == "" {
+		writeError(w, http.StatusBadGateway, "AI returned empty response", "Try a different description")
+		return
+	}
+
+	// Extract HTML from response (AI might wrap in markdown code blocks)
+	html = extractHTML(html)
+
+	// Save to disk
+	siteDir := filepath.Join("/data/sites", domain)
+	if err := os.MkdirAll(siteDir, 0755); err != nil {
+		writeError(w, http.StatusInternalServerError, "create dir: "+err.Error(), "")
+		return
+	}
+	indexPath := filepath.Join(siteDir, "index.html")
+	if err := os.WriteFile(indexPath, []byte(html), 0644); err != nil {
+		writeError(w, http.StatusInternalServerError, "write file: "+err.Error(), "")
+		return
+	}
+
+	// Ensure site record exists
+	if s.store != nil {
+		existing, _ := s.store.GetSite(domain)
+		if existing == nil {
+			customerID := getCustomerID(r)
+			s.store.CreateSite(domain, customerID, "", "")
+			s.store.UpdateSiteStatus(domain, "active")
+		}
+	}
+
+	log.Printf("ai-generate: %s → %d bytes", domain, len(html))
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"domain":   domain,
+		"site_url": "https://" + domain,
+		"size":     len(html),
+		"status":   "deployed",
+	})
+}
+
+// extractHTML strips markdown code fences if the AI wrapped HTML in them.
+func extractHTML(s string) string {
+	s = strings.TrimSpace(s)
+	// Remove ```html ... ``` wrapper
+	if strings.HasPrefix(s, "```") {
+		lines := strings.SplitN(s, "\n", 2)
+		if len(lines) == 2 {
+			s = lines[1]
+		}
+		if idx := strings.LastIndex(s, "```"); idx > 0 {
+			s = s[:idx]
+		}
+	}
+	s = strings.TrimSpace(s)
+	return s
 }

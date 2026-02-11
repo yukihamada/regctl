@@ -217,6 +217,11 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /v1/sites/{domain}/sponsor", sponsorHandler)
 	s.mux.HandleFunc("OPTIONS /v1/sites/{domain}/sponsor", sponsorHandler)
 
+	// AI site generation (CORS enabled, optional auth)
+	generateHandler := s.cors(s.optionalAuth(s.handleGenerateSite))
+	s.mux.HandleFunc("POST /v1/sites/{domain}/generate", generateHandler)
+	s.mux.HandleFunc("OPTIONS /v1/sites/{domain}/generate", generateHandler)
+
 	s.mux.HandleFunc("POST /v1/internal/site-requests", s.handleSiteRequestBatch)
 
 	// Curl-friendly prices endpoint (no auth, CORS enabled)
