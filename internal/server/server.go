@@ -164,6 +164,11 @@ func (s *Server) routes() {
 		s.mux.HandleFunc("POST /webhooks/stripe", s.handleStripeWebhook)
 	}
 
+	// Curl-friendly prices endpoint (no auth, CORS enabled)
+	pricesTextHandler := s.cors(s.handlePricesText)
+	s.mux.HandleFunc("GET /v1/prices", pricesTextHandler)
+	s.mux.HandleFunc("OPTIONS /v1/prices", pricesTextHandler)
+
 	// Static file serving (when staticDir is configured)
 	if s.staticDir != "" {
 		if _, err := os.Stat(s.staticDir); err == nil {
@@ -171,7 +176,7 @@ func (s *Server) routes() {
 			s.mux.HandleFunc("GET /llms.txt", s.serveStatic("llms.txt", "text/plain; charset=utf-8"))
 			s.mux.HandleFunc("GET /prices.json", s.serveStatic("prices.json", "application/json"))
 			s.mux.HandleFunc("GET /og-image.svg", s.serveStatic("og-image.svg", "image/svg+xml"))
-			s.mux.HandleFunc("GET /{$}", s.serveStatic("index.html", "text/html; charset=utf-8"))
+			s.mux.HandleFunc("GET /{$}", s.serveCurlOrHTML())
 		}
 	}
 }
@@ -181,5 +186,18 @@ func (s *Server) serveStatic(filename, contentType string) http.HandlerFunc {
 		w.Header().Set("Content-Type", contentType)
 		w.Header().Set("Cache-Control", "public, max-age=300")
 		http.ServeFile(w, r, s.staticDir+"/"+filename)
+	}
+}
+
+// serveCurlOrHTML returns HTML for browsers, text for curl/wget/httpie.
+func (s *Server) serveCurlOrHTML() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if isCurl(r) {
+			s.handlePricesText(w, r)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		http.ServeFile(w, r, s.staticDir+"/index.html")
 	}
 }

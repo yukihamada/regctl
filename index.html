@@ -85,7 +85,7 @@ header p{color:var(--muted);font-size:1.15rem;max-width:620px;margin:0 auto 28px
 
 /* Domain Search Hero */
 .domain-search-hero{max-width:580px;margin:0 auto 28px;position:relative}
-.domain-search-hero input{width:100%;background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:16px 20px;color:var(--text);font-size:1.1rem;outline:none;transition:border-color .2s}
+.domain-search-hero input{width:100%;background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:16px 48px 16px 20px;color:var(--text);font-size:1.1rem;outline:none;transition:border-color .2s}
 .domain-search-hero input:focus{border-color:var(--green)}
 .domain-search-hero input::placeholder{color:var(--muted)}
 .search-label{display:block;font-size:.9rem;color:var(--muted);margin-bottom:8px;text-align:left}
@@ -235,6 +235,39 @@ tr:hover{background:rgba(88,166,255,.04)}
 html[lang="ja"] [data-i18n-en]{display:none}
 html[lang="en"] [data-i18n-ja]{display:none}
 
+/* Mic button (inside search input) */
+.mic-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:1px solid var(--border);border-radius:8px;padding:6px 10px;color:var(--muted);font-size:1rem;cursor:pointer;transition:all .2s;line-height:1}
+.mic-btn:hover{border-color:var(--green);color:var(--green)}
+.mic-btn.listening{border-color:#f85149;color:#f85149;animation:mic-pulse 1s infinite}
+@keyframes mic-pulse{0%,100%{box-shadow:0 0 0 0 rgba(248,81,73,.4)}50%{box-shadow:0 0 0 8px rgba(248,81,73,0)}}
+
+/* TTS toggle (navbar) */
+.tts-toggle{display:flex;align-items:center;gap:6px;margin-left:8px}
+.tts-label{font-size:.75rem;color:var(--muted)}
+.tts-switch{position:relative;width:32px;height:18px;background:var(--surface);border:1px solid var(--border);border-radius:9px;cursor:pointer;transition:all .2s;appearance:none;-webkit-appearance:none;outline:none}
+.tts-switch::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;background:var(--muted);border-radius:50%;transition:all .2s}
+.tts-switch:checked{background:var(--green-bg);border-color:var(--green)}
+.tts-switch:checked::after{transform:translateX(14px);background:var(--green)}
+
+/* Speak button on result cards */
+.sr-speak-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-size:.85rem;cursor:pointer;transition:all .2s;flex-shrink:0;margin-left:8px}
+.sr-speak-btn:hover{border-color:var(--blue);color:var(--blue)}
+.sr-speak-btn.speaking{border-color:var(--green);color:var(--green)}
+
+/* Voice hidden */
+.mic-btn[hidden],.tts-toggle[hidden],.sr-speak-btn[hidden]{display:none}
+
+/* TLD suggestion grid */
+.sr-tld-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;margin-top:4px}
+.sr-tld-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;transition:all .2s;display:flex;justify-content:space-between;align-items:center}
+.sr-tld-item:hover{border-color:var(--green);background:var(--green-bg)}
+.sr-tld-item.sr-tld-best{border-color:var(--green)}
+.sr-tld-name{font-weight:700;font-size:.95rem;color:var(--text)}
+.sr-tld-price{font-size:.85rem;color:var(--muted);white-space:nowrap}
+.sr-tld-item.sr-tld-best .sr-tld-price{color:var(--green);font-weight:600}
+.sr-tld-more{text-align:center;padding:8px;color:var(--muted);font-size:.85rem;cursor:pointer}
+.sr-tld-more:hover{color:var(--blue)}
+
 /* Discovery */
 .discovery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:16px}
 .disc-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;transition:border-color .2s}
@@ -255,7 +288,8 @@ footer a:hover{text-decoration:underline}
   header{padding:70px 20px 32px}
   header h1{font-size:2rem}
   header p{font-size:.95rem}
-  .domain-search-hero input{font-size:1rem;padding:14px 16px}
+  .domain-search-hero input{font-size:1rem;padding:14px 48px 14px 16px}
+  .tts-label{display:none}
   .install-box{font-size:.75rem;padding:10px 12px}
   .search-wrap input{width:100%}
   .steps{grid-template-columns:1fr}
@@ -279,6 +313,7 @@ footer a:hover{text-decoration:underline}
     <a href="#discovery" class="hide-mobile"><span data-i18n-en>Discovery</span><span data-i18n-ja>発見</span></a>
     <a href="#how-it-works" class="hide-mobile"><span data-i18n-en>How it Works</span><span data-i18n-ja>使い方</span></a>
     <a href="#signup" class="hide-mobile"><span data-i18n-en>Sign Up</span><span data-i18n-ja>登録</span></a>
+    <div class="tts-toggle" id="ttsToggleWrap" hidden><label class="tts-label" for="ttsSwitch"><span data-i18n-en>🔊 TTS</span><span data-i18n-ja>🔊 読上</span></label><input type="checkbox" class="tts-switch" id="ttsSwitch"></div>
     <button class="lang-toggle" id="langToggle" aria-label="Switch language">JA</button>
     <a href="https://github.com/yukihamada/regctl" class="nav-gh" aria-label="GitHub repository"><svg viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
   </div>
@@ -297,6 +332,7 @@ footer a:hover{text-decoration:underline}
 <div class="domain-search-hero" role="search" aria-label="Domain price search">
   <label class="search-label" for="heroSearch"><span data-i18n-en>Find the cheapest price for your domain</span><span data-i18n-ja>ドメインの最安値を検索</span></label>
   <input type="text" id="heroSearch" placeholder="e.g. mysite.com, example.io, startup.dev" autocomplete="off" spellcheck="false">
+  <button class="mic-btn" id="micBtn" type="button" hidden aria-label="Voice search"><svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 10a2 2 0 002-2V4a2 2 0 10-4 0v4a2 2 0 002 2z"/><path d="M12 8a1 1 0 10-2 0 2 2 0 11-4 0 1 1 0 10-2 0 4 4 0 003 3.87V13H6a1 1 0 100 2h4a1 1 0 100-2H9v-1.13A4 4 0 0012 8z"/></svg></button>
   <div class="search-results" id="heroResults" aria-live="polite"></div>
 </div>
 
@@ -761,6 +797,7 @@ function checkAvailability(domain){
     if(dohResult==='taken'){
       el.className='sr-avail taken';
       el.innerHTML='<strong>'+escHtml(domain)+'</strong> is taken';
+      if(window._regctlTTS)window._regctlTTS.speakAvailability(domain,false);
       return;
     }
     // Phase 2: API verification
@@ -784,13 +821,16 @@ function checkAvailability(domain){
           html+='<br><button class="sr-register-btn" onclick="registerDomain(\''+escHtml(domain).replace(/'/g,"\\'")+'\')"><span data-i18n-en>Register Now</span><span data-i18n-ja>今すぐ登録</span></button>';
           html+='<div class="sr-register-msg" id="registerMsg"></div>';
         }else{
-          html+='<div class="sr-register-login"><span data-i18n-en><a href="#signup">Sign up</a> to register this domain directly.</span><span data-i18n-ja>このドメインを直接登録するには<a href="#signup">サインアップ</a>してください。</span></div>';
+          html+='<br><a href="#signup" class="sr-register-btn" style="text-decoration:none;display:inline-block"><span data-i18n-en>Sign Up &amp; Register</span><span data-i18n-ja>登録して取得</span></a>';
+          html+='<div class="sr-register-login" style="margin-top:6px"><span data-i18n-en>Create a free account to register this domain.</span><span data-i18n-ja>無料アカウントを作成してこのドメインを取得できます。</span></div>';
         }
         el.innerHTML=html;
         applyLang(el);
+        if(window._regctlTTS)window._regctlTTS.speakAvailability(domain,true);
       }else{
         el.className='sr-avail taken';
         el.innerHTML='<strong>'+escHtml(domain)+'</strong> is taken';
+        if(window._regctlTTS)window._regctlTTS.speakAvailability(domain,false);
       }
     });
   })
@@ -843,6 +883,46 @@ function registerDomain(domain){
   });
 }
 
+var tldGridLimit=10;
+
+function bestPrice(m){
+  var p=Infinity;
+  if(m.s!=null&&m.s<p)p=m.s;
+  if(m.p!=null&&m.p<p)p=m.p;
+  if(m.c!=null&&m.c<p)p=m.c;
+  return p;
+}
+
+function bestReg(m){
+  var p=bestPrice(m);
+  if(m.s===p)return'Spaceship';
+  if(m.c===p)return'Cloudflare';
+  if(m.p===p)return'Porkbun';
+  return'';
+}
+
+function renderTldGrid(keyword,limit){
+  var sorted=D.filter(function(d){return bestPrice(d)>0}).sort(function(a,b){return bestPrice(a)-bestPrice(b)});
+  var cheapest=sorted.length?bestPrice(sorted[0]):0;
+  var html='<div class="sr-tld"><span data-i18n-en>TLD options for <strong>'+escHtml(keyword)+'</strong> — click to check &amp; register</span><span data-i18n-ja><strong>'+escHtml(keyword)+'</strong> のTLD候補 — クリックで空き確認＆登録</span></div>';
+  html+='<div class="sr-tld-grid">';
+  var shown=Math.min(limit,sorted.length);
+  for(var i=0;i<shown;i++){
+    var m=sorted[i];
+    var p=bestPrice(m);
+    var isBest=p===cheapest;
+    html+='<div class="sr-tld-item'+(isBest?' sr-tld-best':'')+'" data-domain="'+escHtml(keyword)+'.'+escHtml(m.t)+'">'
+      +'<span class="sr-tld-name">'+escHtml(keyword)+'<span style="color:var(--green)">.'+escHtml(m.t)+'</span></span>'
+      +'<span class="sr-tld-price">$'+p.toFixed(2)+'</span>'
+      +'</div>';
+  }
+  html+='</div>';
+  if(sorted.length>limit){
+    html+='<div class="sr-tld-more" id="tldShowMore" data-keyword="'+escHtml(keyword)+'" data-showing="'+limit+'"><span data-i18n-en>Show all '+sorted.length+' TLDs</span><span data-i18n-ja>全'+sorted.length+' TLDを表示</span></div>';
+  }
+  return html;
+}
+
 heroInput.addEventListener('input',e=>{
   const val=e.target.value.trim().toLowerCase();
   if(!val){heroResults.classList.remove('active');heroResults.innerHTML='';return;}
@@ -862,14 +942,53 @@ heroInput.addEventListener('input',e=>{
 
   const debounceMs=800;
 
+  // Keyword-only search (no dot) — show TLD grid
+  if(!isFullDomain){
+    let html=renderTldGrid(val,tldGridLimit);
+    heroResults.classList.add('active');
+    heroResults.innerHTML=html;
+    applyLang(heroResults);
+    // Click on TLD item → fill input
+    heroResults.querySelectorAll('.sr-tld-item').forEach(function(item){
+      item.addEventListener('click',function(){
+        heroInput.value=item.getAttribute('data-domain');
+        heroInput.dispatchEvent(new Event('input',{bubbles:true}));
+      });
+    });
+    var moreBtn=document.getElementById('tldShowMore');
+    if(moreBtn){
+      moreBtn.addEventListener('click',function(){
+        var apiKey=localStorage.getItem('regctl_billing_key');
+        if(!apiKey){
+          var signupEl=document.getElementById('signup');
+          if(signupEl)signupEl.scrollIntoView({behavior:'smooth'});
+          moreBtn.innerHTML='<span data-i18n-en><a href="#signup" style="color:var(--blue)">Sign up free</a> to see all TLDs</span><span data-i18n-ja>全TLDを見るには<a href="#signup" style="color:var(--blue)">無料登録</a>してください</span>';
+          applyLang(moreBtn);
+          return;
+        }
+        var kw=moreBtn.getAttribute('data-keyword');
+        heroResults.innerHTML=renderTldGrid(kw,D.length);
+        applyLang(heroResults);
+        heroResults.querySelectorAll('.sr-tld-item').forEach(function(item){
+          item.addEventListener('click',function(){
+            heroInput.value=item.getAttribute('data-domain');
+            heroInput.dispatchEvent(new Event('input',{bubbles:true}));
+          });
+        });
+      });
+    }
+    return;
+  }
+
   const match=D.find(d=>d.t===tld);
   if(!match){
-    let html='<div class="sr-card"><span class="sr-na">No pricing data for <strong>.'+escHtml(tld)+'</strong>. Try searching in the table below.</span></div>';
+    let html='<div class="sr-card"><span class="sr-na"><span data-i18n-en>No pricing data for <strong>.'+escHtml(tld)+'</strong>. Try searching in the table below.</span><span data-i18n-ja><strong>.'+escHtml(tld)+'</strong> の料金データがありません。下の表で検索してみてください。</span></span></div>';
     if(isFullDomain){
       html+='<div class="sr-avail loading" id="availResult">Checking availability...</div>';
     }
     heroResults.classList.add('active');
     heroResults.innerHTML=html;
+    applyLang(heroResults);
     if(isFullDomain){
       checkTimer=setTimeout(function(){checkAvailability(val)},debounceMs);
     }
@@ -886,6 +1005,7 @@ heroInput.addEventListener('input',e=>{
 
   heroResults.classList.add('active');
   heroResults.innerHTML=html;
+  if(window._regctlTTS)window._regctlTTS.speakResults();
 
   // Debounced availability check
   if(isFullDomain){
@@ -1137,6 +1257,165 @@ function showAPIKey(key){
     if(html.lang==='ja'){html.lang='en';btn.textContent='JA';localStorage.setItem('regctl_lang','en');}
     else{html.lang='ja';btn.textContent='EN';localStorage.setItem('regctl_lang','ja');}
   });
+})();
+
+// Voice features (TTS + Speech Recognition)
+(function(){
+  var synth=window.speechSynthesis;
+  var SpeechRec=window.SpeechRecognition||window.webkitSpeechRecognition;
+  var hasTTS=!!synth;
+  var hasRec=!!SpeechRec;
+  if(!hasTTS&&!hasRec)return;
+
+  var micBtn=document.getElementById('micBtn');
+  var ttsWrap=document.getElementById('ttsToggleWrap');
+  var ttsSw=document.getElementById('ttsSwitch');
+  var heroIn=document.getElementById('heroSearch');
+  var heroRes=document.getElementById('heroResults');
+  var recognition=null;
+  var prompted=false;
+
+  function lang(){return document.documentElement.lang==='ja'?'ja':'en';}
+
+  // Prompt user once on first search input
+  function ensurePrompted(){
+    if(prompted)return;
+    var stored=localStorage.getItem('regctl_tts');
+    if(stored!==null){prompted=true;showControls(stored==='on');return;}
+    prompted=true;
+    var msg=lang()==='ja'?'音声機能を有効にしますか？（読み上げと音声検索）':'Enable voice features? (Text-to-speech and voice search)';
+    if(confirm(msg)){
+      localStorage.setItem('regctl_tts','on');
+      showControls(true);
+    }else{
+      localStorage.setItem('regctl_tts','off');
+      showControls(false);
+    }
+  }
+
+  function showControls(ttsOn){
+    if(hasRec)micBtn.removeAttribute('hidden');
+    if(hasTTS){ttsWrap.removeAttribute('hidden');ttsSw.checked=ttsOn;}
+  }
+
+  // On page load, if already decided, show controls immediately
+  var initStored=localStorage.getItem('regctl_tts');
+  if(initStored!==null){prompted=true;showControls(initStored==='on');}
+
+  // Listen for first input to trigger prompt
+  heroIn.addEventListener('input',function onFirstInput(){
+    ensurePrompted();
+  });
+
+  // --- TTS ---
+  function speak(text){
+    if(!hasTTS||!ttsSw.checked)return;
+    synth.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang=lang()==='ja'?'ja-JP':'en-US';
+    u.rate=1.1;
+    synth.speak(u);
+  }
+
+  ttsSw.addEventListener('change',function(){
+    localStorage.setItem('regctl_tts',ttsSw.checked?'on':'off');
+    if(!ttsSw.checked)synth.cancel();
+  });
+
+  // Speak buttons on result cards
+  function addSpeakButtons(){
+    if(!hasTTS)return;
+    heroRes.querySelectorAll('.sr-card').forEach(function(card){
+      if(card.querySelector('.sr-speak-btn'))return;
+      var btn=document.createElement('button');
+      btn.className='sr-speak-btn';
+      btn.textContent='🔊';
+      btn.setAttribute('aria-label','Read aloud');
+      btn.addEventListener('click',function(){
+        var reg=card.querySelector('.sr-reg');
+        var price=card.querySelector('.sr-price');
+        if(!reg||!price)return;
+        synth.cancel();
+        var text=lang()==='ja'
+          ?reg.textContent+'、'+price.textContent.replace('$','').replace('/yr','')+' ドル'
+          :reg.textContent+', '+price.textContent;
+        var u=new SpeechSynthesisUtterance(text);
+        u.lang=lang()==='ja'?'ja-JP':'en-US';
+        btn.classList.add('speaking');
+        u.onend=function(){btn.classList.remove('speaking');};
+        synth.speak(u);
+      });
+      card.appendChild(btn);
+    });
+  }
+
+  // Observe result changes to add speak buttons
+  var obs=new MutationObserver(function(){addSpeakButtons();});
+  obs.observe(heroRes,{childList:true,subtree:true});
+
+  // --- Speech Recognition ---
+  if(hasRec){
+    recognition=new SpeechRec();
+    recognition.continuous=false;
+    recognition.interimResults=false;
+
+    micBtn.addEventListener('click',function(){
+      if(micBtn.classList.contains('listening')){
+        recognition.abort();
+        micBtn.classList.remove('listening');
+        return;
+      }
+      recognition.lang=lang()==='ja'?'ja-JP':'en-US';
+      try{recognition.start();}catch(e){}
+      micBtn.classList.add('listening');
+    });
+
+    recognition.addEventListener('result',function(e){
+      micBtn.classList.remove('listening');
+      var raw=e.results[0][0].transcript.toLowerCase().trim();
+      // Clean: "dot"→".", "ドット"→".", remove spaces
+      var cleaned=raw
+        .replace(/\bdot\b/g,'.')
+        .replace(/ドット/g,'.')
+        .replace(/\s+/g,'')
+        .replace(/\.+/g,'.');
+      heroIn.value=cleaned;
+      heroIn.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+
+    recognition.addEventListener('end',function(){
+      micBtn.classList.remove('listening');
+    });
+
+    recognition.addEventListener('error',function(){
+      micBtn.classList.remove('listening');
+    });
+  }
+
+  // --- Public TTS hooks ---
+  window._regctlTTS={
+    speakResults:function(){
+      if(!hasTTS||!ttsSw.checked)return;
+      var best=heroRes.querySelector('.sr-best');
+      if(!best)return;
+      var reg=best.querySelector('.sr-reg');
+      var price=best.querySelector('.sr-price');
+      var tld=heroRes.querySelector('.sr-tld strong');
+      if(!reg||!price)return;
+      var domain=tld?tld.textContent:'';
+      var text=lang()==='ja'
+        ?domain+'、最安は'+reg.textContent+'で年間'+price.textContent.replace('$','').replace('/yr','')+'ドルです'
+        :domain+', cheapest is '+reg.textContent+' at '+price.textContent+' per year';
+      speak(text);
+    },
+    speakAvailability:function(domain,available){
+      if(!hasTTS||!ttsSw.checked)return;
+      var text=lang()==='ja'
+        ?(available?domain+'は取得可能です':domain+'は取得済みです')
+        :(available?domain+' is available':domain+' is taken');
+      speak(text);
+    }
+  };
 })();
 
 // Discovery feed

@@ -6,7 +6,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/yukihamada/regctl/internal/billing"
@@ -700,4 +703,156 @@ func (s *Server) handleRDAP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, out)
+}
+
+// handlePricesText returns a curl-friendly plain text price table.
+// GET /v1/prices?q=dojo  → show TLD options for "dojo"
+// GET /v1/prices?tld=com → show registrar prices for .com
+// GET /v1/prices         → show top 20 cheapest TLDs
+func (s *Server) handlePricesText(w http.ResponseWriter, r *http.Request) {
+	// Load prices.json
+	data, err := os.ReadFile(s.staticDir + "/prices.json")
+	if err != nil {
+		http.Error(w, "prices data not available", http.StatusInternalServerError)
+		return
+	}
+
+	var pf struct {
+		Updated   string `json:"updated"`
+		TotalTLDs int    `json:"total_tlds"`
+		TLDs      []struct {
+			TLD    string             `json:"tld"`
+			Prices map[string]float64 `json:"prices"`
+			Best   string             `json:"best_registrar"`
+			BestP  float64            `json:"best_price"`
+		} `json:"tlds"`
+	}
+	if err := json.Unmarshal(data, &pf); err != nil {
+		http.Error(w, "failed to parse prices", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+	query := r.URL.Query().Get("q")
+	tldFilter := r.URL.Query().Get("tld")
+	limitStr := r.URL.Query().Get("limit")
+	limit := 20
+	if n, err := strconv.Atoi(limitStr); err == nil && n > 0 && n <= 897 {
+		limit = n
+	}
+
+	if tldFilter != "" {
+		// Show registrar comparison for a specific TLD
+		tldFilter = strings.TrimPrefix(strings.ToLower(tldFilter), ".")
+		for _, t := range pf.TLDs {
+			tld := strings.TrimPrefix(t.TLD, ".")
+			if tld == tldFilter {
+				fmt.Fprintf(w, "regctl.sh — Renewal prices for .%s\n", tld)
+				fmt.Fprintf(w, "Updated: %s\n\n", pf.Updated)
+				fmt.Fprintf(w, "  %-14s %10s\n", "Registrar", "Price/yr")
+				fmt.Fprintf(w, "  %-14s %10s\n", "──────────────", "─────────")
+				type rp struct {
+					name  string
+					price float64
+				}
+				var rows []rp
+				for reg, price := range t.Prices {
+					rows = append(rows, rp{reg, price})
+				}
+				sort.Slice(rows, func(i, j int) bool { return rows[i].price < rows[j].price })
+				for i, row := range rows {
+					marker := "  "
+					if i == 0 {
+						marker = "→ "
+					}
+					fmt.Fprintf(w, "%s%-14s %9s\n", marker, row.name, fmt.Sprintf("$%.2f", row.price))
+				}
+				fmt.Fprintf(w, "\nBest: %s at $%.2f/yr\n", t.Best, t.BestP)
+				return
+			}
+		}
+		fmt.Fprintf(w, "No pricing data for .%s\n", tldFilter)
+		return
+	}
+
+	if query != "" {
+		// Show TLD options for a keyword
+		query = strings.ToLower(strings.TrimSpace(query))
+		sorted := make([]struct {
+			tld   string
+			best  string
+			price float64
+		}, 0, len(pf.TLDs))
+		for _, t := range pf.TLDs {
+			if t.BestP > 0 {
+				tld := strings.TrimPrefix(t.TLD, ".")
+				sorted = append(sorted, struct {
+					tld   string
+					best  string
+					price float64
+				}{tld, t.Best, t.BestP})
+			}
+		}
+		sort.Slice(sorted, func(i, j int) bool { return sorted[i].price < sorted[j].price })
+
+		fmt.Fprintf(w, "regctl.sh — TLD options for \"%s\"\n", query)
+		fmt.Fprintf(w, "Updated: %s | %d TLDs available\n\n", pf.Updated, len(sorted))
+		fmt.Fprintf(w, "  %-28s %10s  %-12s\n", "Domain", "Price/yr", "Registrar")
+		fmt.Fprintf(w, "  %-28s %10s  %-12s\n", "────────────────────────────", "─────────", "────────────")
+		n := limit
+		if n > len(sorted) {
+			n = len(sorted)
+		}
+		for i := 0; i < n; i++ {
+			s := sorted[i]
+			marker := "  "
+			if i == 0 {
+				marker = "→ "
+			}
+			domain := query + "." + s.tld
+			fmt.Fprintf(w, "%s%-28s %9s  %s\n", marker, domain, fmt.Sprintf("$%.2f", s.price), s.best)
+		}
+		if len(sorted) > n {
+			fmt.Fprintf(w, "\n  ... and %d more TLDs. Use ?limit=%d to see all.\n", len(sorted)-n, len(sorted))
+		}
+		fmt.Fprintf(w, "\nCheck availability: curl %s/v1/domains/check/%s.com\n", s.baseURL, query)
+		fmt.Fprintf(w, "Full data:          curl %s/prices.json\n", s.baseURL)
+		return
+	}
+
+	// Default: show top N cheapest TLDs
+	type entry struct {
+		tld   string
+		best  string
+		price float64
+	}
+	sorted := make([]entry, 0, len(pf.TLDs))
+	for _, t := range pf.TLDs {
+		if t.BestP > 0 {
+			sorted = append(sorted, entry{strings.TrimPrefix(t.TLD, "."), t.Best, t.BestP})
+		}
+	}
+	sort.Slice(sorted, func(i, j int) bool { return sorted[i].price < sorted[j].price })
+
+	fmt.Fprintf(w, "regctl.sh — Domain Price Comparison (%d TLDs)\n", len(sorted))
+	fmt.Fprintf(w, "Updated: %s\n\n", pf.Updated)
+	fmt.Fprintf(w, "  %-10s %10s  %-12s\n", "TLD", "Price/yr", "Best Registrar")
+	fmt.Fprintf(w, "  %-10s %10s  %-12s\n", "──────────", "─────────", "──────────────")
+	n := limit
+	if n > len(sorted) {
+		n = len(sorted)
+	}
+	for _, e := range sorted[:n] {
+		fmt.Fprintf(w, "  .%-9s %9s  %s\n", e.tld, fmt.Sprintf("$%.2f", e.price), e.best)
+	}
+	fmt.Fprintf(w, "\nSearch:     curl %s/v1/prices?q=dojo\n", s.baseURL)
+	fmt.Fprintf(w, "TLD detail: curl %s/v1/prices?tld=com\n", s.baseURL)
+	fmt.Fprintf(w, "Full data:  curl %s/prices.json\n", s.baseURL)
+}
+
+// isCurl returns true if the request appears to be from curl or a CLI tool.
+func isCurl(r *http.Request) bool {
+	ua := r.Header.Get("User-Agent")
+	return strings.HasPrefix(ua, "curl/") || strings.HasPrefix(ua, "Wget/") || strings.HasPrefix(ua, "HTTPie/")
 }
