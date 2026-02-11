@@ -152,11 +152,14 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /v1/auth/github/web", s.handleGitHubWebRedirect)
 	s.mux.HandleFunc("GET /v1/auth/github/callback", s.handleGitHubCallback)
 
-	// Billing routes (no auth for signup/webhook, auth for topup/balance)
+	// Billing routes (no auth for signup/webhook, auth for topup/balance/hold)
 	if s.billingEnabled {
 		s.mux.HandleFunc("POST /v1/billing/signup", s.handleSignUp)
 		s.mux.HandleFunc("POST /v1/billing/topup", s.auth(s.handleTopUp))
 		s.mux.HandleFunc("GET /v1/billing/balance", s.auth(s.handleBalance))
+		s.mux.HandleFunc("POST /v1/billing/hold", s.auth(s.handleHold))
+		s.mux.HandleFunc("POST /v1/billing/confirm", s.auth(s.handleConfirm))
+		s.mux.HandleFunc("POST /v1/billing/release", s.auth(s.handleRelease))
 		s.mux.HandleFunc("GET /v1/billing/session/{session_id}", s.handleGetSession)
 		s.mux.HandleFunc("POST /webhooks/stripe", s.handleStripeWebhook)
 	}

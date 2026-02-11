@@ -97,6 +97,9 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 			map[string]string{"method": "POST", "path": "/v1/billing/signup", "description": "Create account"},
 			map[string]string{"method": "POST", "path": "/v1/billing/topup", "description": "Add credit"},
 			map[string]string{"method": "GET", "path": "/v1/billing/balance", "description": "Check balance"},
+			map[string]string{"method": "POST", "path": "/v1/billing/hold", "description": "Create a balance hold"},
+			map[string]string{"method": "POST", "path": "/v1/billing/confirm", "description": "Confirm a hold"},
+			map[string]string{"method": "POST", "path": "/v1/billing/release", "description": "Release a hold (refund)"},
 		)
 	}
 

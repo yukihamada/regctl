@@ -8,6 +8,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/config"
 	"github.com/yukihamada/regctl/internal/provider"
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
@@ -529,9 +530,30 @@ func newDomainsRegisterCmd() *cobra.Command {
 }
 
 func registerViaPorkbun(domain string) error {
+	// Billing guard: estimate cost from Porkbun pricing
+	var hold *holdResult
+	if cfg != nil && cfg.RegctlBillingKey != "" {
+		avail, err := porkbunClient.CheckAvailability(domain)
+		if err == nil {
+			regPriceCents := int64(avail.RegPrice * 100)
+			h, holdErr := billingGuard(billing.OpDomainRegister, regPriceCents, domain)
+			if holdErr != nil {
+				return nil
+			}
+			hold = h
+		}
+	}
+
 	if err := porkbunClient.RegisterDomain(domain); err != nil {
+		if hold != nil {
+			hold.Release()
+		}
 		printErrorResult("register", err, "Check availability first: regctl domains check "+domain)
 		return nil
+	}
+
+	if hold != nil {
+		hold.Confirm()
 	}
 
 	if isStructuredOutput() {
@@ -547,15 +569,37 @@ func registerViaPorkbun(domain string) error {
 	}
 
 	printSuccess(fmt.Sprintf("  Domain %s registered on Porkbun!", domain))
+	printBillingInfo(hold)
 	fmt.Println()
 	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
 	return nil
 }
 
 func registerViaValueDomain(domain string) error {
+	// Billing guard: estimate cost from Value Domain pricing
+	var hold *holdResult
+	if cfg != nil && cfg.RegctlBillingKey != "" {
+		avail, err := client.CheckAvailability(domain)
+		if err == nil {
+			regPriceCents := int64(avail.Price * 100)
+			h, holdErr := billingGuard(billing.OpDomainRegister, regPriceCents, domain)
+			if holdErr != nil {
+				return nil
+			}
+			hold = h
+		}
+	}
+
 	if err := client.RegisterDomain(domain, 1); err != nil {
+		if hold != nil {
+			hold.Release()
+		}
 		printErrorResult("register", err, "Check availability first: regctl domains check "+domain)
 		return nil
+	}
+
+	if hold != nil {
+		hold.Confirm()
 	}
 
 	if isStructuredOutput() {
@@ -568,15 +612,42 @@ func registerViaValueDomain(domain string) error {
 	}
 
 	printSuccess(fmt.Sprintf("  Domain %s registered on Value Domain!", domain))
+	printBillingInfo(hold)
 	fmt.Println()
 	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
 	return nil
 }
 
 func registerViaNamecheap(domain string) error {
+	// Billing guard: estimate cost from Namecheap pricing
+	var hold *holdResult
+	if cfg != nil && cfg.RegctlBillingKey != "" {
+		parts := strings.SplitN(domain, ".", 2)
+		if len(parts) == 2 {
+			pricing, pErr := namecheapClient.FetchPricing()
+			if pErr == nil {
+				if p, ok := pricing[parts[1]]; ok {
+					regPriceCents := int64(p.RegPrice * 100)
+					h, holdErr := billingGuard(billing.OpDomainRegister, regPriceCents, domain)
+					if holdErr != nil {
+						return nil
+					}
+					hold = h
+				}
+			}
+		}
+	}
+
 	if err := namecheapClient.RegisterDomain(domain); err != nil {
+		if hold != nil {
+			hold.Release()
+		}
 		printErrorResult("register", err, "Check availability first: regctl domains check "+domain)
 		return nil
+	}
+
+	if hold != nil {
+		hold.Confirm()
 	}
 
 	if isStructuredOutput() {
@@ -592,15 +663,40 @@ func registerViaNamecheap(domain string) error {
 	}
 
 	printSuccess(fmt.Sprintf("  Domain %s registered on Namecheap!", domain))
+	printBillingInfo(hold)
 	fmt.Println()
 	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
 	return nil
 }
 
 func registerViaSpaceship(domain string) error {
+	// Billing guard: estimate cost from Spaceship static pricing
+	var hold *holdResult
+	if cfg != nil && cfg.RegctlBillingKey != "" {
+		parts := strings.SplitN(domain, ".", 2)
+		if len(parts) == 2 {
+			reg, _ := ssprovider.GetStaticPrice(parts[1])
+			if reg > 0 {
+				regPriceCents := int64(reg * 100)
+				h, holdErr := billingGuard(billing.OpDomainRegister, regPriceCents, domain)
+				if holdErr != nil {
+					return nil
+				}
+				hold = h
+			}
+		}
+	}
+
 	if err := spaceshipClient.RegisterDomain(domain); err != nil {
+		if hold != nil {
+			hold.Release()
+		}
 		printErrorResult("register", err, "Check availability first: regctl domains check "+domain)
 		return nil
+	}
+
+	if hold != nil {
+		hold.Confirm()
 	}
 
 	if isStructuredOutput() {
@@ -616,6 +712,7 @@ func registerViaSpaceship(domain string) error {
 	}
 
 	printSuccess(fmt.Sprintf("  Domain %s registered on Spaceship!", domain))
+	printBillingInfo(hold)
 	fmt.Println()
 	fmt.Printf("  Next: regctl dns list %s\n\n", domain)
 	return nil

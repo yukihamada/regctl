@@ -1,16 +1,64 @@
 package server
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/stripe/stripe-go/v81/checkout/session"
 
 	"github.com/yukihamada/regctl/internal/billing"
 )
+
+// holdEntry represents a pending balance hold.
+type holdEntry struct {
+	CustomerID  string
+	AmountCents int64
+	Description string
+	CreatedAt   time.Time
+}
+
+// holdStore manages in-memory holds with TTL-based expiry.
+var (
+	holds   = make(map[string]*holdEntry)
+	holdsMu sync.Mutex
+)
+
+func init() {
+	// Background goroutine to expire holds after 10 minutes
+	go func() {
+		ticker := time.NewTicker(1 * time.Minute)
+		for range ticker.C {
+			holdsMu.Lock()
+			now := time.Now()
+			for id, h := range holds {
+				if now.Sub(h.CreatedAt) > 10*time.Minute {
+					// Auto-release: refund the held amount
+					if err := billing.AddBalance(h.CustomerID, h.AmountCents, fmt.Sprintf("Auto-release expired hold: %s", h.Description)); err != nil {
+						log.Printf("WARN: auto-release hold %s: %v", id, err)
+					} else {
+						log.Printf("INFO: auto-released expired hold %s ($%.2f for %s)", id, float64(h.AmountCents)/100, h.Description)
+					}
+					delete(holds, id)
+				}
+			}
+			holdsMu.Unlock()
+		}
+	}()
+}
+
+func generateHoldID() string {
+	b := make([]byte, 16)
+	rand.Read(b)
+	return "hold_" + hex.EncodeToString(b)
+}
 
 func (s *Server) handleSignUp(w http.ResponseWriter, r *http.Request) {
 	var req struct {
@@ -167,4 +215,134 @@ func (s *Server) handleStripeWebhook(w http.ResponseWriter, r *http.Request) {
 		"status": "processed",
 		"type":   result.Type,
 	})
+}
+
+// handleHold creates a balance hold (deducts immediately, stores hold for potential release).
+func (s *Server) handleHold(w http.ResponseWriter, r *http.Request) {
+	customerID := getCustomerID(r)
+	if customerID == "" {
+		writeError(w, http.StatusForbidden, "hold requires a billing API key", "")
+		return
+	}
+
+	var req struct {
+		AmountCents int64  `json:"amount_cents"`
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body",
+			`Expected JSON: {"amount_cents": 1090, "description": "domain_register: example.com"}`)
+		return
+	}
+	if req.AmountCents <= 0 {
+		writeError(w, http.StatusBadRequest, "amount_cents must be positive", "")
+		return
+	}
+
+	// Deduct balance immediately
+	if err := billing.DeductBalance(customerID, req.AmountCents, fmt.Sprintf("Hold: %s", req.Description)); err != nil {
+		writeError(w, http.StatusPaymentRequired, err.Error(), "Top up: regctl billing topup 10")
+		return
+	}
+
+	// Get balance after deduction
+	balanceAfter, err := billing.GetBalance(customerID)
+	if err != nil {
+		log.Printf("WARN: get balance after hold: %v", err)
+		balanceAfter = 0
+	}
+
+	// Store hold
+	holdID := generateHoldID()
+	holdsMu.Lock()
+	holds[holdID] = &holdEntry{
+		CustomerID:  customerID,
+		AmountCents: req.AmountCents,
+		Description: req.Description,
+		CreatedAt:   time.Now(),
+	}
+	holdsMu.Unlock()
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"hold_id":       holdID,
+		"amount_cents":  req.AmountCents,
+		"balance_after": balanceAfter,
+	})
+}
+
+// handleConfirm confirms a hold (no-op since hold already deducted).
+func (s *Server) handleConfirm(w http.ResponseWriter, r *http.Request) {
+	customerID := getCustomerID(r)
+	if customerID == "" {
+		writeError(w, http.StatusForbidden, "confirm requires a billing API key", "")
+		return
+	}
+
+	var req struct {
+		HoldID string `json:"hold_id"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body",
+			`Expected JSON: {"hold_id": "hold_..."}`)
+		return
+	}
+
+	holdsMu.Lock()
+	h, ok := holds[req.HoldID]
+	if !ok {
+		holdsMu.Unlock()
+		writeError(w, http.StatusNotFound, "hold not found or already processed", "")
+		return
+	}
+	if h.CustomerID != customerID {
+		holdsMu.Unlock()
+		writeError(w, http.StatusForbidden, "hold belongs to a different customer", "")
+		return
+	}
+	delete(holds, req.HoldID)
+	holdsMu.Unlock()
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "confirmed"})
+}
+
+// handleRelease releases a hold (refunds the held amount).
+func (s *Server) handleRelease(w http.ResponseWriter, r *http.Request) {
+	customerID := getCustomerID(r)
+	if customerID == "" {
+		writeError(w, http.StatusForbidden, "release requires a billing API key", "")
+		return
+	}
+
+	var req struct {
+		HoldID string `json:"hold_id"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 4096)).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body",
+			`Expected JSON: {"hold_id": "hold_..."}`)
+		return
+	}
+
+	holdsMu.Lock()
+	h, ok := holds[req.HoldID]
+	if !ok {
+		holdsMu.Unlock()
+		writeError(w, http.StatusNotFound, "hold not found or already processed", "")
+		return
+	}
+	if h.CustomerID != customerID {
+		holdsMu.Unlock()
+		writeError(w, http.StatusForbidden, "hold belongs to a different customer", "")
+		return
+	}
+	delete(holds, req.HoldID)
+	holdsMu.Unlock()
+
+	// Refund the held amount
+	if err := billing.AddBalance(customerID, h.AmountCents, fmt.Sprintf("Release hold: %s", h.Description)); err != nil {
+		log.Printf("WARN: release hold %s: %v", req.HoldID, err)
+		writeError(w, http.StatusInternalServerError, "failed to release hold", "")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{"status": "released"})
 }

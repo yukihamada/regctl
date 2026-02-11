@@ -10,6 +10,7 @@ import (
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
+	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/config"
 	"github.com/yukihamada/regctl/internal/hosting"
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
@@ -122,6 +123,18 @@ Examples:
 			fmt.Println()
 			bold.Println("  Step 2: Register domain")
 
+			// Billing guard: check balance and create hold
+			regPriceCents := int64(chosen.RegPrice * 100)
+			hold, holdErr := billingGuard(billing.OpDomainRegister, regPriceCents, domain)
+			if holdErr != nil {
+				return nil
+			}
+			if hold != nil {
+				fmt.Printf("    Estimated cost: $%.2f (incl. %d%% markup)\n",
+					float64(hold.CostCents)/100, billing.MarkupPercent)
+				fmt.Printf("    Balance after: $%.2f\n", float64(hold.BalanceAfter)/100)
+			}
+
 			if registrarFlag == "" {
 				// Interactive confirmation
 				fmt.Printf("    Register %s on %s? [Y/n]: ", domain, chosen.Registrar)
@@ -129,6 +142,9 @@ Examples:
 				answer = strings.TrimSpace(strings.ToLower(answer))
 				if answer != "" && answer != "y" && answer != "yes" {
 					fmt.Println("    Cancelled.")
+					if hold != nil {
+						hold.Release()
+					}
 					return nil
 				}
 			}
@@ -137,9 +153,17 @@ Examples:
 			regErr := registerDomain(domain, chosen.Registrar)
 			if regErr != nil {
 				color.Red(" Failed: %v", regErr)
+				if hold != nil {
+					hold.Release()
+				}
 				return nil
 			}
 			color.Green(" Domain registered!")
+
+			// Confirm hold on success
+			if hold != nil {
+				hold.Confirm()
+			}
 
 			// ── Step 3: Connect to hosting ──
 			fmt.Println()
@@ -200,6 +224,7 @@ Examples:
 			} else {
 				fmt.Println("    Hosting:  skipped")
 			}
+			printBillingInfo(hold)
 
 			// Next steps
 			if hp != nil {
@@ -492,20 +517,43 @@ func runMenuLaunch(reader *bufio.Reader) {
 	// Step 2: Register
 	fmt.Println()
 	bold.Println("  Step 2: Register domain")
+
+	// Billing guard
+	regPriceCents := int64(chosen.RegPrice * 100)
+	hold, holdErr := billingGuard(billing.OpDomainRegister, regPriceCents, domain)
+	if holdErr != nil {
+		return
+	}
+	if hold != nil {
+		fmt.Printf("    Estimated cost: $%.2f (incl. %d%% markup)\n",
+			float64(hold.CostCents)/100, billing.MarkupPercent)
+		fmt.Printf("    Balance after: $%.2f\n", float64(hold.BalanceAfter)/100)
+	}
+
 	fmt.Printf("    Register %s on %s? [Y/n]: ", domain, chosen.Registrar)
 	answer, _ := reader.ReadString('\n')
 	answer = strings.TrimSpace(strings.ToLower(answer))
 	if answer != "" && answer != "y" && answer != "yes" {
 		fmt.Println("    Cancelled.")
+		if hold != nil {
+			hold.Release()
+		}
 		return
 	}
 
 	fmt.Printf("    Registering...")
 	if err := registerDomain(domain, chosen.Registrar); err != nil {
 		color.Red(" Failed: %v", err)
+		if hold != nil {
+			hold.Release()
+		}
 		return
 	}
 	color.Green(" Domain registered!")
+
+	if hold != nil {
+		hold.Confirm()
+	}
 
 	// Step 3: Hosting
 	fmt.Println()
@@ -561,6 +609,7 @@ func runMenuLaunch(reader *bufio.Reader) {
 		fmt.Printf("    1. Connect to hosting: regctl sites create %s\n", domain)
 		fmt.Printf("    2. Verify DNS: regctl dns list %s\n", domain)
 	}
+	printBillingInfo(hold)
 	fmt.Println()
 }
 

@@ -150,6 +150,52 @@ func (c *APIClient) PollGitHubDevice(deviceCode string) (string, string, error) 
 	return data.APIKey, data.Email, nil
 }
 
+// HoldBalanceResult is the result of a hold request.
+type HoldBalanceResult struct {
+	HoldID       string `json:"hold_id"`
+	AmountCents  int64  `json:"amount_cents"`
+	BalanceAfter int64  `json:"balance_after"`
+}
+
+// HoldBalance reserves amount from balance. Returns hold details.
+func (c *APIClient) HoldBalance(amountCents int64, description string) (*HoldBalanceResult, error) {
+	body := fmt.Sprintf(`{"amount_cents":%d,"description":%q}`, amountCents, description)
+	r, err := c.do("POST", "/v1/billing/hold", body)
+	if err != nil {
+		return nil, err
+	}
+	var result HoldBalanceResult
+	json.Unmarshal(r.Data, &result)
+	return &result, nil
+}
+
+// ConfirmHold confirms a hold (finalizes the charge).
+func (c *APIClient) ConfirmHold(holdID string) error {
+	body := fmt.Sprintf(`{"hold_id":%q}`, holdID)
+	_, err := c.do("POST", "/v1/billing/confirm", body)
+	return err
+}
+
+// ReleaseHold releases a hold (refunds the amount).
+func (c *APIClient) ReleaseHold(holdID string) error {
+	body := fmt.Sprintf(`{"hold_id":%q}`, holdID)
+	_, err := c.do("POST", "/v1/billing/release", body)
+	return err
+}
+
+// GetBalanceCents returns the account balance in cents.
+func (c *APIClient) GetBalanceCents() (int64, error) {
+	r, err := c.do("GET", "/v1/billing/balance", "")
+	if err != nil {
+		return 0, err
+	}
+	var data struct {
+		BalanceCents int64 `json:"balance_cents"`
+	}
+	json.Unmarshal(r.Data, &data)
+	return data.BalanceCents, nil
+}
+
 // GoogleAuthResponse holds the Google OAuth start response.
 type GoogleAuthResponse struct {
 	AuthURL string `json:"auth_url"`

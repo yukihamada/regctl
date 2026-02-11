@@ -290,8 +290,8 @@ footer a:hover{text-decoration:underline}
 <!-- Hero Section -->
 <header>
 <h1>regctl<span>.sh</span></h1>
-<p data-i18n-en>Automatically finds the cheapest registrar and registers your domain. Compare 897 TLDs across Spaceship, Porkbun, Cloudflare — always get the lowest price.</p>
-<p data-i18n-ja>最安のレジストラを自動で見つけてドメインを登録。Spaceship・Porkbun・Cloudflare の 897 TLD を比較して、常に最安値で取得できます。</p>
+<p data-i18n-en>Automatically finds the cheapest registrar and registers your domain. Compare <span class="tld-count">897</span> TLDs across Spaceship, Porkbun, Cloudflare — always get the lowest price.</p>
+<p data-i18n-ja>最安のレジストラを自動で見つけてドメインを登録。Spaceship・Porkbun・Cloudflare の <span class="tld-count">897</span> TLD を比較して、常に最安値で取得できます。</p>
 
 <!-- Domain Search -->
 <div class="domain-search-hero" role="search" aria-label="Domain price search">
@@ -308,8 +308,8 @@ footer a:hover{text-decoration:underline}
 
 <!-- Price Comparison Section -->
 <section id="prices" class="container" aria-label="TLD Price Comparison">
-<h2 data-i18n-en>897 TLD Price <span>Comparison</span></h2>
-<h2 data-i18n-ja>897 TLD <span>料金比較</span></h2>
+<h2 data-i18n-en><span class="tld-count">897</span> TLD Price <span>Comparison</span></h2>
+<h2 data-i18n-ja><span class="tld-count">897</span> TLD <span>料金比較</span></h2>
 <p class="sub" data-i18n-en>Renewal prices (USD/year). Green = cheapest with API registration. Data from live APIs, Feb 2026.</p>
 <p class="sub" data-i18n-ja>更新料金（USD/年）。緑 = API登録対応の最安値。2026年2月のライブAPI取得データ。</p>
 
@@ -324,7 +324,7 @@ footer a:hover{text-decoration:underline}
 
 <div class="search-wrap">
 <input type="text" id="search" placeholder="Search TLD... (com, io, dev, ai...)" aria-label="Filter TLDs by name">
-<span class="count" id="count">897 TLDs</span>
+<span class="count" id="count"><span class="tld-count">897</span> TLDs</span>
 </div>
 <div class="table-fade">
 <div class="table-wrap" role="region" aria-label="Price comparison table" tabindex="0">
@@ -428,7 +428,7 @@ Spaceship &amp; Porkbun = API registration supported. Cloudflare = at-cost prici
 <h2 data-i18n-ja>なぜ <span>regctl</span>？</h2>
 <div class="features">
 <div class="feature"><h3 data-i18n-en>One-Command Launch</h3><h3 data-i18n-ja>ワンコマンド公開</h3><p data-i18n-en>Register a domain and connect to hosting in one step. <code>regctl launch mysite.com</code></p><p data-i18n-ja>ドメイン取得からホスティング接続まで一発。<code>regctl launch mysite.com</code></p></div>
-<div class="feature"><h3 data-i18n-en>Always the Lowest Price</h3><h3 data-i18n-ja>常に最安値</h3><p data-i18n-en>Compares 897 TLDs across multiple registrars in real-time. You always register at the cheapest available price.</p><p data-i18n-ja>897 TLDをリアルタイムで複数のレジストラから比較。常に最安値で登録できます。</p></div>
+<div class="feature"><h3 data-i18n-en>Always the Lowest Price</h3><h3 data-i18n-ja>常に最安値</h3><p data-i18n-en>Compares <span class="tld-count">897</span> TLDs across multiple registrars in real-time. You always register at the cheapest available price.</p><p data-i18n-ja><span class="tld-count">897</span> TLDをリアルタイムで複数のレジストラから比較。常に最安値で登録できます。</p></div>
 <div class="feature"><h3 data-i18n-en>Hosting Integration</h3><h3 data-i18n-ja>ホスティング連携</h3><p data-i18n-en>Connects to Vercel, Netlify, Cloudflare Pages, GitHub Pages, Fly.io. DNS records added automatically.</p><p data-i18n-ja>Vercel、Netlify、Cloudflare Pages、GitHub Pages、Fly.ioに対応。DNSレコードを自動追加。</p></div>
 <div class="feature"><h3 data-i18n-en>Unified DNS Management</h3><h3 data-i18n-ja>統合DNS管理</h3><p data-i18n-en>Manage DNS records across all registrars. <code>regctl dns list/add/delete</code></p><p data-i18n-ja>全レジストラのDNSレコードを一括管理。<code>regctl dns list/add/delete</code></p></div>
 <div class="feature"><h3 data-i18n-en>AI-Friendly Output</h3><h3 data-i18n-ja>AI対応出力</h3><p data-i18n-en><code>--format json</code> for structured output. Works with Claude, GPT, and AI tools.</p><p data-i18n-ja><code>--format json</code> で構造化出力。Claude、GPTなどのAIツールと連携。</p></div>
@@ -592,6 +592,7 @@ let searchQuery='';
 const tb=document.getElementById('tbody');
 const si=document.getElementById('search');
 const ct=document.getElementById('count');
+document.querySelectorAll('.tld-count').forEach(function(el){el.textContent=D.length});
 
 // Helpers
 function fmt(v,best){if(v==null)return'<td class="na">\u2014</td>';return`<td${best?' class="best"':''}>$${v.toFixed(2)}</td>`}
@@ -697,7 +698,7 @@ function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(
 
 var checkTimer=null;
 var checkController=null;
-const CHECK_API=location.origin;
+const CHECK_API='https://regctl-api.fly.dev';
 
 function renderPrices(domainName,tld,match){
   const prices=[];
@@ -859,18 +860,17 @@ heroInput.addEventListener('input',e=>{
   // Need at least "name.tld" format for availability check
   const isFullDomain=parts.length>=2&&parts[0].length>0;
 
-  // Debounce delay based on input length: 4 chars→10s, 5+→5s
-  const debounceMs=val.length>=5?5000:val.length>=4?10000:0;
+  const debounceMs=800;
 
   const match=D.find(d=>d.t===tld);
   if(!match){
     let html='<div class="sr-card"><span class="sr-na">No pricing data for <strong>.'+escHtml(tld)+'</strong>. Try searching in the table below.</span></div>';
-    if(isFullDomain&&debounceMs>0){
+    if(isFullDomain){
       html+='<div class="sr-avail loading" id="availResult">Checking availability...</div>';
     }
     heroResults.classList.add('active');
     heroResults.innerHTML=html;
-    if(isFullDomain&&debounceMs>0){
+    if(isFullDomain){
       checkTimer=setTimeout(function(){checkAvailability(val)},debounceMs);
     }
     return;
@@ -880,15 +880,15 @@ heroInput.addEventListener('input',e=>{
   let html=renderPrices(domainName,tld,match);
 
   // Add availability check area for full domains
-  if(isFullDomain&&debounceMs>0){
+  if(isFullDomain){
     html+='<div class="sr-avail loading" id="availResult">Checking availability...</div>';
   }
 
   heroResults.classList.add('active');
   heroResults.innerHTML=html;
 
-  // Debounced availability check (4 chars→10s, 5+→5s)
-  if(isFullDomain&&debounceMs>0){
+  // Debounced availability check
+  if(isFullDomain){
     checkTimer=setTimeout(function(){checkAvailability(val)},debounceMs);
   }
 });
@@ -1142,7 +1142,7 @@ function showAPIKey(key){
 // Discovery feed
 (function(){
   var grid=document.getElementById('discoveryGrid');
-  var apiBase=location.origin;
+  var apiBase='https://regctl-api.fly.dev';
   fetch(apiBase+'/v1/discovery?limit=12')
   .then(function(r){return r.json()})
   .then(function(res){
