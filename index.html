@@ -960,7 +960,10 @@ function registerDomain(domain,provider){
   .then(function(res){
     if(res.ok){
       msg.className='sr-register-msg success';
-      msg.innerHTML='<strong>'+escHtml(domain)+'</strong> registered successfully!';
+      var siteUrl='https://'+escHtml(domain);
+      msg.innerHTML='<strong>'+escHtml(domain)+'</strong> registered! '
+        +'Your site is live at <a href="'+siteUrl+'" target="_blank" style="color:#22c55e">'+siteUrl+'</a>'
+        +'<br><small style="color:#888">DNS propagation may take a few minutes.</small>';
       btn.style.display='none';
     }else{
       msg.className='sr-register-msg error';

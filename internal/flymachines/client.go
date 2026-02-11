@@ -206,3 +206,33 @@ func (c *Client) DeleteMachine(machineID string) error {
 	}
 	return nil
 }
+
+// AddCertificate adds a TLS certificate for a custom hostname.
+// Uses the Fly platform API (not machines API).
+func (c *Client) AddCertificate(appName, hostname string) error {
+	body := map[string]string{"hostname": hostname}
+	data, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	url := fmt.Sprintf("https://api.fly.io/v1/apps/%s/certificates", appName)
+	req, err := http.NewRequest("POST", url, bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Authorization", "Bearer "+c.apiToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.http.Do(req)
+	if err != nil {
+		return fmt.Errorf("fly cert request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("fly cert error %d: %s", resp.StatusCode, string(respBody))
+	}
+	return nil
+}

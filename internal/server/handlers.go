@@ -450,9 +450,13 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 		s.tryReferralCredit(req.Domain, customerID, baseCostCents)
 	}
 
+	// Auto-setup: DNS + TLS cert + site record (non-blocking)
+	go s.autoSetupSite(req.Domain, usedRegistrar, customerID)
+
 	result := map[string]string{
-		"domain": req.Domain,
-		"status": "registered",
+		"domain":   req.Domain,
+		"status":   "registered",
+		"site_url": "https://" + req.Domain,
 	}
 	if usedRegistrar != "" {
 		result["registrar"] = usedRegistrar

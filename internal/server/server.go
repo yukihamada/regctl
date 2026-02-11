@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/email"
@@ -113,10 +114,20 @@ func (s *Server) ListenAndServe(port int) error {
 }
 
 // ServeHTTP implements the http.Handler interface.
-// Adds security headers to all responses.
+// Routes hosted domain requests to site handler, everything else to API mux.
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")
+
+	// Check if this is a hosted site request (custom domain, not our API domain)
+	host := r.Host
+	if i := strings.Index(host, ":"); i > 0 {
+		host = host[:i]
+	}
+	if !isAPIDomain(host) && s.serveSite(w, r, host) {
+		return
+	}
+
 	s.mux.ServeHTTP(w, r)
 }
 
