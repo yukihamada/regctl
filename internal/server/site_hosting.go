@@ -208,7 +208,6 @@ func (s *Server) handleGenerateSite(w http.ResponseWriter, r *http.Request) {
 		"message":    prompt,
 		"session_id": "regctl-site-" + domain,
 		"model":      "claude-sonnet-4-5-20250929",
-		"device":     "pc",
 	}
 	body, err := json.Marshal(chatReq)
 	if err != nil {
@@ -229,6 +228,8 @@ func (s *Server) handleGenerateSite(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadGateway, "read AI response: "+err.Error(), "")
 		return
 	}
+
+	log.Printf("ai-generate: nanobot status=%d body_len=%d body_preview=%.200s", resp.StatusCode, len(respBody), string(respBody))
 
 	var chatResp struct {
 		Response string `json:"response"`
