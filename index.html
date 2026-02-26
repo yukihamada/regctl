@@ -1331,7 +1331,8 @@ async function checkDomain(domain, resultEl){
   resultEl.innerHTML = `<span style="color:var(--muted)">Checking ${escHtml(domain)}...</span>`;
   try{
     const r = await fetch(`${API}/v1/domains/check/${encodeURIComponent(domain)}`);
-    const data = await r.json();
+    const _raw = await r.json();
+    const data = _raw?.data || _raw;
     if(data.available){
       resultEl.innerHTML = `
         <div style="background:var(--green-dim);border:1px solid var(--green-border);border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
@@ -1520,7 +1521,8 @@ async function heroSearch(){
     // Check specific domain
     try{
       const r = await fetch(`${API}/v1/domains/check/${encodeURIComponent(raw)}`);
-      const d = await r.json();
+      const _rd = await r.json();
+      const d = _rd?.data || _rd;
       if(d.available){
         resultsEl.innerHTML = `
           <div style="background:var(--green-dim);border:1px solid var(--green-border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
