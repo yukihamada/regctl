@@ -46,6 +46,13 @@ type DNSProvider interface {
 	DeleteRecord(domain, recordID string) error
 }
 
+// NSProvider can get and update domain nameservers.
+type NSProvider interface {
+	Name() string
+	GetNameservers(domain string) ([]string, error)
+	UpdateNameservers(domain string, ns []string) error
+}
+
 // PriceFetcher can fetch bulk TLD pricing without auth.
 type PriceFetcher interface {
 	Name() string

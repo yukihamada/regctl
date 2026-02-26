@@ -692,23 +692,76 @@ footer a{color:var(--blue)}
     <!-- DNS -->
     <div class="app-page" id="page-dns">
       <div class="page-header">
-        <div class="page-title">DNS Management</div>
+        <div class="page-title">DNS / Nameservers</div>
       </div>
+
+      <!-- Domain selector -->
       <div class="card" style="margin-bottom:16px">
-        <div class="form-label">Select domain</div>
+        <div class="form-label">Domain</div>
         <div class="input-group">
-          <select class="input" id="dnsSelectDomain" style="flex:1"><option value="">— Choose domain —</option></select>
-          <button class="btn btn-ghost" id="dnsLoadBtn">Load Records</button>
+          <select class="input" id="dnsSelectDomain" style="flex:1"><option value="">— Select domain —</option></select>
+          <button class="btn btn-ghost" id="dnsLoadBtn">Load</button>
           <button class="btn btn-primary btn-sm" id="dnsAddBtn">+ Add Record</button>
         </div>
       </div>
+
+      <!-- Nameserver management -->
+      <div class="card" style="margin-bottom:16px" id="nsCard">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="font-weight:700;font-size:.9rem">Nameservers</div>
+          <button class="btn btn-ghost btn-sm" id="nsEditBtn">Change NS</button>
+        </div>
+        <div id="nsCurrentDisplay" style="font-size:.85rem;color:var(--muted)">Select a domain to view nameservers</div>
+
+        <!-- NS presets + custom -->
+        <div id="nsEditPanel" style="display:none;margin-top:14px">
+          <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px">Quick presets:</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('cloudflare')">Cloudflare</button>
+            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('vercel')">Vercel</button>
+            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('porkbun')">Porkbun (default)</button>
+            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('custom')">Custom</button>
+          </div>
+          <div id="nsInputArea">
+            <textarea class="input" id="nsTextarea" rows="3" placeholder="ns1.example.com&#10;ns2.example.com" style="font-family:monospace;font-size:.82rem;resize:vertical"></textarea>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary btn-sm" onclick="saveNameservers()">Save Nameservers</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nsEditPanel').style.display='none'">Cancel</button>
+          </div>
+          <div id="nsMsg" style="margin-top:8px;font-size:.82rem"></div>
+        </div>
+      </div>
+
+      <!-- Quick DNS templates -->
+      <div class="card" style="margin-bottom:16px" id="dnsTemplateCard">
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">Quick Setup Templates</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('vercel')">▲ Vercel</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('cloudflare-pages')">☁ CF Pages</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('github-pages')">⬡ GitHub Pages</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('netlify')">◆ Netlify</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('fly-io')">🪰 Fly.io</button>
+          <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('custom-a')">A Record</button>
+        </div>
+        <div id="dnsTemplatePreview" style="margin-top:10px;display:none">
+          <div style="font-size:.82rem;color:var(--muted);margin-bottom:6px" id="dnsTemplateDesc"></div>
+          <div id="dnsTemplateRecords" style="font-family:monospace;font-size:.8rem;background:var(--surface2);padding:10px;border-radius:6px"></div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn btn-primary btn-sm" id="dnsTemplateApplyBtn">Apply All Records →</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('dnsTemplatePreview').style.display='none'">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Record form -->
       <div class="add-record-form" id="addRecordForm">
         <div style="font-weight:700;font-size:.85rem;margin-bottom:10px">Add DNS Record</div>
         <div class="dns-form-grid">
           <div>
             <div class="form-label">Type</div>
             <select class="input" id="dnsType">
-              <option>A</option><option>AAAA</option><option>CNAME</option><option>MX</option><option>TXT</option><option>NS</option>
+              <option>A</option><option>AAAA</option><option>CNAME</option><option>MX</option><option>TXT</option><option>NS</option><option>SRV</option><option>CAA</option>
             </select>
           </div>
           <div>
@@ -717,11 +770,11 @@ footer a{color:var(--blue)}
           </div>
           <div>
             <div class="form-label">Content</div>
-            <input class="input" id="dnsContent" placeholder="IP address or hostname">
+            <input class="input" id="dnsContent" placeholder="IP or hostname">
           </div>
           <div>
             <div class="form-label">TTL</div>
-            <input class="input" id="dnsTTL" value="3600" type="number">
+            <input class="input" id="dnsTTL" value="300" type="number">
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
@@ -729,9 +782,11 @@ footer a{color:var(--blue)}
           <button class="btn btn-ghost btn-sm" id="dnsAddCancel">Cancel</button>
         </div>
       </div>
+
+      <!-- Records table -->
       <div class="table-wrap" id="dnsTableWrap">
         <table>
-          <thead><tr><th>Type</th><th>Name</th><th>Content</th><th>TTL</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Type</th><th>Name</th><th>Content</th><th>TTL</th><th></th></tr></thead>
           <tbody id="dnsTableBody">
             <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Select a domain to view DNS records</td></tr>
           </tbody>
@@ -1341,6 +1396,8 @@ function populateDnsSelect(domains){
 async function loadDNS(domain){
   if(!domain || !getToken()) return;
   document.getElementById('dnsTableBody').innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:16px">Loading...</td></tr>`;
+  document.getElementById('nsEditPanel').style.display='none';
+  loadNameservers(domain);
   try{
     const r = await fetch(`${API}/v1/dns/${encodeURIComponent(domain)}`, {headers: authedHeaders()});
     if(r.ok){
@@ -1349,6 +1406,148 @@ async function loadDNS(domain){
       renderDNSTable(records, domain);
     }
   } catch(e){ toast('Failed to load DNS records','error'); }
+}
+
+async function loadNameservers(domain){
+  if(!domain || !getToken()) return;
+  const el = document.getElementById('nsCurrentDisplay');
+  el.textContent = 'Loading nameservers...';
+  try{
+    const r = await fetch(`${API}/v1/domains/${encodeURIComponent(domain)}/nameservers`, {headers: authedHeaders()});
+    if(r.ok){
+      const raw = await r.json();
+      const ns = (raw.data?.nameservers || raw.nameservers || []);
+      if(ns.length){
+        el.innerHTML = ns.map(n=>`<code style="display:block;font-size:.82rem;color:var(--text)">${escHtml(n)}</code>`).join('');
+      } else {
+        el.textContent = 'No nameservers returned.';
+      }
+    } else {
+      el.textContent = 'Could not load nameservers.';
+    }
+  } catch(e){ el.textContent = 'Failed to load nameservers.'; }
+}
+
+const NS_PRESETS = {
+  cloudflare: ['ns1.cloudflare.com','ns2.cloudflare.com'],
+  vercel:     ['ns1.vercel-dns.com','ns2.vercel-dns.com'],
+  porkbun:    ['curitiba.ns.porkbun.com','fortaleza.ns.porkbun.com','maceio.ns.porkbun.com','salvador.ns.porkbun.com'],
+  custom:     []
+};
+
+function applyNSPreset(preset){
+  const ns = NS_PRESETS[preset] || [];
+  document.getElementById('nsTextarea').value = ns.join('\n');
+  if(preset === 'custom') document.getElementById('nsTextarea').focus();
+}
+
+async function saveNameservers(){
+  const domain = document.getElementById('dnsSelectDomain').value;
+  if(!domain){ toast('Select a domain first','error'); return; }
+  const raw = document.getElementById('nsTextarea').value;
+  const ns = raw.split('\n').map(s=>s.trim()).filter(Boolean);
+  if(ns.length < 2){ toast('Enter at least 2 nameservers','error'); return; }
+  const msgEl = document.getElementById('nsMsg');
+  msgEl.textContent = 'Saving...';
+  try{
+    const r = await fetch(`${API}/v1/domains/${encodeURIComponent(domain)}/nameservers`, {
+      method:'PUT', headers: authedHeaders(),
+      body: JSON.stringify({nameservers: ns})
+    });
+    const d = await r.json();
+    if(r.ok){
+      msgEl.innerHTML = `<span style="color:var(--green)">✓ Nameservers updated! Changes propagate in 24-48h.</span>`;
+      document.getElementById('nsEditPanel').style.display='none';
+      loadNameservers(domain);
+    } else {
+      msgEl.innerHTML = `<span style="color:var(--red)">${escHtml(d.error||'Failed to update nameservers')}</span>`;
+    }
+  } catch(e){ msgEl.innerHTML=`<span style="color:var(--red)">Request failed</span>`; }
+}
+
+const DNS_TEMPLATES = {
+  vercel: {
+    desc: 'Point your domain to Vercel (add your project in Vercel dashboard first)',
+    records: [
+      {type:'A',    name:'@', content:'76.76.21.21',    ttl:300},
+      {type:'CNAME',name:'www',content:'cname.vercel-dns.com', ttl:300}
+    ]
+  },
+  'cloudflare-pages': {
+    desc: 'Host a static site on Cloudflare Pages',
+    records: [
+      {type:'CNAME',name:'@',   content:'YOUR-PROJECT.pages.dev', ttl:300},
+      {type:'CNAME',name:'www', content:'YOUR-PROJECT.pages.dev', ttl:300}
+    ]
+  },
+  'github-pages': {
+    desc: 'Host on GitHub Pages (also add domain in repo Settings → Pages)',
+    records: [
+      {type:'A',name:'@',content:'185.199.108.153',ttl:300},
+      {type:'A',name:'@',content:'185.199.109.153',ttl:300},
+      {type:'A',name:'@',content:'185.199.110.153',ttl:300},
+      {type:'A',name:'@',content:'185.199.111.153',ttl:300},
+      {type:'CNAME',name:'www',content:'YOUR-USERNAME.github.io',ttl:300}
+    ]
+  },
+  netlify: {
+    desc: 'Deploy via Netlify (add domain in Netlify site settings first)',
+    records: [
+      {type:'A',    name:'@',   content:'75.2.60.5',           ttl:300},
+      {type:'CNAME',name:'www', content:'YOUR-SITE.netlify.app',ttl:300}
+    ]
+  },
+  'fly-io': {
+    desc: 'Host on Fly.io (run: fly certs add YOUR-DOMAIN in your app)',
+    records: [
+      {type:'A',    name:'@',   content:'66.241.124.3',  ttl:300},
+      {type:'AAAA', name:'@',   content:'2a09:8280:1::27:7603',ttl:300},
+      {type:'CNAME',name:'www', content:'fly.io',         ttl:300}
+    ]
+  },
+  'custom-a': {
+    desc: 'Point to a custom IP address',
+    records: [
+      {type:'A',    name:'@',   content:'YOUR-IP',ttl:300},
+      {type:'CNAME',name:'www', content:'@',      ttl:300}
+    ]
+  }
+};
+
+let pendingDNSTemplate = null;
+
+function applyDNSTemplate(tmpl){
+  const t = DNS_TEMPLATES[tmpl];
+  if(!t) return;
+  pendingDNSTemplate = t.records;
+  document.getElementById('dnsTemplateDesc').textContent = t.desc;
+  document.getElementById('dnsTemplateRecords').innerHTML = t.records.map(r=>
+    `<div style="color:var(--muted);padding:2px 0"><span style="color:var(--green);min-width:50px;display:inline-block">${r.type}</span> <span style="color:var(--text)">${r.name}</span> → <span style="color:var(--blue)">${r.content}</span> <span style="color:var(--muted);font-size:.75rem">(TTL ${r.ttl})</span></div>`
+  ).join('');
+  document.getElementById('dnsTemplatePreview').style.display='block';
+  document.getElementById('dnsTemplateApplyBtn').onclick = applyTemplateRecords;
+}
+
+async function applyTemplateRecords(){
+  const domain = document.getElementById('dnsSelectDomain').value;
+  if(!domain){ toast('Select a domain first','error'); return; }
+  if(!pendingDNSTemplate || !pendingDNSTemplate.length) return;
+  const btn = document.getElementById('dnsTemplateApplyBtn');
+  btn.disabled=true; btn.textContent='Applying...';
+  let ok=0, fail=0;
+  for(const rec of pendingDNSTemplate){
+    try{
+      const r = await fetch(`${API}/v1/dns/${encodeURIComponent(domain)}`,{
+        method:'POST', headers: authedHeaders(),
+        body: JSON.stringify(rec)
+      });
+      if(r.ok) ok++; else fail++;
+    } catch(e){ fail++; }
+  }
+  btn.disabled=false; btn.textContent='Apply All Records →';
+  document.getElementById('dnsTemplatePreview').style.display='none';
+  if(ok > 0){ toast(`Added ${ok} record${ok>1?'s':''}${fail?' ('+fail+' failed)':''}`, fail?'error':'success'); loadDNS(domain); }
+  else toast('All records failed to add','error');
 }
 
 function renderDNSTable(records, domain){
@@ -1445,6 +1644,12 @@ async function confirmRegister(){
       toast('Domain registered! 🎉','success');
       document.getElementById('registerModal').classList.add('hidden');
       loadDomains();
+      setTimeout(()=>{
+        if(confirm(`✓ ${domain} registered!\n\nSetup DNS / Nameservers now?`)){
+          navigateToPage('dns');
+          setTimeout(()=>{ populateDnsSelectAndLoad(domain); }, 100);
+        }
+      }, 300);
     } else {
       document.getElementById('registerMsg').innerHTML = `<span style="color:var(--red)">${escHtml(data.error||'Registration failed')}</span>`;
     }
@@ -1654,6 +1859,12 @@ async function confirmMarketBuy(listing){
       loadMarket();
       loadPortfolio();
       loadBalance();
+      setTimeout(()=>{
+        if(confirm(`✓ ${listing.domain} purchased!\n\nSetup DNS / Nameservers now?`)){
+          navigateToPage('dns');
+          setTimeout(()=>{ populateDnsSelectAndLoad(listing.domain); }, 100);
+        }
+      }, 300);
     } else {
       msgEl.innerHTML = `<span style="color:var(--red)">${escHtml(data.error||'Purchase failed')}</span>`;
       btn.disabled=false; btn.textContent='Buy Instantly →';
@@ -1779,6 +1990,19 @@ async function deleteSite(domain){
 function goToDNS(domain){
   navigateToPage('dns');
   document.getElementById('dnsSelectDomain').value = domain;
+  loadDNS(domain);
+}
+
+// After purchase: ensure domain appears in select then load DNS+NS
+function populateDnsSelectAndLoad(domain){
+  const sel = document.getElementById('dnsSelectDomain');
+  // Add option if missing
+  if(!Array.from(sel.options).some(o=>o.value===domain)){
+    const opt = document.createElement('option');
+    opt.value = domain; opt.textContent = domain;
+    sel.appendChild(opt);
+  }
+  sel.value = domain;
   loadDNS(domain);
 }
 
@@ -2035,7 +2259,11 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // DNS page
   document.getElementById('dnsLoadBtn').addEventListener('click', ()=>loadDNS(document.getElementById('dnsSelectDomain').value));
-  document.getElementById('dnsSelectDomain').addEventListener('change', e=>loadDNS(e.target.value));
+  document.getElementById('dnsSelectDomain').addEventListener('change', e=>{ loadDNS(e.target.value); });
+  document.getElementById('nsEditBtn').addEventListener('click', ()=>{
+    const p = document.getElementById('nsEditPanel');
+    p.style.display = p.style.display==='none' ? 'block' : 'none';
+  });
   document.getElementById('dnsAddBtn').addEventListener('click', ()=>document.getElementById('addRecordForm').classList.toggle('show'));
   document.getElementById('dnsAddSubmit').addEventListener('click', ()=>addDNSRecord(document.getElementById('dnsSelectDomain').value));
   document.getElementById('dnsAddCancel').addEventListener('click', ()=>document.getElementById('addRecordForm').classList.remove('show'));

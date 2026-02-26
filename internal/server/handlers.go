@@ -476,15 +476,71 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, result)
 }
 
-func (s *Server) handleListDNS(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
-		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
-		return
+// dnsProviderFor returns the first DNS provider that can handle the domain,
+// looking up the registrar from the portfolio if available.
+func (s *Server) dnsProviderFor(domain string) provider.DNSProvider {
+	// Try to find the registrar from portfolio
+	if s.store != nil {
+		if entry, _ := s.store.GetPortfolioEntry(domain); entry != nil {
+			for _, p := range s.dnsProviders {
+				if p.Name() == entry.Registrar {
+					return p
+				}
+			}
+		}
 	}
+	// Fall back to first available
+	if len(s.dnsProviders) > 0 {
+		return s.dnsProviders[0]
+	}
+	return nil
+}
+
+// nsProviderFor returns the first NS provider for a domain.
+func (s *Server) nsProviderFor(domain string) provider.NSProvider {
+	if s.store != nil {
+		if entry, _ := s.store.GetPortfolioEntry(domain); entry != nil {
+			for _, p := range s.nsProviders {
+				if p.Name() == entry.Registrar {
+					return p
+				}
+			}
+		}
+	}
+	if len(s.nsProviders) > 0 {
+		return s.nsProviders[0]
+	}
+	return nil
+}
+
+func (s *Server) handleListDNS(w http.ResponseWriter, r *http.Request) {
 	if !s.chargeBilling(w, r, billing.OpDNSList, 0) {
 		return
 	}
 	domain := r.PathValue("domain")
+
+	// Try multi-provider first
+	if dp := s.dnsProviderFor(domain); dp != nil {
+		records, err := dp.ListRecords(domain)
+		if err != nil {
+			s.refundBilling(r, billing.OpDNSList, 0)
+			writeError(w, http.StatusInternalServerError, err.Error(),
+				"Make sure you own this domain.")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"domain":  domain,
+			"records": records,
+			"count":   len(records),
+		})
+		return
+	}
+
+	// Legacy ValueDomain fallback
+	if s.client == nil {
+		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
+		return
+	}
 	records, err := s.client.GetDNSRecords(domain)
 	if err != nil {
 		s.refundBilling(r, billing.OpDNSList, 0)
@@ -500,29 +556,55 @@ func (s *Server) handleListDNS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleAddDNS(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
-		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
-		return
-	}
 	if !s.chargeBilling(w, r, billing.OpDNSAdd, 0) {
 		return
 	}
 	domain := r.PathValue("domain")
-	var record valuedomain.DNSRecord
-	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536)).Decode(&record); err != nil {
+	var rec struct {
+		Type     string `json:"type"`
+		Name     string `json:"name"`
+		Content  string `json:"content"`
+		TTL      int    `json:"ttl"`
+		Priority int    `json:"priority"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 65536)).Decode(&rec); err != nil {
 		s.refundBilling(r, billing.OpDNSAdd, 0)
 		writeError(w, http.StatusBadRequest, "invalid request body",
 			`Expected JSON: {"type": "A", "name": "@", "content": "1.2.3.4", "ttl": 3600}`)
 		return
 	}
-	if record.Type == "" || record.Content == "" {
+	if rec.Type == "" || rec.Content == "" {
 		s.refundBilling(r, billing.OpDNSAdd, 0)
 		writeError(w, http.StatusBadRequest, "type and content are required",
 			`Include "type" and "content" fields. Example types: A, AAAA, CNAME, MX, TXT`)
 		return
 	}
+	if rec.TTL == 0 {
+		rec.TTL = 300
+	}
 
-	if err := s.client.AddDNSRecord(domain, record); err != nil {
+	// Multi-provider
+	if dp := s.dnsProviderFor(domain); dp != nil {
+		if err := dp.AddRecord(domain, provider.DNSRecord{
+			Type: rec.Type, Name: rec.Name, Content: rec.Content,
+			TTL: rec.TTL, Priority: rec.Priority,
+		}); err != nil {
+			s.refundBilling(r, billing.OpDNSAdd, 0)
+			writeError(w, http.StatusInternalServerError, err.Error(), "")
+			return
+		}
+		writeJSON(w, http.StatusCreated, map[string]string{"status": "created"})
+		return
+	}
+
+	// Legacy
+	if s.client == nil {
+		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
+		return
+	}
+	if err := s.client.AddDNSRecord(domain, valuedomain.DNSRecord{
+		Type: rec.Type, Name: rec.Name, Content: rec.Content, TTL: rec.TTL,
+	}); err != nil {
 		s.refundBilling(r, billing.OpDNSAdd, 0)
 		writeError(w, http.StatusInternalServerError, err.Error(), "")
 		return
@@ -531,23 +613,35 @@ func (s *Server) handleAddDNS(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) handleDeleteDNS(w http.ResponseWriter, r *http.Request) {
+	domain := r.PathValue("domain")
+	idStr := r.PathValue("id")
+
+	if !s.chargeBilling(w, r, billing.OpDNSDelete, 0) {
+		return
+	}
+
+	// Multi-provider
+	if dp := s.dnsProviderFor(domain); dp != nil {
+		if err := dp.DeleteRecord(domain, idStr); err != nil {
+			s.refundBilling(r, billing.OpDNSDelete, 0)
+			writeError(w, http.StatusInternalServerError, err.Error(), "")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]string{"status": "deleted"})
+		return
+	}
+
+	// Legacy
 	if s.client == nil {
 		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
-	domain := r.PathValue("domain")
-	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Sprintf("invalid record ID: %s", idStr),
 			"Get record IDs from: GET /v1/dns/"+domain)
 		return
 	}
-
-	if !s.chargeBilling(w, r, billing.OpDNSDelete, 0) {
-		return
-	}
-
 	if err := s.client.DeleteDNSRecord(domain, id); err != nil {
 		s.refundBilling(r, billing.OpDNSDelete, 0)
 		writeError(w, http.StatusInternalServerError, err.Error(), "")
@@ -588,11 +682,22 @@ func (s *Server) handleRenewDomain(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func (s *Server) handleUpdateNameservers(w http.ResponseWriter, r *http.Request) {
-	if s.client == nil {
-		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
+// GET /v1/domains/{domain}/nameservers — get current nameservers
+func (s *Server) handleGetNameservers(w http.ResponseWriter, r *http.Request) {
+	domain := r.PathValue("domain")
+	if np := s.nsProviderFor(domain); np != nil {
+		ns, err := np.GetNameservers(domain)
+		if err != nil {
+			writeError(w, http.StatusInternalServerError, err.Error(), "")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{"domain": domain, "nameservers": ns})
 		return
 	}
+	writeError(w, http.StatusServiceUnavailable, "NS provider not configured", "")
+}
+
+func (s *Server) handleUpdateNameservers(w http.ResponseWriter, r *http.Request) {
 	domain := r.PathValue("domain")
 	var req struct {
 		Nameservers []string `json:"nameservers"`
@@ -608,6 +713,25 @@ func (s *Server) handleUpdateNameservers(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if !s.chargeBilling(w, r, billing.OpNSUpdate, 0) {
+		return
+	}
+
+	// Multi-provider NS update
+	if np := s.nsProviderFor(domain); np != nil {
+		if err := np.UpdateNameservers(domain, req.Nameservers); err != nil {
+			s.refundBilling(r, billing.OpNSUpdate, 0)
+			writeError(w, http.StatusInternalServerError, err.Error(), "")
+			return
+		}
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"domain": domain, "status": "nameservers_updated", "nameservers": req.Nameservers,
+		})
+		return
+	}
+
+	// Legacy
+	if s.client == nil {
+		writeError(w, http.StatusServiceUnavailable, "domain provider not configured", "")
 		return
 	}
 	if err := s.client.UpdateNameservers(domain, req.Nameservers); err != nil {

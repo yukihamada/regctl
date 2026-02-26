@@ -45,6 +45,10 @@ type Config struct {
 
 	// Multi-registrar support
 	Registrars []provider.Registrar
+
+	// Multi-DNS/NS support
+	DNSProviders []provider.DNSProvider
+	NSProviders  []provider.NSProvider
 }
 
 // Server is the HTTP API server.
@@ -76,6 +80,10 @@ type Server struct {
 	// Multi-registrar
 	registrars []provider.Registrar
 
+	// Multi-DNS/NS
+	dnsProviders []provider.DNSProvider
+	nsProviders  []provider.NSProvider
+
 	// Notifications
 	lineNotify *notify.LineClient
 }
@@ -102,6 +110,8 @@ func New(cfg Config) *Server {
 		flyAppName:         cfg.FlyAppName,
 		internalSecret:     cfg.InternalSecret,
 		registrars:         cfg.Registrars,
+		dnsProviders:       cfg.DNSProviders,
+		nsProviders:        cfg.NSProviders,
 		lineNotify:         cfg.LineNotify,
 	}
 	if cfg.FlyAPIToken != "" && cfg.FlyAppName != "" {
@@ -199,6 +209,7 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("GET /v1/domains/{domain}", s.auth(s.handleGetDomain))
 	s.mux.HandleFunc("POST /v1/domains", s.auth(s.handleRegisterDomain))
 	s.mux.HandleFunc("POST /v1/domains/{domain}/renew", s.auth(s.handleRenewDomain))
+	s.mux.HandleFunc("GET /v1/domains/{domain}/nameservers", s.auth(s.handleGetNameservers))
 	s.mux.HandleFunc("PUT /v1/domains/{domain}/nameservers", s.auth(s.handleUpdateNameservers))
 	s.mux.HandleFunc("GET /v1/dns/{domain}", s.auth(s.handleListDNS))
 	s.mux.HandleFunc("POST /v1/dns/{domain}", s.auth(s.handleAddDNS))

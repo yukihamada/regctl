@@ -123,3 +123,46 @@ func (c *Client) ListDomains() ([]provider.Domain, error) {
 	}
 	return domains, nil
 }
+
+type nsUpdateRequest struct {
+	APIKey    string   `json:"apikey"`
+	SecretKey string   `json:"secretapikey"`
+	NS        []string `json:"ns"`
+}
+
+// UpdateNameservers updates the nameservers for a domain on Porkbun.
+func (c *Client) UpdateNameservers(domain string, ns []string) error {
+	var resp struct {
+		Status  string `json:"status"`
+		Message string `json:"message"`
+	}
+	if err := c.post("/domain/updateNs/"+domain, nsUpdateRequest{
+		APIKey:    c.APIKey,
+		SecretKey: c.SecretKey,
+		NS:        ns,
+	}, &resp); err != nil {
+		return err
+	}
+	if resp.Status != "SUCCESS" {
+		return fmt.Errorf("porkbun ns update: %s", resp.Message)
+	}
+	return nil
+}
+
+type nsGetResponse struct {
+	Status  string   `json:"status"`
+	Message string   `json:"message"`
+	NS      []string `json:"ns"`
+}
+
+// GetNameservers returns the current nameservers for a domain.
+func (c *Client) GetNameservers(domain string) ([]string, error) {
+	var resp nsGetResponse
+	if err := c.post("/domain/getNs/"+domain, c.auth(), &resp); err != nil {
+		return nil, err
+	}
+	if resp.Status != "SUCCESS" {
+		return nil, fmt.Errorf("porkbun get ns: %s", resp.Message)
+	}
+	return resp.NS, nil
+}
