@@ -9,6 +9,7 @@ import (
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/email"
 	"github.com/yukihamada/regctl/internal/flymachines"
+	"github.com/yukihamada/regctl/internal/notify"
 	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 	"github.com/yukihamada/regctl/internal/storage"
@@ -32,6 +33,9 @@ type Config struct {
 	GoogleClientSecret string
 	GoogleRedirectURI  string
 	BaseURL            string // e.g. https://regctl-api.fly.dev
+
+	// Notifications
+	LineNotify *notify.LineClient // nil = disabled
 
 	// Fly Machines hosting
 	FlyAPIToken    string
@@ -71,6 +75,9 @@ type Server struct {
 
 	// Multi-registrar
 	registrars []provider.Registrar
+
+	// Notifications
+	lineNotify *notify.LineClient
 }
 
 // New creates a new HTTP API server.
@@ -95,6 +102,7 @@ func New(cfg Config) *Server {
 		flyAppName:         cfg.FlyAppName,
 		internalSecret:     cfg.InternalSecret,
 		registrars:         cfg.Registrars,
+		lineNotify:         cfg.LineNotify,
 	}
 	if cfg.FlyAPIToken != "" && cfg.FlyAppName != "" {
 		region := cfg.FlyRegion
@@ -128,7 +136,38 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// SPA slug route: /name → serve index.html so JS can search for name.*
+	// Matches single-segment paths that are not known API/static routes.
+	if s.staticDir != "" && r.Method == "GET" && isSlugPath(r.URL.Path) {
+		b, err := os.ReadFile(s.staticDir + "/index.html")
+		if err == nil {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Header().Set("Cache-Control", "public, max-age=60")
+			w.Write(b)
+			return
+		}
+	}
+
 	s.mux.ServeHTTP(w, r)
+}
+
+// isSlugPath returns true for paths like /startup or /myapp:
+// single segment, no dot, not a known API/static route.
+func isSlugPath(path string) bool {
+	if path == "/" || path == "" {
+		return false
+	}
+	// Must be /something with no further slashes
+	trimmed := strings.TrimPrefix(path, "/")
+	if strings.Contains(trimmed, "/") || strings.Contains(trimmed, ".") {
+		return false
+	}
+	// Exclude known static files and API prefixes
+	switch trimmed {
+	case "health", "install", "llms", "og-image":
+		return false
+	}
+	return !strings.HasPrefix(trimmed, "v1") && !strings.HasPrefix(trimmed, "webhooks")
 }
 
 func (s *Server) routes() {

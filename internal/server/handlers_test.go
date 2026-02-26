@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -223,5 +224,24 @@ func TestResponseAlwaysHasTimestamp(t *testing.T) {
 	json.NewDecoder(w.Body).Decode(&resp)
 	if resp.Timestamp == "" {
 		t.Error("all responses should include a timestamp for AI logging")
+	}
+}
+
+func TestSlugRoute(t *testing.T) {
+	tmp := t.TempDir()
+	if err := os.WriteFile(tmp+"/index.html", []byte("<h1>hello</h1>"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	srv := New(Config{StaticDir: tmp})
+
+	for _, path := range []string{"/", "/startup", "/jiuflow"} {
+		req := httptest.NewRequest("GET", path, nil)
+		req.Host = "localhost:8080"
+		w := httptest.NewRecorder()
+		srv.ServeHTTP(w, req)
+		t.Logf("GET %-20s → %d", path, w.Code)
+		if w.Code != 200 {
+			t.Errorf("expected 200 for %s, got %d", path, w.Code)
+		}
 	}
 }

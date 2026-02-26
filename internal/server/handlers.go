@@ -58,6 +58,13 @@ func (s *Server) chargeBilling(w http.ResponseWriter, r *http.Request, op billin
 		return true
 	}
 	if err := billing.DeductBalance(customerID, costCents, fmt.Sprintf("API: %s", op)); err != nil {
+		// Notify via LINE when balance is insufficient
+		if strings.Contains(err.Error(), "insufficient") {
+			s.lineNotify.Send(fmt.Sprintf(
+				"\n[regctl] 残高不足\nCustomer: %s\n操作: %s\n必要額: $%.2f\nチャージ: https://regctl.sh/#billing",
+				customerID, op, float64(costCents)/100,
+			))
+		}
 		writeError(w, http.StatusPaymentRequired, err.Error(), "Top up: POST /v1/billing/topup")
 		return false
 	}

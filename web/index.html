@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>regctl - ドメイン登録CLI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .search-box {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+
+        .search-input-wrapper {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 18px 24px;
+            font-size: 1.1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 18px 40px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .result-header {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .result-header h2 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .domain-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .status-available {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-unavailable {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .price-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .price-table thead {
+            background: #f8f9fa;
+        }
+
+        .price-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .price-table td {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .price-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .cheapest {
+            background: #fff3cd !important;
+            border-left: 4px solid #ffc107;
+        }
+
+        .price {
+            font-weight: 700;
+            color: #28a745;
+            font-size: 1.1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-secondary {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .register-btn {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .best-deal {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .best-deal h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .best-deal .registrar {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .features {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+        }
+
+        .history {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin-top: 30px;
+        }
+
+        .history h3 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .history-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-item:hover {
+            background: #f8f9fa;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-domain {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .history-date {
+            font-size: 0.9rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌐 regctl</h1>
+            <p>897 TLD対応 - 最安値レジストラで自動登録</p>
+        </div>
+
+        <div class="search-box">
+            <div class="search-input-wrapper">
+                <input
+                    type="text"
+                    id="domainInput"
+                    placeholder="example.com"
+                    autocomplete="off"
+                >
+                <button id="searchBtn" onclick="searchDomain()">検索</button>
+            </div>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>価格を比較しています...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div id="results" class="results" style="display: none;">
+            <div class="result-header">
+                <h2 id="resultDomain"></h2>
+                <span id="domainStatus" class="domain-status"></span>
+            </div>
+
+            <div id="bestDeal" class="best-deal" style="display: none;">
+                <h3>💰 最安値</h3>
+                <div class="registrar" id="bestRegistrar"></div>
+                <div class="price" id="bestPrice"></div>
+            </div>
+
+            <table class="price-table">
+                <thead>
+                    <tr>
+                        <th>レジストラ</th>
+                        <th>登録価格</th>
+                        <th>更新価格</th>
+                        <th>ステータス</th>
+                        <th>特徴</th>
+                        <th>アクション</th>
+                    </tr>
+                </thead>
+                <tbody id="priceTableBody">
+                </tbody>
+            </table>
+        </div>
+
+        <div class="history" id="history" style="display: none;">
+            <h3>📜 検索履歴</h3>
+            <div id="historyList"></div>
+        </div>
+    </div>
+
+    <script>
+        // Load search history from localStorage
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            if (history.length > 0) {
+                document.getElementById('history').style.display = 'block';
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = history.map(item => `
+                    <div class="history-item" onclick="searchDomain('${item.domain}')">
+                        <div class="history-domain">${item.domain}</div>
+                        <div class="history-date">${new Date(item.date).toLocaleString('ja-JP')}</div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Save to history
+        function saveToHistory(domain) {
+            let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
+            history = history.filter(item => item.domain !== domain);
+            history.unshift({ domain, date: new Date().toISOString() });
+            history = history.slice(0, 10); // Keep last 10
+            localStorage.setItem('searchHistory', JSON.stringify(history));
+            loadHistory();
+        }
+
+        async function searchDomain(domain) {
+            if (!domain) {
+                domain = document.getElementById('domainInput').value.trim();
+            }
+
+            if (!domain) {
+                showError('ドメイン名を入力してください');
+                return;
+            }
+
+            document.getElementById('domainInput').value = domain;
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('searchBtn').disabled = true;
+
+            try {
+                const response = await fetch(`/v1/domains/check/${domain}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'エラーが発生しました');
+                }
+
+                displayResults(domain, data);
+                saveToHistory(domain);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('searchBtn').disabled = false;
+            }
+        }
+
+        function displayResults(domain, data) {
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('resultDomain').textContent = domain;
+
+            const available = data.results.some(r => r.available);
+            const statusEl = document.getElementById('domainStatus');
+            statusEl.textContent = available ? '✅ 利用可能' : '❌ 利用不可';
+            statusEl.className = `domain-status ${available ? 'status-available' : 'status-unavailable'}`;
+
+            // Find cheapest
+            let cheapest = null;
+            data.results.forEach(r => {
+                if (r.available && (!cheapest || r.price < cheapest.price)) {
+                    cheapest = r;
+                }
+            });
+
+            if (cheapest) {
+                document.getElementById('bestDeal').style.display = 'block';
+                document.getElementById('bestRegistrar').textContent = cheapest.registrar;
+                document.getElementById('bestPrice').textContent = `$${cheapest.price.toFixed(2)}`;
+            } else {
+                document.getElementById('bestDeal').style.display = 'none';
+            }
+
+            // Build table
+            const tbody = document.getElementById('priceTableBody');
+            tbody.innerHTML = data.results.map(r => `
+                <tr class="${cheapest && r.registrar === cheapest.registrar ? 'cheapest' : ''}">
+                    <td><strong>${r.registrar}</strong></td>
+                    <td class="price">$${r.price.toFixed(2)}</td>
+                    <td>$${r.renewal.toFixed(2)}/年</td>
+                    <td>
+                        <span class="badge ${r.available ? 'badge-success' : 'badge-secondary'}">
+                            ${r.available ? '✅ 可能' : '❌ 不可'}
+                        </span>
+                    </td>
+                    <td class="features">${r.features || '-'}</td>
+                    <td>
+                        ${r.available ? `
+                            <button class="register-btn" onclick="registerDomain('${domain}', '${r.registrar}')">
+                                登録する
+                            </button>
+                        ` : '-'}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('error');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        async function registerDomain(domain, registrar) {
+            if (!confirm(`${domain}を${registrar}で登録しますか？`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/v1/domains', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ domain, registrar })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || '登録に失敗しました');
+                }
+
+                alert(`${domain}の登録を開始しました！`);
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Enter key support
+        document.getElementById('domainInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchDomain();
+            }
+        });
+
+        // Load history on page load
+        loadHistory();
+    </script>
+</body>
+</html>
