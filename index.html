@@ -1809,11 +1809,11 @@ async function confirmRegister(){
   if(!pendingRegister) return;
   const {domain, info} = pendingRegister;
   const btn = document.getElementById('registerConfirmBtn');
-  btn.disabled = true; btn.textContent = 'Registering...';
+  btn.disabled = true; btn.textContent = currentLang==='ja'?'取得中...':'Registering...';
   try{
     const r = await fetch(`${API}/v1/domains`, {
       method:'POST', headers: authedHeaders(),
-      body: JSON.stringify({domain, registrar: info?.registrar})
+      body: JSON.stringify({domain, provider: info?.registrar})
     });
     const data = await r.json();
     if(r.ok){
@@ -1821,16 +1821,23 @@ async function confirmRegister(){
       document.getElementById('registerModal').classList.add('hidden');
       loadDomains();
       setTimeout(()=>{
-        if(confirm(`✓ ${domain} registered!\n\nSetup DNS / Nameservers now?`)){
+        if(confirm(currentLang==='ja'?`✓ ${domain} を取得しました！\n\nDNS/ネームサーバーを設定しますか？`:`✓ ${domain} registered!\n\nSetup DNS / Nameservers now?`)){
           navigateToPage('dns');
           setTimeout(()=>{ populateDnsSelectAndLoad(domain); }, 100);
         }
       }, 300);
+    } else if(r.status === 401){
+      // Stale token → clear auth and re-login
+      clearUser();
+      document.getElementById('registerModal').classList.add('hidden');
+      pendingRegister = {domain, info};
+      openAuthModal();
+      toast(currentLang==='ja'?'セッションが切れました。再ログインしてください':'Session expired. Please sign in again','error');
     } else {
       document.getElementById('registerMsg').innerHTML = `<span style="color:var(--red)">${escHtml(data.error||'Registration failed')}</span>`;
     }
   } catch(e){ document.getElementById('registerMsg').innerHTML = `<span style="color:var(--red)">Request failed</span>`; }
-  btn.disabled = false; btn.textContent = 'Register Now →';
+  btn.disabled = false; btn.textContent = currentLang==='ja'?'今すぐ取得 →':'Register Now →';
 }
 
 /* ── INSTANT BUY (register with balance check) ── */
@@ -2412,8 +2419,8 @@ document.addEventListener('DOMContentLoaded', ()=>{
     document.getElementById('emailStep2').style.display='none';
   });
   document.getElementById('authGoogle').addEventListener('click', async ()=>{
-    const r=await fetch(`${API}/v1/auth/google/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({redirect_uri:`${API}/v1/auth/google/callback?local_redirect=${encodeURIComponent(location.origin+location.pathname)}`})});
-    if(r.ok){ const d=await r.json(); if(d.url) location.href=d.url; }
+    const r=await fetch(`${API}/v1/auth/google/start`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({local_redirect:location.origin+location.pathname})});
+    if(r.ok){ const d=await r.json(); if(d.auth_url) location.href=d.auth_url; }
   });
   document.getElementById('authModalClose').addEventListener('click', ()=>document.getElementById('authModal').classList.add('hidden'));
   document.getElementById('authModal').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.add('hidden'); });
@@ -2458,9 +2465,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   document.getElementById('mobileClose').addEventListener('click', ()=>document.getElementById('mobileMenu').classList.remove('show'));
   document.getElementById('mobileMenu').addEventListener('click', e=>{ if(e.target===e.currentTarget) e.currentTarget.classList.remove('show'); });
 
-  // OAuth callback token
+  // OAuth callback token (?key= from Google OAuth, ?token= legacy)
   const params = new URLSearchParams(location.search);
-  const tokenParam = params.get('token');
+  const tokenParam = params.get('key') || params.get('token');
   const emailParam = params.get('email');
   if(tokenParam){
     saveUser({token:tokenParam, email:emailParam||'user'});

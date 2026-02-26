@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -48,6 +49,11 @@ func (s *Server) auth(next http.HandlerFunc) http.HandlerFunc {
 			}
 			customerID, err := billing.ValidateAPIKey(token, s.signingSecret)
 			if err != nil {
+				pfx := token
+				if len(pfx) > 16 {
+					pfx = pfx[:16] + "..."
+				}
+				log.Printf("auth: ValidateAPIKey failed (key=%q): %v", pfx, err)
 				writeError(w, http.StatusUnauthorized, "invalid API key", "")
 				return
 			}

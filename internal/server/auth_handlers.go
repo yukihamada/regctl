@@ -2,6 +2,7 @@ package server
 
 import (
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -105,7 +106,9 @@ func (s *Server) handleVerify(w http.ResponseWriter, r *http.Request) {
 
 
 // handleGoogleStart initiates Google OAuth flow.
-// POST /v1/auth/google/start  {redirect_uri}
+// POST /v1/auth/google/start  {local_redirect}
+// local_redirect is encoded into the OAuth state parameter so the registered
+// redirect_uri stays clean (no query params that Google would reject).
 func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 	if s.googleClientID == "" {
 		writeError(w, http.StatusServiceUnavailable, "Google auth not configured", "")
@@ -113,19 +116,19 @@ func (s *Server) handleGoogleStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var req struct {
-		RedirectURI string `json:"redirect_uri"`
+		LocalRedirect string `json:"local_redirect"`
 	}
 	json.NewDecoder(r.Body).Decode(&req)
 
+	// Encode local_redirect into state: "<random_hex>|<base64(local_redirect)>"
 	state := generateState()
-	redirectURI := s.googleRedirectURI
-	if req.RedirectURI != "" {
-		redirectURI = req.RedirectURI
+	if req.LocalRedirect != "" {
+		state = state + "|" + base64.RawURLEncoding.EncodeToString([]byte(req.LocalRedirect))
 	}
 
 	authURL := fmt.Sprintf(
 		"https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=email+profile&state=%s&access_type=offline",
-		s.googleClientID, redirectURI, state,
+		s.googleClientID, s.googleRedirectURI, state,
 	)
 
 	writeJSON(w, http.StatusOK, map[string]string{
@@ -141,6 +144,19 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	if code == "" {
 		writeError(w, http.StatusBadRequest, "missing code parameter", "")
 		return
+	}
+
+	// Extract local_redirect from state (format: "<random_hex>|<base64(url)>")
+	var localRedirect string
+	if state := r.URL.Query().Get("state"); strings.Contains(state, "|") {
+		parts := strings.SplitN(state, "|", 2)
+		if decoded, err := base64.RawURLEncoding.DecodeString(parts[1]); err == nil {
+			localRedirect = string(decoded)
+		}
+	}
+	// Fallback: legacy ?local_redirect= query param
+	if localRedirect == "" {
+		localRedirect = r.URL.Query().Get("local_redirect")
 	}
 
 	// Exchange code for token
@@ -183,8 +199,7 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check if this is a CLI redirect (localhost) or web redirect
-	localRedirect := r.URL.Query().Get("local_redirect")
+	// Redirect to local_redirect (web or CLI) if provided via state
 	if localRedirect != "" {
 		http.Redirect(w, r, localRedirect+"?key="+apiKey+"&email="+email, http.StatusFound)
 		return
