@@ -1149,7 +1149,9 @@ const TRANSLATIONS = {
   }
 };
 
-let currentLang = localStorage.getItem('regctl_lang') || 'en';
+const _savedLang = localStorage.getItem('regctl_lang');
+const _browserLang = (navigator.language || '').toLowerCase();
+let currentLang = _savedLang || (_browserLang.startsWith('ja') ? 'ja' : 'en');
 
 function t(key){ return TRANSLATIONS[currentLang]?.[key] ?? TRANSLATIONS.en?.[key] ?? key; }
 
