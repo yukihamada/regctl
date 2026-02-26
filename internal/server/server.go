@@ -263,6 +263,23 @@ func (s *Server) routes() {
 
 	s.mux.HandleFunc("POST /v1/internal/site-requests", s.handleSiteRequestBatch)
 
+	// Market & Portfolio routes
+	marketListHandler := s.cors(s.handleMarketList)
+	s.mux.HandleFunc("GET /v1/market", marketListHandler)
+	s.mux.HandleFunc("OPTIONS /v1/market", marketListHandler)
+
+	s.mux.HandleFunc("GET /v1/portfolio", s.auth(s.handlePortfolio))
+	s.mux.HandleFunc("POST /v1/market/list", s.auth(s.handleMarketListDomain))
+	s.mux.HandleFunc("DELETE /v1/market/list/{domain}", s.auth(s.handleMarketCancelListing))
+
+	marketBuyHandler := s.cors(s.auth(s.handleMarketBuy))
+	s.mux.HandleFunc("POST /v1/market/buy/{domain}", marketBuyHandler)
+	s.mux.HandleFunc("OPTIONS /v1/market/buy/{domain}", marketBuyHandler)
+
+	balanceCheckHandler := s.cors(s.optionalAuth(s.handleBalanceCheck))
+	s.mux.HandleFunc("GET /v1/billing/balance-check", balanceCheckHandler)
+	s.mux.HandleFunc("OPTIONS /v1/billing/balance-check", balanceCheckHandler)
+
 	// Curl-friendly prices endpoint (no auth, CORS enabled)
 	pricesTextHandler := s.cors(s.handlePricesText)
 	s.mux.HandleFunc("GET /v1/prices", pricesTextHandler)

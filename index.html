@@ -582,6 +582,14 @@ footer a{color:var(--blue)}
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
         Sites
       </button>
+      <button class="sidebar-item" data-page="market">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21h6"/></svg>
+        Marketplace
+      </button>
+      <button class="sidebar-item" data-page="portfolio">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+        Portfolio
+      </button>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Account</div>
@@ -786,6 +794,33 @@ footer a{color:var(--blue)}
       </div>
     </div>
 
+    <!-- MARKETPLACE -->
+    <div class="app-page" id="page-market">
+      <div class="page-header">
+        <div class="page-title">Marketplace</div>
+        <div style="font-size:.82rem;color:var(--muted)">Platform fee: 10% of profit (min $1.00)</div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:.9rem;color:var(--muted);margin-bottom:12px">Buy domains listed by other users. Instant purchase if you have credits.</div>
+        <div id="marketListings">
+          <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:24px">Loading listings...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTFOLIO -->
+    <div class="app-page" id="page-portfolio">
+      <div class="page-header">
+        <div class="page-title">My Portfolio</div>
+        <div style="font-size:.82rem;color:var(--muted)">Domains you've registered via regctl.sh</div>
+      </div>
+      <div class="card">
+        <div id="portfolioList">
+          <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:24px">Loading portfolio...</div>
+        </div>
+      </div>
+    </div>
+
     <!-- API KEYS -->
     <div class="app-page" id="page-secrets">
       <div class="page-header">
@@ -865,6 +900,39 @@ footer a{color:var(--blue)}
     </div>
     <button class="btn btn-green" id="registerConfirmBtn" style="width:100%;padding:12px">Register Now →</button>
     <div id="registerMsg" style="margin-top:10px;font-size:.85rem"></div>
+  </div>
+</div>
+
+<!-- LIST FOR SALE MODAL -->
+<div class="modal-backdrop hidden" id="sellModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('sellModal').classList.add('hidden')">✕</button>
+    <div class="modal-title">List Domain for Sale</div>
+    <div class="modal-sub" id="sellDomainName" style="font-size:1rem;color:var(--accent);font-weight:700"></div>
+    <div style="margin:16px 0">
+      <div class="form-label">Asking Price (USD)</div>
+      <div style="position:relative">
+        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)">$</span>
+        <input class="input" type="number" min="1" step="0.01" id="sellPrice" placeholder="50.00" style="padding-left:28px">
+      </div>
+      <div id="sellFeePreview" style="margin-top:8px;font-size:.82rem;color:var(--muted)"></div>
+    </div>
+    <button class="btn btn-primary" id="sellConfirmBtn" style="width:100%;padding:12px">List for Sale →</button>
+    <div id="sellMsg" style="margin-top:10px;font-size:.85rem"></div>
+  </div>
+</div>
+
+<!-- INSTANT BUY MODAL (market) -->
+<div class="modal-backdrop hidden" id="marketBuyModal">
+  <div class="modal">
+    <button class="modal-close" onclick="document.getElementById('marketBuyModal').classList.add('hidden')">✕</button>
+    <div class="modal-title">Buy Domain</div>
+    <div class="modal-sub" id="mbDomain" style="font-size:1rem;color:var(--green);font-weight:700"></div>
+    <div style="margin:16px 0;font-size:.85rem" id="mbDetails"></div>
+    <div id="mbBalanceInfo" style="margin-bottom:12px;padding:10px;border-radius:8px;font-size:.85rem"></div>
+    <button class="btn btn-green" id="mbBuyBtn" style="width:100%;padding:12px;display:none">Buy Instantly →</button>
+    <button class="btn btn-primary" id="mbTopupBtn" style="width:100%;padding:12px;display:none">Top Up & Buy →</button>
+    <div id="mbMsg" style="margin-top:10px;font-size:.85rem"></div>
   </div>
 </div>
 
@@ -1057,7 +1125,7 @@ function updateTldCard(d, r){
   else el.classList.remove('hidden');
   el.innerHTML = tldCardInner(d,r);
   if(r.status==='available'){
-    el.querySelector('.reg-btn')?.addEventListener('click', ()=>openRegister(d, r));
+    el.querySelector('.reg-btn')?.addEventListener('click', ()=>openInstantBuy(d, r));
   }
 }
 
@@ -1107,7 +1175,7 @@ function router(){
     // URL slug mode: /startup → search for startup.*
     showView('view-slug');
     startSlugSearch(slug);
-  } else if(user && (hash.startsWith('dashboard')||hash.startsWith('domains')||hash.startsWith('dns')||hash.startsWith('sites')||hash.startsWith('billing')||hash.startsWith('secrets')||!hash)){
+  } else if(user && (hash.startsWith('dashboard')||hash.startsWith('domains')||hash.startsWith('dns')||hash.startsWith('sites')||hash.startsWith('billing')||hash.startsWith('secrets')||hash.startsWith('market')||hash.startsWith('portfolio')||!hash)){
     if(user) showApp(hash || 'dashboard');
     else showView('view-landing');
   } else {
@@ -1161,6 +1229,8 @@ async function loadAppData(){
   loadDomains();
   loadBalance();
   loadSites();
+  loadMarket();
+  loadPortfolio();
 }
 
 async function loadBalance(){
@@ -1340,7 +1410,7 @@ async function checkDomain(domain, resultEl){
             <span style="color:var(--green);font-weight:700">✓ Available — ${escHtml(domain)}</span><br>
             <span style="font-size:.8rem;color:var(--muted)">${data.registrar||''} · $${(data.price||0).toFixed(2)}/yr</span>
           </div>
-          <button class="btn btn-green btn-sm" onclick='openRegister("${escHtml(domain)}",{price:${data.price||0},registrar:"${escHtml(data.registrar||'')}",reg_label:"${escHtml(data.registrar||'')}"})'>Register →</button>
+          <button class="btn btn-green btn-sm" onclick='openInstantBuy("${escHtml(domain)}",{price:${data.price||0},registrar:"${escHtml(data.registrar||'')}",reg_label:"${escHtml(data.registrar||'')}"})'>Buy Now →</button>
         </div>`;
     } else {
       resultEl.innerHTML = `<div style="background:var(--red-dim);border:1px solid var(--red);border-radius:8px;padding:12px 14px"><span style="color:var(--red);font-weight:700">✗ Taken — ${escHtml(domain)}</span></div>`;
@@ -1380,6 +1450,270 @@ async function confirmRegister(){
     }
   } catch(e){ document.getElementById('registerMsg').innerHTML = `<span style="color:var(--red)">Request failed</span>`; }
   btn.disabled = false; btn.textContent = 'Register Now →';
+}
+
+/* ── INSTANT BUY (register with balance check) ── */
+async function openInstantBuy(domain, info){
+  if(!user){ pendingRegister={domain,info}; openAuthModal(); return; }
+  // Show register modal with balance check
+  document.getElementById('registerDomainName').textContent = domain;
+  document.getElementById('regRegistrar').textContent = info?.reg_label||info?.registrar||'Best price';
+  document.getElementById('regPrice').textContent = info?.price ? '$'+info.price.toFixed(2)+'/yr' : 'At cost';
+
+  const amountCents = info?.price ? Math.ceil(info.price * 100) : 0;
+  const msgEl = document.getElementById('registerMsg');
+  msgEl.textContent = '';
+
+  if(amountCents > 0 && getToken()){
+    try{
+      const r = await fetch(`${API}/v1/billing/balance-check?amount_cents=${amountCents}`, {headers: authedHeaders()});
+      if(r.ok){
+        const d = await r.json();
+        if(d.sufficient){
+          msgEl.innerHTML = `<span style="color:var(--green)">✓ Balance $${(d.balance_cents/100).toFixed(2)} — instant purchase ready</span>`;
+        } else {
+          const short = (d.shortfall_cents/100).toFixed(2);
+          msgEl.innerHTML = `<span style="color:var(--red)">⚠ Need $${short} more. </span><button class="btn btn-primary btn-sm" style="margin-left:8px" onclick="quickTopup(${d.shortfall_cents}, '${domain}', ${JSON.stringify(info).replace(/'/g,"&#39;")})">Top Up →</button>`;
+        }
+      }
+    } catch(e){}
+  }
+  pendingRegister = {domain, info};
+  document.getElementById('registerModal').classList.remove('hidden');
+}
+
+async function quickTopup(shortfallCents, domain, info){
+  // Round up to nearest $5
+  const topupCents = Math.ceil(shortfallCents / 500) * 500;
+  const btn = event?.target;
+  if(btn){ btn.disabled=true; btn.textContent='Loading...'; }
+  try{
+    const r = await fetch(`${API}/v1/billing/topup`, {
+      method:'POST', headers: authedHeaders(),
+      body: JSON.stringify({amount_cents: topupCents})
+    });
+    const d = await r.json();
+    if(r.ok && (d.checkout_url || d.data?.checkout_url)){
+      const url = d.checkout_url || d.data?.checkout_url;
+      pendingRegister = {domain, info};
+      window.open(url, '_blank');
+      toast('Complete payment in the new tab, then return here to register','success');
+    } else toast(d.error||'Topup failed','error');
+  } catch(e){ toast('Request failed','error'); }
+  if(btn){ btn.disabled=false; btn.textContent='Top Up →'; }
+}
+
+/* ── PORTFOLIO & MARKET ── */
+async function loadPortfolio(){
+  if(!getToken()) return;
+  const el = document.getElementById('portfolioList');
+  if(!el) return;
+  try{
+    const r = await fetch(`${API}/v1/portfolio`, {headers: authedHeaders()});
+    if(r.ok){
+      const raw = await r.json();
+      const entries = Array.isArray(raw) ? raw : (raw.data || []);
+      renderPortfolio(entries);
+    }
+  } catch(e){ if(el) el.innerHTML = `<div style="color:var(--muted);text-align:center;padding:24px">Failed to load</div>`; }
+}
+
+function renderPortfolio(entries){
+  const el = document.getElementById('portfolioList');
+  if(!el) return;
+  if(!entries.length){
+    el.innerHTML = `<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:24px">No domains in portfolio yet. <a href="javascript:navigateToPage('domains')" style="color:var(--accent)">Register one →</a></div>`;
+    return;
+  }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border);font-size:.8rem;color:var(--muted)">
+      <th style="text-align:left;padding:8px 6px">Domain</th>
+      <th style="text-align:right;padding:8px 6px">Cost</th>
+      <th style="text-align:right;padding:8px 6px">Listed</th>
+      <th style="text-align:right;padding:8px 6px">Actions</th>
+    </tr></thead>
+    <tbody>${entries.map(e=>{
+      const cost = e.purchase_price_cents ? '$'+(e.purchase_price_cents/100).toFixed(2) : '—';
+      const listedBadge = e.listed
+        ? `<span class="badge badge-green">$${e.ask_price_usd?.toFixed(2)||'?'}</span>`
+        : `<span style="color:var(--muted);font-size:.8rem">—</span>`;
+      const actions = e.listed
+        ? `<button class="btn btn-ghost btn-sm" onclick="cancelListing('${escHtml(e.domain)}')">Delist</button>`
+        : `<button class="btn btn-primary btn-sm" onclick="openSellModal('${escHtml(e.domain)}',${e.purchase_price_cents||0})">Sell →</button>`;
+      return `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 6px;font-family:monospace;font-weight:600">${escHtml(e.domain)}</td>
+        <td style="padding:10px 6px;text-align:right;color:var(--muted)">${cost}</td>
+        <td style="padding:10px 6px;text-align:right">${listedBadge}</td>
+        <td style="padding:10px 6px;text-align:right">${actions}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+async function loadMarket(){
+  const el = document.getElementById('marketListings');
+  if(!el) return;
+  try{
+    const r = await fetch(`${API}/v1/market`);
+    if(r.ok){
+      const raw = await r.json();
+      const listings = Array.isArray(raw) ? raw : (raw.data || []);
+      renderMarket(listings);
+    }
+  } catch(e){ if(el) el.innerHTML = `<div style="color:var(--muted);text-align:center;padding:24px">Failed to load</div>`; }
+}
+
+function renderMarket(listings){
+  const el = document.getElementById('marketListings');
+  if(!el) return;
+  if(!listings.length){
+    el.innerHTML = `<div style="color:var(--muted);font-size:.85rem;text-align:center;padding:32px">
+      <div style="font-size:2rem;margin-bottom:8px">🏪</div>
+      No domains listed yet. Register a domain and sell it from your Portfolio!
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    <thead><tr style="border-bottom:1px solid var(--border);font-size:.8rem;color:var(--muted)">
+      <th style="text-align:left;padding:8px 6px">Domain</th>
+      <th style="text-align:right;padding:8px 6px">Price</th>
+      <th style="text-align:right;padding:8px 6px">Fee</th>
+      <th style="text-align:right;padding:8px 6px"></th>
+    </tr></thead>
+    <tbody>${listings.map(m=>`
+      <tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:10px 6px;font-family:monospace;font-weight:600">${escHtml(m.domain)}</td>
+        <td style="padding:10px 6px;text-align:right;color:var(--green);font-weight:700">$${m.ask_price_usd?.toFixed(2)||'?'}</td>
+        <td style="padding:10px 6px;text-align:right;color:var(--muted);font-size:.8rem">$${(m.fee_cents/100).toFixed(2)}</td>
+        <td style="padding:10px 6px;text-align:right">
+          <button class="btn btn-green btn-sm" onclick="openMarketBuy(${JSON.stringify(m).replace(/</g,'&lt;')})">Buy →</button>
+        </td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`;
+}
+
+async function openMarketBuy(listing){
+  if(!user){ openAuthModal(); return; }
+  document.getElementById('mbDomain').textContent = listing.domain;
+  document.getElementById('mbDetails').innerHTML = `
+    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--muted)">Price</span><span style="font-weight:700;color:var(--green)">$${listing.ask_price_usd?.toFixed(2)}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 0">
+      <span style="color:var(--muted)">Platform fee</span><span>$${(listing.fee_cents/100).toFixed(2)} (10% min $1)</span>
+    </div>`;
+  const balEl = document.getElementById('mbBalanceInfo');
+  const buyBtn = document.getElementById('mbBuyBtn');
+  const topupBtn = document.getElementById('mbTopupBtn');
+  const msgEl = document.getElementById('mbMsg');
+  balEl.textContent = 'Checking balance...';
+  buyBtn.style.display = 'none';
+  topupBtn.style.display = 'none';
+  msgEl.textContent = '';
+  document.getElementById('marketBuyModal').classList.remove('hidden');
+
+  // store for confirm
+  document.getElementById('mbBuyBtn').onclick = ()=>confirmMarketBuy(listing);
+  document.getElementById('mbTopupBtn').onclick = ()=>quickTopup(listing.ask_price_cents, null, null);
+
+  try{
+    const r = await fetch(`${API}/v1/billing/balance-check?amount_cents=${listing.ask_price_cents}`, {headers: authedHeaders()});
+    if(r.ok){
+      const d = await r.json();
+      if(d.sufficient){
+        balEl.innerHTML = `<span style="color:var(--green)">✓ Balance: $${(d.balance_cents/100).toFixed(2)} — ready to buy!</span>`;
+        balEl.style.background = 'var(--green-dim)';
+        balEl.style.border = '1px solid var(--green-border)';
+        buyBtn.style.display = 'block';
+      } else {
+        const short = (d.shortfall_cents/100).toFixed(2);
+        balEl.innerHTML = `<span style="color:var(--red)">Balance: $${(d.balance_cents/100).toFixed(2)} — need $${short} more</span>`;
+        balEl.style.background = 'var(--red-dim)';
+        balEl.style.border = '1px solid var(--red)';
+        topupBtn.style.display = 'block';
+        topupBtn.textContent = `Top Up $${Math.ceil(d.shortfall_cents/500)*5} & Buy →`;
+      }
+    }
+  } catch(e){ balEl.textContent = 'Failed to check balance'; }
+}
+
+async function confirmMarketBuy(listing){
+  const btn = document.getElementById('mbBuyBtn');
+  const msgEl = document.getElementById('mbMsg');
+  btn.disabled=true; btn.textContent='Buying...';
+  try{
+    const r = await fetch(`${API}/v1/market/buy/${encodeURIComponent(listing.domain)}`, {
+      method:'POST', headers: authedHeaders()
+    });
+    const d = await r.json();
+    const data = d.data || d;
+    if(r.ok){
+      document.getElementById('marketBuyModal').classList.add('hidden');
+      toast(`🎉 You own ${listing.domain}! Check your portfolio.`, 'success');
+      loadMarket();
+      loadPortfolio();
+      loadBalance();
+    } else {
+      msgEl.innerHTML = `<span style="color:var(--red)">${escHtml(data.error||'Purchase failed')}</span>`;
+      btn.disabled=false; btn.textContent='Buy Instantly →';
+    }
+  } catch(e){ msgEl.innerHTML=`<span style="color:var(--red)">Request failed</span>`; btn.disabled=false; btn.textContent='Buy Instantly →'; }
+}
+
+function openSellModal(domain, purchasePriceCents){
+  document.getElementById('sellDomainName').textContent = domain;
+  document.getElementById('sellPrice').value = '';
+  document.getElementById('sellMsg').textContent = '';
+  document.getElementById('sellFeePreview').textContent = '';
+  document.getElementById('sellModal').classList.remove('hidden');
+
+  document.getElementById('sellPrice').oninput = ()=>{
+    const ask = parseFloat(document.getElementById('sellPrice').value)||0;
+    const askC = Math.round(ask*100);
+    const profit = askC - purchasePriceCents;
+    const fee = Math.max(Math.round(profit*0.1), 100);
+    const net = askC - fee;
+    if(ask > 0){
+      document.getElementById('sellFeePreview').innerHTML =
+        `Fee: $${(fee/100).toFixed(2)} (10% profit, min $1) · You receive: <strong style="color:var(--green)">$${(net/100).toFixed(2)}</strong>`;
+    }
+  };
+  document.getElementById('sellConfirmBtn').onclick = ()=>confirmSell(domain, purchasePriceCents);
+}
+
+async function confirmSell(domain, purchasePriceCents){
+  const askPrice = parseFloat(document.getElementById('sellPrice').value)||0;
+  if(askPrice < 1){ toast('Minimum price is $1.00','error'); return; }
+  const btn = document.getElementById('sellConfirmBtn');
+  const msgEl = document.getElementById('sellMsg');
+  btn.disabled=true; btn.textContent='Listing...';
+  try{
+    const r = await fetch(`${API}/v1/market/list`, {
+      method:'POST', headers: authedHeaders(),
+      body: JSON.stringify({domain, ask_price: askPrice})
+    });
+    const raw = await r.json();
+    const d = raw.data || raw;
+    if(r.ok){
+      document.getElementById('sellModal').classList.add('hidden');
+      toast(`${domain} listed for $${askPrice.toFixed(2)} 🎉`,'success');
+      loadPortfolio();
+      loadMarket();
+    } else {
+      msgEl.innerHTML = `<span style="color:var(--red)">${escHtml(d.error||'Failed')}</span>`;
+    }
+  } catch(e){ msgEl.innerHTML=`<span style="color:var(--red)">Request failed</span>`; }
+  btn.disabled=false; btn.textContent='List for Sale →';
+}
+
+async function cancelListing(domain){
+  if(!confirm(`Cancel listing for ${domain}?`)) return;
+  try{
+    const r = await fetch(`${API}/v1/market/list/${encodeURIComponent(domain)}`, {method:'DELETE', headers: authedHeaders()});
+    if(r.ok){ toast('Listing cancelled','success'); loadPortfolio(); loadMarket(); }
+    else toast('Failed to cancel','error');
+  } catch(e){ toast('Request failed','error'); }
 }
 
 /* ── AUTH ── */
@@ -1423,7 +1757,7 @@ async function verifyCode(){
       toast('Signed in! 🎉','success');
       updateNav(true);
       showApp('dashboard');
-      if(pendingRegister) setTimeout(()=>openRegister(pendingRegister.domain,pendingRegister.info),500);
+      if(pendingRegister) setTimeout(()=>openInstantBuy(pendingRegister.domain,pendingRegister.info),500);
     } else {
       const d=await r.json();
       document.getElementById('emailMsg').innerHTML=`<span style="color:var(--red)">${escHtml(d.error||'Invalid code')}</span>`;
@@ -1528,7 +1862,7 @@ async function heroSearch(){
           <div style="background:var(--green-dim);border:1px solid var(--green-border);border-radius:10px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div><span style="color:var(--green);font-weight:800;font-size:1.1rem">✓ ${escHtml(raw)} is available!</span><br>
             <span style="font-size:.85rem;color:var(--muted)">${escHtml(d.registrar||'')} · $${(d.price||0).toFixed(2)}/yr</span></div>
-            <button class="btn btn-green" onclick='openRegister("${escHtml(raw)}",{price:${d.price||0},registrar:"${escHtml(d.registrar||'')}",reg_label:"${escHtml(d.registrar||'')}"})'>Register →</button>
+            <button class="btn btn-green" onclick='openInstantBuy("${escHtml(raw)}",{price:${d.price||0},registrar:"${escHtml(d.registrar||'')}",reg_label:"${escHtml(d.registrar||'')}"})'>Buy Now →</button>
           </div>
           <div style="text-align:center;margin-top:10px;font-size:.82rem;color:var(--muted)">
             Also check: <a href="/${escHtml(raw.split('.')[0])}" style="color:var(--accent)">all TLDs for ${escHtml(raw.split('.')[0])}</a>

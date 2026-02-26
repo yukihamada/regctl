@@ -80,6 +80,31 @@ CREATE TABLE IF NOT EXISTS site_usage (
     UNIQUE(site_id, usage_date)
 );
 
+-- Domain portfolio: tracks domains registered through regctl by each user
+CREATE TABLE IF NOT EXISTS domain_portfolio (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain          TEXT NOT NULL UNIQUE,
+    customer_id     TEXT NOT NULL,
+    registrar       TEXT NOT NULL DEFAULT '',
+    purchase_price_cents INTEGER NOT NULL DEFAULT 0,
+    purchased_at    TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now'))
+);
+CREATE INDEX IF NOT EXISTS idx_portfolio_customer ON domain_portfolio(customer_id);
+
+-- Market listings: domains listed for sale by users
+CREATE TABLE IF NOT EXISTS market_listings (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    domain          TEXT NOT NULL UNIQUE,
+    seller_id       TEXT NOT NULL,
+    ask_price_cents INTEGER NOT NULL,
+    purchase_price_cents INTEGER NOT NULL DEFAULT 0,
+    status          TEXT NOT NULL DEFAULT 'active', -- active | sold | cancelled
+    listed_at       TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%SZ','now')),
+    sold_at         TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_market_status ON market_listings(status, listed_at);
+CREATE INDEX IF NOT EXISTS idx_market_seller ON market_listings(seller_id);
+
 CREATE TABLE IF NOT EXISTS site_sponsors (
     id                  INTEGER PRIMARY KEY AUTOINCREMENT,
     site_id             INTEGER NOT NULL,
@@ -578,4 +603,166 @@ func (s *Store) GetAllActiveSites() ([]Site, error) {
 		sites = []Site{}
 	}
 	return sites, rows.Err()
+}
+
+// ── Portfolio ──────────────────────────────────────────────────────────────
+
+// PortfolioEntry represents a domain owned by a user.
+type PortfolioEntry struct {
+	ID                 int64  `json:"id"`
+	Domain             string `json:"domain"`
+	CustomerID         string `json:"customer_id"`
+	Registrar          string `json:"registrar"`
+	PurchasePriceCents int64  `json:"purchase_price_cents"`
+	PurchasedAt        string `json:"purchased_at"`
+}
+
+// AddToPortfolio records a domain purchase.
+func (s *Store) AddToPortfolio(domain, customerID, registrar string, priceCents int64) error {
+	_, err := s.db.Exec(
+		`INSERT OR REPLACE INTO domain_portfolio (domain, customer_id, registrar, purchase_price_cents)
+		 VALUES (?, ?, ?, ?)`,
+		domain, customerID, registrar, priceCents,
+	)
+	return err
+}
+
+// GetPortfolio returns all domains owned by a customer.
+func (s *Store) GetPortfolio(customerID string) ([]PortfolioEntry, error) {
+	rows, err := s.db.Query(
+		`SELECT id, domain, customer_id, registrar, purchase_price_cents, purchased_at
+		 FROM domain_portfolio WHERE customer_id = ? ORDER BY purchased_at DESC`,
+		customerID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var entries []PortfolioEntry
+	for rows.Next() {
+		var e PortfolioEntry
+		if err := rows.Scan(&e.ID, &e.Domain, &e.CustomerID, &e.Registrar, &e.PurchasePriceCents, &e.PurchasedAt); err != nil {
+			return nil, err
+		}
+		entries = append(entries, e)
+	}
+	if entries == nil {
+		entries = []PortfolioEntry{}
+	}
+	return entries, rows.Err()
+}
+
+// GetPortfolioEntry returns a single portfolio entry.
+func (s *Store) GetPortfolioEntry(domain string) (*PortfolioEntry, error) {
+	var e PortfolioEntry
+	err := s.db.QueryRow(
+		`SELECT id, domain, customer_id, registrar, purchase_price_cents, purchased_at
+		 FROM domain_portfolio WHERE domain = ?`, domain,
+	).Scan(&e.ID, &e.Domain, &e.CustomerID, &e.Registrar, &e.PurchasePriceCents, &e.PurchasedAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &e, err
+}
+
+// TransferPortfolio changes the owner of a domain (market sale).
+func (s *Store) TransferPortfolio(domain, newCustomerID string, priceCents int64) error {
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	_, err := s.db.Exec(
+		`UPDATE domain_portfolio SET customer_id = ?, purchase_price_cents = ?, purchased_at = ?
+		 WHERE domain = ?`,
+		newCustomerID, priceCents, now, domain,
+	)
+	return err
+}
+
+// ── Market Listings ─────────────────────────────────────────────────────────
+
+// MarketListing represents a domain listed for sale.
+type MarketListing struct {
+	ID                 int64   `json:"id"`
+	Domain             string  `json:"domain"`
+	SellerID           string  `json:"seller_id"`
+	AskPriceCents      int64   `json:"ask_price_cents"`
+	PurchasePriceCents int64   `json:"purchase_price_cents"`
+	Status             string  `json:"status"`
+	ListedAt           string  `json:"listed_at"`
+	SoldAt             *string `json:"sold_at,omitempty"`
+}
+
+// ListForSale creates or updates a market listing.
+func (s *Store) ListForSale(domain, sellerID string, askPriceCents, purchasePriceCents int64) error {
+	_, err := s.db.Exec(
+		`INSERT INTO market_listings (domain, seller_id, ask_price_cents, purchase_price_cents)
+		 VALUES (?, ?, ?, ?)
+		 ON CONFLICT(domain) DO UPDATE SET
+		   ask_price_cents = excluded.ask_price_cents,
+		   status = 'active',
+		   sold_at = NULL,
+		   listed_at = strftime('%Y-%m-%dT%H:%M:%SZ','now')`,
+		domain, sellerID, askPriceCents, purchasePriceCents,
+	)
+	return err
+}
+
+// CancelListing removes a listing (seller action).
+func (s *Store) CancelListing(domain, sellerID string) error {
+	_, err := s.db.Exec(
+		`UPDATE market_listings SET status = 'cancelled'
+		 WHERE domain = ? AND seller_id = ? AND status = 'active'`,
+		domain, sellerID,
+	)
+	return err
+}
+
+// GetListing returns a single active listing.
+func (s *Store) GetListing(domain string) (*MarketListing, error) {
+	var m MarketListing
+	err := s.db.QueryRow(
+		`SELECT id, domain, seller_id, ask_price_cents, purchase_price_cents, status, listed_at, sold_at
+		 FROM market_listings WHERE domain = ? AND status = 'active'`, domain,
+	).Scan(&m.ID, &m.Domain, &m.SellerID, &m.AskPriceCents, &m.PurchasePriceCents, &m.Status, &m.ListedAt, &m.SoldAt)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	return &m, err
+}
+
+// GetActiveListings returns all active market listings.
+func (s *Store) GetActiveListings(limit, offset int) ([]MarketListing, error) {
+	if limit <= 0 {
+		limit = 50
+	}
+	rows, err := s.db.Query(
+		`SELECT id, domain, seller_id, ask_price_cents, purchase_price_cents, status, listed_at, sold_at
+		 FROM market_listings WHERE status = 'active'
+		 ORDER BY listed_at DESC LIMIT ? OFFSET ?`,
+		limit, offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var listings []MarketListing
+	for rows.Next() {
+		var m MarketListing
+		if err := rows.Scan(&m.ID, &m.Domain, &m.SellerID, &m.AskPriceCents, &m.PurchasePriceCents, &m.Status, &m.ListedAt, &m.SoldAt); err != nil {
+			return nil, err
+		}
+		listings = append(listings, m)
+	}
+	if listings == nil {
+		listings = []MarketListing{}
+	}
+	return listings, rows.Err()
+}
+
+// MarkSold marks a listing as sold.
+func (s *Store) MarkSold(domain string) error {
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	_, err := s.db.Exec(
+		`UPDATE market_listings SET status = 'sold', sold_at = ? WHERE domain = ? AND status = 'active'`,
+		now, domain,
+	)
+	return err
 }

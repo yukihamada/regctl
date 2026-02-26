@@ -457,6 +457,11 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 		s.tryReferralCredit(req.Domain, customerID, baseCostCents)
 	}
 
+	// Record in portfolio for market trading
+	if s.store != nil && customerID != "" {
+		_ = s.store.AddToPortfolio(req.Domain, customerID, usedRegistrar, baseCostCents)
+	}
+
 	// Auto-setup: DNS + TLS cert + site record (non-blocking)
 	go s.autoSetupSite(req.Domain, usedRegistrar, customerID)
 
