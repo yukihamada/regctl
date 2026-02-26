@@ -873,7 +873,7 @@ footer a{color:var(--blue)}
 
 <script>
 'use strict';
-const API = 'https://regctl-api.fly.dev';
+const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? '' : 'https://regctl.sh';
 const PRICES_URL = '/prices.json';
 
 /* ── AUTH STATE ── */

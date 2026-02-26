@@ -5,7 +5,7 @@ primary_region = "nrt"
 
 [env]
   PORT = "8080"
-  REGCTL_BASE_URL = "https://regctl-api.fly.dev"
+  REGCTL_BASE_URL = "https://regctl.sh"
 
 [http_service]
   internal_port = 8080
