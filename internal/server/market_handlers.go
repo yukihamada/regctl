@@ -236,14 +236,6 @@ func (s *Server) handleMarketBuy(w http.ResponseWriter, r *http.Request) {
 	// Mark listing as sold
 	_ = s.store.MarkSold(domain)
 
-	// Notify seller via LINE if configured
-	if s.lineNotify != nil {
-		s.lineNotify.Send(fmt.Sprintf(
-			"\n[regctl] ドメイン売却完了\nドメイン: %s\n売却額: $%.2f\n手数料: $%.2f\n受取額: $%.2f",
-			domain, float64(askCents)/100, float64(feeCents)/100, float64(sellerNetCents)/100,
-		))
-	}
-
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"domain":          domain,
 		"paid_usd":        float64(askCents) / 100,

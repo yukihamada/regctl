@@ -9,7 +9,6 @@ import (
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/email"
 	"github.com/yukihamada/regctl/internal/flymachines"
-	"github.com/yukihamada/regctl/internal/notify"
 	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
 	"github.com/yukihamada/regctl/internal/storage"
@@ -27,15 +26,10 @@ type Config struct {
 
 	// Auth providers
 	EmailClient        *email.Client
-	GitHubClientID     string
-	GitHubClientSecret string
 	GoogleClientID     string
 	GoogleClientSecret string
 	GoogleRedirectURI  string
 	BaseURL            string // e.g. https://regctl-api.fly.dev
-
-	// Notifications
-	LineNotify *notify.LineClient // nil = disabled
 
 	// Fly Machines hosting
 	FlyAPIToken    string
@@ -65,8 +59,6 @@ type Server struct {
 
 	// Auth providers
 	emailClient        *email.Client
-	githubClientID     string
-	githubClientSecret string
 	googleClientID     string
 	googleClientSecret string
 	googleRedirectURI  string
@@ -84,8 +76,6 @@ type Server struct {
 	dnsProviders []provider.DNSProvider
 	nsProviders  []provider.NSProvider
 
-	// Notifications
-	lineNotify *notify.LineClient
 }
 
 // New creates a new HTTP API server.
@@ -101,8 +91,6 @@ func New(cfg Config) *Server {
 		store:              cfg.Store,
 		mux:                http.NewServeMux(),
 		emailClient:        cfg.EmailClient,
-		githubClientID:     cfg.GitHubClientID,
-		githubClientSecret: cfg.GitHubClientSecret,
 		googleClientID:     cfg.GoogleClientID,
 		googleClientSecret: cfg.GoogleClientSecret,
 		googleRedirectURI:  cfg.GoogleRedirectURI,
@@ -112,7 +100,6 @@ func New(cfg Config) *Server {
 		registrars:         cfg.Registrars,
 		dnsProviders:       cfg.DNSProviders,
 		nsProviders:        cfg.NSProviders,
-		lineNotify:         cfg.LineNotify,
 	}
 	if cfg.FlyAPIToken != "" && cfg.FlyAppName != "" {
 		region := cfg.FlyRegion
@@ -225,23 +212,11 @@ func (s *Server) routes() {
 	s.mux.HandleFunc("POST /v1/auth/verify", authVerifyHandler)
 	s.mux.HandleFunc("OPTIONS /v1/auth/verify", authVerifyHandler)
 
-	ghDeviceHandler := s.cors(s.handleGitHubDevice)
-	s.mux.HandleFunc("POST /v1/auth/github/device", ghDeviceHandler)
-	s.mux.HandleFunc("OPTIONS /v1/auth/github/device", ghDeviceHandler)
-
-	ghPollHandler := s.cors(s.handleGitHubPoll)
-	s.mux.HandleFunc("POST /v1/auth/github/poll", ghPollHandler)
-	s.mux.HandleFunc("OPTIONS /v1/auth/github/poll", ghPollHandler)
-
 	googleStartHandler := s.cors(s.handleGoogleStart)
 	s.mux.HandleFunc("POST /v1/auth/google/start", googleStartHandler)
 	s.mux.HandleFunc("OPTIONS /v1/auth/google/start", googleStartHandler)
 
 	s.mux.HandleFunc("GET /v1/auth/google/callback", s.handleGoogleCallback)
-
-	// GitHub web OAuth (redirect flow for web clients)
-	s.mux.HandleFunc("GET /v1/auth/github/web", s.handleGitHubWebRedirect)
-	s.mux.HandleFunc("GET /v1/auth/github/callback", s.handleGitHubCallback)
 
 	// Billing routes (no auth for signup/webhook, auth for topup/balance/hold)
 	if s.billingEnabled {

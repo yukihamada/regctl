@@ -11,7 +11,6 @@ import (
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/config"
 	"github.com/yukihamada/regctl/internal/email"
-	"github.com/yukihamada/regctl/internal/notify"
 	"github.com/yukihamada/regctl/internal/provider"
 	"github.com/yukihamada/regctl/internal/server"
 	"github.com/yukihamada/regctl/internal/storage"
@@ -121,8 +120,6 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			if resendKey != "" {
 				srvCfg.EmailClient = email.NewClient(resendKey, "noreply@regctl.sh")
 			}
-			srvCfg.GitHubClientID = os.Getenv("GITHUB_CLIENT_ID")
-			srvCfg.GitHubClientSecret = os.Getenv("GITHUB_CLIENT_SECRET")
 			srvCfg.GoogleClientID = os.Getenv("GOOGLE_CLIENT_ID")
 			srvCfg.GoogleClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
 			baseURL := os.Getenv("REGCTL_BASE_URL")
@@ -131,9 +128,6 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			}
 			srvCfg.BaseURL = baseURL
 			srvCfg.GoogleRedirectURI = baseURL + "/v1/auth/google/callback"
-
-			// LINE Notify (残高不足アラート)
-			srvCfg.LineNotify = notify.NewLineClient(os.Getenv("LINE_NOTIFY_TOKEN"))
 
 			// Fly Machines hosting
 			srvCfg.FlyAPIToken = os.Getenv("FLY_API_TOKEN")
