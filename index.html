@@ -1413,7 +1413,7 @@ async function loadNameservers(domain){
   const el = document.getElementById('nsCurrentDisplay');
   el.textContent = 'Loading nameservers...';
   try{
-    const r = await fetch(`${API}/v1/domains/${encodeURIComponent(domain)}/nameservers`, {headers: authedHeaders()});
+    const r = await fetch(`${API}/v1/ns/${encodeURIComponent(domain)}`, {headers: authedHeaders()});
     if(r.ok){
       const raw = await r.json();
       const ns = (raw.data?.nameservers || raw.nameservers || []);
@@ -1450,7 +1450,7 @@ async function saveNameservers(){
   const msgEl = document.getElementById('nsMsg');
   msgEl.textContent = 'Saving...';
   try{
-    const r = await fetch(`${API}/v1/domains/${encodeURIComponent(domain)}/nameservers`, {
+    const r = await fetch(`${API}/v1/ns/${encodeURIComponent(domain)}`, {
       method:'PUT', headers: authedHeaders(),
       body: JSON.stringify({nameservers: ns})
     });
