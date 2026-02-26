@@ -987,7 +987,7 @@ async function startSlugSearch(name){
       });
       if(res.ok){
         const data = await res.json();
-        const results = Array.isArray(data) ? data : (data.results || []);
+        const results = Array.isArray(data) ? data : (data.results || data?.data?.results || []);
         for(const r of results){
           if(!r.domain) continue;
           const avail = r.available === true;
