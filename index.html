@@ -317,14 +317,15 @@ footer a{color:var(--blue)}
   </button>
   <a href="/" class="nav-logo">regctl<span>.sh</span></a>
   <div class="nav-links" id="navLinks">
-    <a href="/#prices" class="nav-btn">Prices</a>
-    <a href="/#features" class="nav-btn">Features</a>
-    <a href="/#pricing" class="nav-btn">Plans</a>
+    <a href="/#prices" class="nav-btn" data-i18n="nav.prices">Prices</a>
+    <a href="/#features" class="nav-btn" data-i18n="nav.features">Features</a>
+    <a href="/#pricing" class="nav-btn" data-i18n="nav.plans">Plans</a>
     <a href="https://github.com/yukihamada/regctl" target="_blank" class="nav-btn">GitHub</a>
   </div>
   <div class="nav-right" id="navRight">
-    <button class="btn btn-ghost btn-sm" id="signInBtn">Sign In</button>
-    <button class="btn btn-primary btn-sm hidden" id="userMenuBtn">Account ▾</button>
+    <button class="btn btn-ghost btn-sm lang-toggle" id="langToggle" onclick="toggleLang()">日本語</button>
+    <button class="btn btn-ghost btn-sm" id="signInBtn" data-i18n="nav.signin">Sign In</button>
+    <button class="btn btn-primary btn-sm hidden" id="userMenuBtn" data-i18n="nav.account">Account ▾</button>
   </div>
 </nav>
 
@@ -345,32 +346,32 @@ footer a{color:var(--blue)}
 
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">⚡ World's Cheapest Domain Registration</div>
+    <div class="hero-badge" data-i18n="hero.badge">⚡ World's Cheapest Domain Registration</div>
     <h1>Get <span class="accent" id="typewriterText">startup</span><span class="typewriter-cursor">|</span>.com for <span class="accent">$8.88</span></h1>
-    <p>Search 897 TLDs across Spaceship, Porkbun & Cloudflare. Always register at the lowest price — automatically.</p>
+    <p data-i18n="hero.desc">Search 897 TLDs across Spaceship, Porkbun & Cloudflare. Always register at the lowest price — automatically.</p>
 
     <div class="hero-search">
-      <input type="text" id="heroInput" placeholder="Search any domain... or just type a name" autocomplete="off" spellcheck="false">
-      <button class="hero-search-btn" id="heroSearchBtn">Search →</button>
+      <input type="text" id="heroInput" data-i18n-placeholder="hero.placeholder" placeholder="Search any domain... or just type a name" autocomplete="off" spellcheck="false">
+      <button class="hero-search-btn" id="heroSearchBtn" data-i18n="hero.searchBtn">Search →</button>
     </div>
-    <p style="font-size:.78rem;color:var(--muted2);margin-top:-16px;margin-bottom:16px">
+    <p style="font-size:.78rem;color:var(--muted2);margin-top:-16px;margin-bottom:16px" data-i18n="hero.tip">
       Tip: visit <code>regctl.sh/<strong>yourname</strong></code> to instantly see all available TLDs
     </p>
 
     <div id="hero-results"></div>
 
     <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-val">897</div><div class="hero-stat-label">TLDs Compared</div></div>
-      <div class="hero-stat"><div class="hero-stat-val">5</div><div class="hero-stat-label">Registrars</div></div>
-      <div class="hero-stat"><div class="hero-stat-val">$0.88</div><div class="hero-stat-label">Cheapest .xyz</div></div>
-      <div class="hero-stat"><div class="hero-stat-val">Free</div><div class="hero-stat-label">1,000 checks/day</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">897</div><div class="hero-stat-label" data-i18n="hero.statTLDs">TLDs Compared</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">5</div><div class="hero-stat-label" data-i18n="hero.statRegistrars">Registrars</div></div>
+      <div class="hero-stat"><div class="hero-stat-val">$0.88</div><div class="hero-stat-label" data-i18n="hero.statCheapest">Cheapest .xyz</div></div>
+      <div class="hero-stat"><div class="hero-stat-val" data-i18n="hero.statFreeVal">Free</div><div class="hero-stat-label" data-i18n="hero.statFree">1,000 checks/day</div></div>
     </div>
 
     <div style="margin-top:32px">
       <div class="install-box" id="installBox">
         <span style="color:var(--muted)">$</span>
         <span class="install-cmd">curl -fsSL https://regctl.sh/install.sh | sh</span>
-        <span class="install-copy" id="installCopy">Copy</span>
+        <span class="install-copy" id="installCopy" data-i18n="installCopy">Copy</span>
       </div>
     </div>
   </section>
@@ -378,38 +379,38 @@ footer a{color:var(--blue)}
   <!-- Features -->
   <section class="feature-section" id="features">
     <div class="container">
-      <div class="section-title">Everything you need to manage domains</div>
-      <div class="section-sub">One CLI. Multiple registrars. Always the lowest price.</div>
+      <div class="section-title" data-i18n="features.title">Everything you need to manage domains</div>
+      <div class="section-sub" data-i18n="features.sub">One CLI. Multiple registrars. Always the lowest price.</div>
       <div class="feature-grid">
         <div class="feature-card">
           <div class="feature-icon">💰</div>
-          <h3>Always Cheapest</h3>
-          <p>Compares all registrars in real-time and auto-registers at the lowest available price.</p>
+          <h3 data-i18n="features.cheapest.title">Always Cheapest</h3>
+          <p data-i18n="features.cheapest.desc">Compares all registrars in real-time and auto-registers at the lowest available price.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌐</div>
-          <h3>DNS Management</h3>
-          <p>Add, edit, delete DNS records across all your registrars from a single command.</p>
+          <h3 data-i18n="features.dns.title">DNS Management</h3>
+          <p data-i18n="features.dns.desc">Add, edit, delete DNS records across all your registrars from a single command.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🚀</div>
-          <h3>One-Command Launch</h3>
-          <p><code>regctl launch mysite.com</code> — domain + hosting + DNS in 60 seconds.</p>
+          <h3 data-i18n="features.launch.title">One-Command Launch</h3>
+          <p data-i18n="features.launch.desc"><code>regctl launch mysite.com</code> — domain + hosting + DNS in 60 seconds.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🔍</div>
-          <h3>URL Search</h3>
-          <p>Visit <code>regctl.sh/anything</code> to instantly check all TLDs for that name.</p>
+          <h3 data-i18n="features.url.title">URL Search</h3>
+          <p data-i18n="features.url.desc">Visit <code>regctl.sh/anything</code> to instantly check all TLDs for that name.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🤖</div>
-          <h3>AI-Friendly</h3>
-          <p><code>--format json</code> output for Claude, GPT, and any AI automation pipeline.</p>
+          <h3 data-i18n="features.ai.title">AI-Friendly</h3>
+          <p data-i18n="features.ai.desc"><code>--format json</code> output for Claude, GPT, and any AI automation pipeline.</p>
         </div>
         <div class="feature-card">
           <div class="feature-icon">🌍</div>
-          <h3>5 Registrars</h3>
-          <p>Spaceship, Porkbun, Cloudflare, Namecheap, Value Domain — all in one tool.</p>
+          <h3 data-i18n="features.registrars.title">5 Registrars</h3>
+          <p data-i18n="features.registrars.desc">Spaceship, Porkbun, Cloudflare, Namecheap, Value Domain — all in one tool.</p>
         </div>
       </div>
     </div>
@@ -420,8 +421,8 @@ footer a{color:var(--blue)}
     <div class="container">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start">
         <div>
-          <div class="section-title" style="text-align:left;margin-bottom:6px">Quick Demo</div>
-          <div class="section-sub" style="text-align:left;margin-bottom:16px">From install to live site in 3 steps.</div>
+          <div class="section-title" style="text-align:left;margin-bottom:6px" data-i18n="demo.title">Quick Demo</div>
+          <div class="section-sub" style="text-align:left;margin-bottom:16px" data-i18n="demo.sub">From install to live site in 3 steps.</div>
           <div class="cli-box">
             <div class="cli-header">
               <div class="cli-dot" style="background:#ff5f57"></div>
@@ -444,11 +445,11 @@ footer a{color:var(--blue)}
           </div>
         </div>
         <div>
-          <div class="section-title" style="text-align:left;margin-bottom:6px">Popular TLD Prices</div>
-          <div class="section-sub" style="text-align:left;margin-bottom:16px">Renewal price/yr. Green = cheapest with API.</div>
+          <div class="section-title" style="text-align:left;margin-bottom:6px" data-i18n="prices.title">Popular TLD Prices</div>
+          <div class="section-sub" style="text-align:left;margin-bottom:16px" data-i18n="prices.sub">Renewal price/yr. Green = cheapest with API.</div>
           <div class="table-wrap" style="max-height:320px;overflow-y:auto">
             <table>
-              <thead><tr><th>TLD</th><th>Best Price</th><th>Registrar</th></tr></thead>
+              <thead><tr><th data-i18n="prices.tld">TLD</th><th data-i18n="prices.bestprice">Best Price</th><th data-i18n="prices.registrar">Registrar</th></tr></thead>
               <tbody id="landingPriceTable">
                 <tr><td colspan="3" style="text-align:center;color:var(--muted);padding:20px">Loading prices...</td></tr>
               </tbody>
@@ -462,43 +463,43 @@ footer a{color:var(--blue)}
   <!-- Pricing -->
   <section style="padding:60px 0;border-top:1px solid var(--border)" id="pricing">
     <div class="container">
-      <div class="section-title">Simple pricing</div>
-      <div class="section-sub">Domain costs pass-through at cost. We charge only for API usage.</div>
+      <div class="section-title" data-i18n="pricing.title">Simple pricing</div>
+      <div class="section-sub" data-i18n="pricing.sub">Domain costs pass-through at cost. We charge only for API usage.</div>
       <div class="pricing-grid">
         <div class="price-card">
-          <div class="price-name">Free</div>
+          <div class="price-name" data-i18n="pricing.free.name">Free</div>
           <div class="price-val">$0<span>/mo</span></div>
-          <div class="price-desc">Perfect for personal projects</div>
+          <div class="price-desc" data-i18n="pricing.free.desc">Perfect for personal projects</div>
           <ul class="price-features">
-            <li><span class="check">✓</span> 1,000 domain checks/day</li>
-            <li><span class="check">✓</span> Price comparison</li>
-            <li><span class="check">✓</span> CLI tool</li>
-            <li><span class="check">✓</span> DNS management</li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f1">1,000 domain checks/day</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f2">Price comparison</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f3">CLI tool</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.free.f4">DNS management</span></li>
           </ul>
         </div>
         <div class="price-card featured">
-          <div class="price-card-badge">Most Popular</div>
-          <div class="price-name">Starter</div>
+          <div class="price-card-badge" data-i18n="pricing.starter.badge">Most Popular</div>
+          <div class="price-name" data-i18n="pricing.starter.name">Starter</div>
           <div class="price-val">$9<span>/mo</span></div>
-          <div class="price-desc">For growing teams</div>
+          <div class="price-desc" data-i18n="pricing.starter.desc">For growing teams</div>
           <ul class="price-features">
-            <li><span class="check">✓</span> Unlimited checks</li>
-            <li><span class="check">✓</span> Auto-registration</li>
-            <li><span class="check">✓</span> Domain portfolio</li>
-            <li><span class="check">✓</span> Site hosting</li>
-            <li><span class="check">✓</span> Referral rewards (10%)</li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.starter.f1">Unlimited checks</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.starter.f2">Auto-registration</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.starter.f3">Domain portfolio</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.starter.f4">Site hosting</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.starter.f5">Referral rewards (10%)</span></li>
           </ul>
         </div>
         <div class="price-card">
-          <div class="price-name">Pro</div>
+          <div class="price-name" data-i18n="pricing.pro.name">Pro</div>
           <div class="price-val">$29<span>/mo</span></div>
-          <div class="price-desc">For power users & agencies</div>
+          <div class="price-desc" data-i18n="pricing.pro.desc">For power users & agencies</div>
           <ul class="price-features">
-            <li><span class="check">✓</span> Everything in Starter</li>
-            <li><span class="check">✓</span> Bulk operations</li>
-            <li><span class="check">✓</span> API access</li>
-            <li><span class="check">✓</span> Priority support</li>
-            <li><span class="check">✓</span> Custom nameservers</li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f1">Everything in Starter</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f2">Bulk operations</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f3">API access</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f4">Priority support</span></li>
+            <li><span class="check">✓</span> <span data-i18n="pricing.pro.f5">Custom nameservers</span></li>
           </ul>
         </div>
       </div>
@@ -508,8 +509,8 @@ footer a{color:var(--blue)}
   <!-- Discovery -->
   <section style="padding:60px 0;border-top:1px solid var(--border)">
     <div class="container">
-      <div class="section-title">Domain Discovery</div>
-      <div class="section-sub">Available domains recently searched by users. Find gems before others do.</div>
+      <div class="section-title" data-i18n="discovery.title">Domain Discovery</div>
+      <div class="section-sub" data-i18n="discovery.sub">Available domains recently searched by users. Find gems before others do.</div>
       <div class="discovery-grid" id="landingDiscovery">
         <div style="color:var(--muted);font-size:.85rem;grid-column:1/-1;text-align:center;padding:20px">Loading...</div>
       </div>
@@ -518,46 +519,46 @@ footer a{color:var(--blue)}
 
   <footer>
     <p>© 2026 regctl.sh — <a href="https://github.com/yukihamada/regctl">GitHub</a> · <a href="/llms.txt">llms.txt</a> · <a href="/prices.json">prices.json</a></p>
-    <p style="margin-top:6px">Domain prices are renewal costs (USD/yr). Registration may differ.</p>
+    <p style="margin-top:6px" data-i18n="footer.note">Domain prices are renewal costs (USD/yr). Registration may differ.</p>
   </footer>
 </div>
 
 <!-- ===== SLUG SEARCH VIEW ===== -->
 <div id="view-slug" class="hidden">
   <div class="slug-hero">
-    <h1>Available domains for <span class="slug-name" id="slugNameDisplay">...</span></h1>
-    <p>Checking all TLDs — available ones appear in green with prices</p>
+    <h1><span data-i18n="slug.title">Available domains for</span> <span class="slug-name" id="slugNameDisplay">...</span></h1>
+    <p data-i18n="slug.sub">Checking all TLDs — available ones appear in green with prices</p>
   </div>
 
   <div class="slug-search-bar">
-    <input type="text" id="slugSearchInput" placeholder="Try another name..." autocomplete="off">
-    <button id="slugSearchBtn">Search →</button>
+    <input type="text" id="slugSearchInput" data-i18n-placeholder="slug.placeholder" placeholder="Try another name..." autocomplete="off">
+    <button id="slugSearchBtn" data-i18n="slug.searchBtn">Search →</button>
   </div>
 
   <div class="slug-stats" id="slugStats">
-    <div class="slug-stat"><div class="slug-stat-val green" id="statAvail">0</div><div class="slug-stat-label">Available</div></div>
-    <div class="slug-stat"><div class="slug-stat-val red" id="statTaken">0</div><div class="slug-stat-label">Taken</div></div>
-    <div class="slug-stat"><div class="slug-stat-val" id="statChecking" style="color:var(--muted)">0</div><div class="slug-stat-label">Checking</div></div>
-    <div class="slug-stat"><div class="slug-stat-val" id="statTotal" style="color:var(--accent)">0</div><div class="slug-stat-label">TLDs</div></div>
+    <div class="slug-stat"><div class="slug-stat-val green" id="statAvail">0</div><div class="slug-stat-label" data-i18n="slug.available">Available</div></div>
+    <div class="slug-stat"><div class="slug-stat-val red" id="statTaken">0</div><div class="slug-stat-label" data-i18n="slug.taken">Taken</div></div>
+    <div class="slug-stat"><div class="slug-stat-val" id="statChecking" style="color:var(--muted)">0</div><div class="slug-stat-label" data-i18n="slug.checking">Checking</div></div>
+    <div class="slug-stat"><div class="slug-stat-val" id="statTotal" style="color:var(--accent)">0</div><div class="slug-stat-label" data-i18n="slug.tlds">TLDs</div></div>
   </div>
 
   <div style="max-width:1100px;margin:0 auto 8px;padding:0 20px">
     <div class="load-progress"><div class="load-bar" id="loadBar"></div></div>
     <div class="filter-row" id="slugFilters">
-      <span style="font-size:.78rem;color:var(--muted)">Filter:</span>
-      <span class="filter-chip active" data-f="all">All</span>
-      <span class="filter-chip" data-f="available">Available only</span>
-      <span class="filter-chip" data-f="popular">Popular TLDs</span>
-      <span class="filter-chip" data-f="cheap">Under $15/yr</span>
-      <span class="filter-chip" data-f="country">Country codes</span>
+      <span style="font-size:.78rem;color:var(--muted)" data-i18n="slug.filter">Filter:</span>
+      <span class="filter-chip active" data-f="all" data-i18n="slug.filterAll">All</span>
+      <span class="filter-chip" data-f="available" data-i18n="slug.filterAvail">Available only</span>
+      <span class="filter-chip" data-f="popular" data-i18n="slug.filterPopular">Popular TLDs</span>
+      <span class="filter-chip" data-f="cheap" data-i18n="slug.filterCheap">Under $15/yr</span>
+      <span class="filter-chip" data-f="country" data-i18n="slug.filterCountry">Country codes</span>
     </div>
   </div>
 
   <div class="tld-grid" id="tldGrid"></div>
 
   <div style="text-align:center;padding:32px 20px;color:var(--muted);font-size:.85rem">
-    Prices are renewal costs (USD/yr). Registration cost may differ.<br>
-    <a href="/" style="color:var(--accent)">← Back to regctl.sh</a>
+    <span data-i18n="slug.footerNote">Prices are renewal costs (USD/yr). Registration cost may differ.</span><br>
+    <a href="/" style="color:var(--accent)" data-i18n="slug.backLink">← Back to regctl.sh</a>
   </div>
 </div>
 
@@ -565,51 +566,51 @@ footer a{color:var(--blue)}
 <div id="view-app" class="hidden">
   <aside class="sidebar" id="appSidebar">
     <div class="sidebar-section">
-      <div class="sidebar-label">Menu</div>
+      <div class="sidebar-label" data-i18n="sidebar.menu">Menu</div>
       <button class="sidebar-item active" data-page="dashboard">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        Dashboard
+        <span data-i18n="sidebar.dashboard">Dashboard</span>
       </button>
       <button class="sidebar-item" data-page="domains">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
-        Domains
+        <span data-i18n="sidebar.domains">Domains</span>
       </button>
       <button class="sidebar-item" data-page="dns">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
-        DNS
+        <span data-i18n="sidebar.dns">DNS</span>
       </button>
       <button class="sidebar-item" data-page="sites">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
-        Sites
+        <span data-i18n="sidebar.sites">Sites</span>
       </button>
       <button class="sidebar-item" data-page="market">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2 9m12-9l2 9M9 21h6"/></svg>
-        Marketplace
+        <span data-i18n="sidebar.market">Marketplace</span>
       </button>
       <button class="sidebar-item" data-page="portfolio">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-        Portfolio
+        <span data-i18n="sidebar.portfolio">Portfolio</span>
       </button>
     </div>
     <div class="sidebar-section">
-      <div class="sidebar-label">Account</div>
+      <div class="sidebar-label" data-i18n="sidebar.account">Account</div>
       <button class="sidebar-item" data-page="billing">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><path d="M1 10h22"/></svg>
-        Billing
+        <span data-i18n="sidebar.billing">Billing</span>
       </button>
       <button class="sidebar-item" data-page="secrets">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><circle cx="12" cy="8" r="4" stroke="currentColor"/></svg>
-        API Keys
+        <span data-i18n="sidebar.apikeys">API Keys</span>
       </button>
     </div>
     <div class="sidebar-credit" id="sidebarCredit">
-      <div class="label">Balance</div>
+      <div class="label" data-i18n="sidebar.balance">Balance</div>
       <div class="val" id="sidebarBalance">—</div>
     </div>
     <div style="padding:0 12px;margin-top:8px">
       <button class="sidebar-item" id="sidebarSignOut" style="color:var(--red)">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        Sign Out
+        <span data-i18n="sidebar.signout">Sign Out</span>
       </button>
     </div>
   </aside>
@@ -619,44 +620,44 @@ footer a{color:var(--blue)}
     <!-- DASHBOARD -->
     <div class="app-page active" id="page-dashboard">
       <div class="page-header">
-        <div class="page-title">Dashboard</div>
-        <button class="btn btn-primary btn-sm" id="dashRegisterBtn">+ Register Domain</button>
+        <div class="page-title" data-i18n="dash.title">Dashboard</div>
+        <button class="btn btn-primary btn-sm" id="dashRegisterBtn" data-i18n="dash.register">+ Register Domain</button>
       </div>
       <div class="card-grid">
         <div class="stat-card">
-          <div class="stat-label">Domains</div>
+          <div class="stat-label" data-i18n="dash.statDomains">Domains</div>
           <div class="stat-val" id="statDomains">—</div>
-          <div class="stat-sub">registered</div>
+          <div class="stat-sub" data-i18n="dash.statDomainsub">registered</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Active Sites</div>
+          <div class="stat-label" data-i18n="dash.statSites">Active Sites</div>
           <div class="stat-val" id="statSites">—</div>
-          <div class="stat-sub">hosted</div>
+          <div class="stat-sub" data-i18n="dash.statSiteSub">hosted</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Balance</div>
+          <div class="stat-label" data-i18n="dash.statBalance">Balance</div>
           <div class="stat-val" id="statBalance" style="color:var(--green)">—</div>
-          <div class="stat-sub">credits</div>
+          <div class="stat-sub" data-i18n="dash.statBalanceSub">credits</div>
         </div>
         <div class="stat-card">
-          <div class="stat-label">Checks Today</div>
+          <div class="stat-label" data-i18n="dash.statChecks">Checks Today</div>
           <div class="stat-val" id="statChecksToday">—</div>
-          <div class="stat-sub">/ 1,000 free</div>
+          <div class="stat-sub" data-i18n="dash.statChecksSub">/ 1,000 free</div>
         </div>
       </div>
       <div class="card" style="margin-bottom:16px">
-        <div style="font-weight:700;margin-bottom:12px;font-size:.9rem">Quick Search</div>
+        <div style="font-weight:700;margin-bottom:12px;font-size:.9rem" data-i18n="dash.quickSearch">Quick Search</div>
         <div class="input-group">
           <div class="search-bar" style="flex:1">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input class="input" type="text" id="dashSearchInput" placeholder="Search domain... e.g. mystartup.com">
+            <input class="input" type="text" id="dashSearchInput" data-i18n-placeholder="dash.searchPlaceholder" placeholder="Search domain... e.g. mystartup.com">
           </div>
-          <button class="btn btn-primary" id="dashSearchBtn">Check</button>
+          <button class="btn btn-primary" id="dashSearchBtn" data-i18n="dash.checkBtn">Check</button>
         </div>
         <div id="dashSearchResult" style="margin-top:10px"></div>
       </div>
       <div class="card">
-        <div style="font-weight:700;margin-bottom:12px;font-size:.9rem">Your Domains</div>
+        <div style="font-weight:700;margin-bottom:12px;font-size:.9rem" data-i18n="dash.yourDomains">Your Domains</div>
         <div id="dashDomainsList">
           <div style="color:var(--muted);font-size:.85rem">Loading...</div>
         </div>
@@ -666,22 +667,22 @@ footer a{color:var(--blue)}
     <!-- DOMAINS -->
     <div class="app-page" id="page-domains">
       <div class="page-header">
-        <div class="page-title">Domains</div>
-        <button class="btn btn-primary btn-sm" id="domainsRegisterBtn">+ Register Domain</button>
+        <div class="page-title" data-i18n="domains.title">Domains</div>
+        <button class="btn btn-primary btn-sm" id="domainsRegisterBtn" data-i18n="domains.register">+ Register Domain</button>
       </div>
       <div class="card" style="margin-bottom:16px">
         <div class="input-group">
           <div class="search-bar" style="flex:1">
             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input class="input" type="text" id="domainsSearchInput" placeholder="Check availability... e.g. startup.io">
+            <input class="input" type="text" id="domainsSearchInput" data-i18n-placeholder="domains.searchPlaceholder" placeholder="Check availability... e.g. startup.io">
           </div>
-          <button class="btn btn-primary" id="domainsCheckBtn">Check →</button>
+          <button class="btn btn-primary" id="domainsCheckBtn" data-i18n="domains.checkBtn">Check →</button>
         </div>
         <div id="domainsCheckResult" style="margin-top:10px"></div>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Domain</th><th>Registrar</th><th>Expires</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead><tr><th data-i18n="domains.th.domain">Domain</th><th data-i18n="domains.th.registrar">Registrar</th><th data-i18n="domains.th.expires">Expires</th><th data-i18n="domains.th.status">Status</th><th data-i18n="domains.th.actions">Actions</th></tr></thead>
           <tbody id="domainsTableBody">
             <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Loading domains...</td></tr>
           </tbody>
@@ -692,42 +693,42 @@ footer a{color:var(--blue)}
     <!-- DNS -->
     <div class="app-page" id="page-dns">
       <div class="page-header">
-        <div class="page-title">DNS / Nameservers</div>
+        <div class="page-title" data-i18n="dns.title">DNS / Nameservers</div>
       </div>
 
       <!-- Domain selector -->
       <div class="card" style="margin-bottom:16px">
-        <div class="form-label">Domain</div>
+        <div class="form-label" data-i18n="dns.domain">Domain</div>
         <div class="input-group">
-          <select class="input" id="dnsSelectDomain" style="flex:1"><option value="">— Select domain —</option></select>
-          <button class="btn btn-ghost" id="dnsLoadBtn">Load</button>
-          <button class="btn btn-primary btn-sm" id="dnsAddBtn">+ Add Record</button>
+          <select class="input" id="dnsSelectDomain" style="flex:1"><option value="" data-i18n="dns.selectPlaceholder">— Select domain —</option></select>
+          <button class="btn btn-ghost" id="dnsLoadBtn" data-i18n="dns.loadBtn">Load</button>
+          <button class="btn btn-primary btn-sm" id="dnsAddBtn" data-i18n="dns.addBtn">+ Add Record</button>
         </div>
       </div>
 
       <!-- Nameserver management -->
       <div class="card" style="margin-bottom:16px" id="nsCard">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-          <div style="font-weight:700;font-size:.9rem">Nameservers</div>
-          <button class="btn btn-ghost btn-sm" id="nsEditBtn">Change NS</button>
+          <div style="font-weight:700;font-size:.9rem" data-i18n="dns.ns.title">Nameservers</div>
+          <button class="btn btn-ghost btn-sm" id="nsEditBtn" data-i18n="dns.ns.changeBtn">Change NS</button>
         </div>
-        <div id="nsCurrentDisplay" style="font-size:.85rem;color:var(--muted)">Select a domain to view nameservers</div>
+        <div id="nsCurrentDisplay" style="font-size:.85rem;color:var(--muted)" data-i18n="dns.ns.empty">Select a domain to view nameservers</div>
 
         <!-- NS presets + custom -->
         <div id="nsEditPanel" style="display:none;margin-top:14px">
-          <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px">Quick presets:</div>
+          <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px" data-i18n="dns.ns.presets">Quick presets:</div>
           <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
             <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('cloudflare')">Cloudflare</button>
             <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('vercel')">Vercel</button>
-            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('porkbun')">Porkbun (default)</button>
-            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('custom')">Custom</button>
+            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('porkbun')" data-i18n="dns.ns.porkbun">Porkbun (default)</button>
+            <button class="btn btn-ghost btn-sm" onclick="applyNSPreset('custom')" data-i18n="dns.ns.custom">Custom</button>
           </div>
           <div id="nsInputArea">
             <textarea class="input" id="nsTextarea" rows="3" placeholder="ns1.example.com&#10;ns2.example.com" style="font-family:monospace;font-size:.82rem;resize:vertical"></textarea>
           </div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn btn-primary btn-sm" onclick="saveNameservers()">Save Nameservers</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nsEditPanel').style.display='none'">Cancel</button>
+            <button class="btn btn-primary btn-sm" onclick="saveNameservers()" data-i18n="dns.ns.saveBtn">Save Nameservers</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('nsEditPanel').style.display='none'" data-i18n="common.cancel">Cancel</button>
           </div>
           <div id="nsMsg" style="margin-top:8px;font-size:.82rem"></div>
         </div>
@@ -735,7 +736,7 @@ footer a{color:var(--blue)}
 
       <!-- Quick DNS templates -->
       <div class="card" style="margin-bottom:16px" id="dnsTemplateCard">
-        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px">Quick Setup Templates</div>
+        <div style="font-weight:700;font-size:.9rem;margin-bottom:10px" data-i18n="dns.templates.title">Quick Setup Templates</div>
         <div style="display:flex;flex-wrap:wrap;gap:8px">
           <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('vercel')">▲ Vercel</button>
           <button class="btn btn-ghost btn-sm" onclick="applyDNSTemplate('cloudflare-pages')">☁ CF Pages</button>
@@ -748,45 +749,45 @@ footer a{color:var(--blue)}
           <div style="font-size:.82rem;color:var(--muted);margin-bottom:6px" id="dnsTemplateDesc"></div>
           <div id="dnsTemplateRecords" style="font-family:monospace;font-size:.8rem;background:var(--surface2);padding:10px;border-radius:6px"></div>
           <div style="display:flex;gap:8px;margin-top:8px">
-            <button class="btn btn-primary btn-sm" id="dnsTemplateApplyBtn">Apply All Records →</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('dnsTemplatePreview').style.display='none'">Cancel</button>
+            <button class="btn btn-primary btn-sm" id="dnsTemplateApplyBtn" data-i18n="dns.templates.applyBtn">Apply All Records →</button>
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('dnsTemplatePreview').style.display='none'" data-i18n="common.cancel">Cancel</button>
           </div>
         </div>
       </div>
 
       <!-- Add Record form -->
       <div class="add-record-form" id="addRecordForm">
-        <div style="font-weight:700;font-size:.85rem;margin-bottom:10px">Add DNS Record</div>
+        <div style="font-weight:700;font-size:.85rem;margin-bottom:10px" data-i18n="dns.add.title">Add DNS Record</div>
         <div class="dns-form-grid">
           <div>
-            <div class="form-label">Type</div>
+            <div class="form-label" data-i18n="dns.th.type">Type</div>
             <select class="input" id="dnsType">
               <option>A</option><option>AAAA</option><option>CNAME</option><option>MX</option><option>TXT</option><option>NS</option><option>SRV</option><option>CAA</option>
             </select>
           </div>
           <div>
-            <div class="form-label">Name</div>
-            <input class="input" id="dnsName" placeholder="@ or subdomain">
+            <div class="form-label" data-i18n="dns.th.name">Name</div>
+            <input class="input" id="dnsName" data-i18n-placeholder="dns.namePlaceholder" placeholder="@ or subdomain">
           </div>
           <div>
-            <div class="form-label">Content</div>
-            <input class="input" id="dnsContent" placeholder="IP or hostname">
+            <div class="form-label" data-i18n="dns.th.content">Content</div>
+            <input class="input" id="dnsContent" data-i18n-placeholder="dns.contentPlaceholder" placeholder="IP or hostname">
           </div>
           <div>
-            <div class="form-label">TTL</div>
+            <div class="form-label" data-i18n="dns.th.ttl">TTL</div>
             <input class="input" id="dnsTTL" value="300" type="number">
           </div>
         </div>
         <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn btn-primary btn-sm" id="dnsAddSubmit">Add Record</button>
-          <button class="btn btn-ghost btn-sm" id="dnsAddCancel">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="dnsAddSubmit" data-i18n="dns.addSubmit">Add Record</button>
+          <button class="btn btn-ghost btn-sm" id="dnsAddCancel" data-i18n="common.cancel">Cancel</button>
         </div>
       </div>
 
       <!-- Records table -->
       <div class="table-wrap" id="dnsTableWrap">
         <table>
-          <thead><tr><th>Type</th><th>Name</th><th>Content</th><th>TTL</th><th></th></tr></thead>
+          <thead><tr><th data-i18n="dns.th.type">Type</th><th data-i18n="dns.th.name">Name</th><th data-i18n="dns.th.content">Content</th><th data-i18n="dns.th.ttl">TTL</th><th></th></tr></thead>
           <tbody id="dnsTableBody">
             <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Select a domain to view DNS records</td></tr>
           </tbody>
@@ -797,12 +798,12 @@ footer a{color:var(--blue)}
     <!-- SITES -->
     <div class="app-page" id="page-sites">
       <div class="page-header">
-        <div class="page-title">Sites</div>
-        <button class="btn btn-primary btn-sm" id="sitesNewBtn">+ New Site</button>
+        <div class="page-title" data-i18n="sites.title">Sites</div>
+        <button class="btn btn-primary btn-sm" id="sitesNewBtn" data-i18n="sites.new">+ New Site</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>Domain</th><th>Status</th><th>Provider</th><th>Last Deploy</th><th>Actions</th></tr></thead>
+          <thead><tr><th data-i18n="sites.th.domain">Domain</th><th data-i18n="sites.th.status">Status</th><th data-i18n="sites.th.provider">Provider</th><th data-i18n="sites.th.deploy">Last Deploy</th><th data-i18n="sites.th.actions">Actions</th></tr></thead>
           <tbody id="sitesTableBody">
             <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">Loading sites...</td></tr>
           </tbody>
@@ -813,16 +814,16 @@ footer a{color:var(--blue)}
     <!-- BILLING -->
     <div class="app-page" id="page-billing">
       <div class="page-header">
-        <div class="page-title">Billing</div>
+        <div class="page-title" data-i18n="billing.title">Billing</div>
       </div>
       <div class="card-grid">
         <div class="card" style="text-align:center">
-          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px">Current Balance</div>
+          <div style="font-size:.8rem;color:var(--muted);margin-bottom:8px" data-i18n="billing.balance">Current Balance</div>
           <div style="font-size:2.5rem;font-weight:900;color:var(--green)" id="billingBalance">—</div>
-          <div style="font-size:.75rem;color:var(--muted);margin-top:4px">credits</div>
+          <div style="font-size:.75rem;color:var(--muted);margin-top:4px" data-i18n="billing.credits">credits</div>
         </div>
         <div class="card">
-          <div style="font-weight:700;margin-bottom:12px;font-size:.9rem">Add Credits</div>
+          <div style="font-weight:700;margin-bottom:12px;font-size:.9rem" data-i18n="billing.addCredits">Add Credits</div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
             <button class="btn btn-ghost btn-sm" data-amount="500">$5</button>
             <button class="btn btn-ghost btn-sm" data-amount="1000">$10</button>
@@ -833,16 +834,16 @@ footer a{color:var(--blue)}
         </div>
       </div>
       <div class="card" style="margin-top:12px">
-        <div style="font-weight:700;margin-bottom:12px;font-size:.9rem">Pricing</div>
+        <div style="font-weight:700;margin-bottom:12px;font-size:.9rem" data-i18n="billing.pricing">Pricing</div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Operation</th><th>Cost</th></tr></thead>
+            <thead><tr><th data-i18n="billing.op">Operation</th><th data-i18n="billing.cost">Cost</th></tr></thead>
             <tbody>
-              <tr><td>Domain check</td><td>Free (1,000/day)</td></tr>
-              <tr><td>Domain check (over limit)</td><td>$0.01</td></tr>
-              <tr><td>DNS read</td><td>$0.001</td></tr>
-              <tr><td>DNS write</td><td>$0.01</td></tr>
-              <tr><td>Domain registration</td><td>At cost (no markup)</td></tr>
+              <tr><td data-i18n="billing.op.check">Domain check</td><td data-i18n="billing.cost.check">Free (1,000/day)</td></tr>
+              <tr><td data-i18n="billing.op.checkOver">Domain check (over limit)</td><td>$0.01</td></tr>
+              <tr><td data-i18n="billing.op.dnsRead">DNS read</td><td>$0.001</td></tr>
+              <tr><td data-i18n="billing.op.dnsWrite">DNS write</td><td>$0.01</td></tr>
+              <tr><td data-i18n="billing.op.register">Domain registration</td><td data-i18n="billing.cost.register">At cost (no markup)</td></tr>
             </tbody>
           </table>
         </div>
@@ -852,11 +853,11 @@ footer a{color:var(--blue)}
     <!-- MARKETPLACE -->
     <div class="app-page" id="page-market">
       <div class="page-header">
-        <div class="page-title">Marketplace</div>
-        <div style="font-size:.82rem;color:var(--muted)">Platform fee: 10% of profit (min $1.00)</div>
+        <div class="page-title" data-i18n="market.title">Marketplace</div>
+        <div style="font-size:.82rem;color:var(--muted)" data-i18n="market.fee">Platform fee: 10% of profit (min $1.00)</div>
       </div>
       <div class="card" style="margin-bottom:16px">
-        <div style="font-size:.9rem;color:var(--muted);margin-bottom:12px">Buy domains listed by other users. Instant purchase if you have credits.</div>
+        <div style="font-size:.9rem;color:var(--muted);margin-bottom:12px" data-i18n="market.sub">Buy domains listed by other users. Instant purchase if you have credits.</div>
         <div id="marketListings">
           <div style="color:var(--muted);font-size:.85rem;text-align:center;padding:24px">Loading listings...</div>
         </div>
@@ -866,8 +867,8 @@ footer a{color:var(--blue)}
     <!-- PORTFOLIO -->
     <div class="app-page" id="page-portfolio">
       <div class="page-header">
-        <div class="page-title">My Portfolio</div>
-        <div style="font-size:.82rem;color:var(--muted)">Domains you've registered via regctl.sh</div>
+        <div class="page-title" data-i18n="portfolio.title">My Portfolio</div>
+        <div style="font-size:.82rem;color:var(--muted)" data-i18n="portfolio.sub">Domains you've registered via regctl.sh</div>
       </div>
       <div class="card">
         <div id="portfolioList">
@@ -879,11 +880,11 @@ footer a{color:var(--blue)}
     <!-- API KEYS -->
     <div class="app-page" id="page-secrets">
       <div class="page-header">
-        <div class="page-title">API Keys</div>
-        <button class="btn btn-primary btn-sm" id="secretsNewBtn">+ New Key</button>
+        <div class="page-title" data-i18n="secrets.title">API Keys</div>
+        <button class="btn btn-primary btn-sm" id="secretsNewBtn" data-i18n="secrets.new">+ New Key</button>
       </div>
       <div class="card">
-        <div style="font-size:.85rem;color:var(--muted);margin-bottom:16px">
+        <div style="font-size:.85rem;color:var(--muted);margin-bottom:16px" data-i18n="secrets.desc">
           Your API key gives full access to your account. Keep it secret.
         </div>
         <div id="secretsList">
@@ -901,30 +902,30 @@ footer a{color:var(--blue)}
 <div class="modal-backdrop hidden" id="authModal">
   <div class="modal">
     <button class="modal-close" id="authModalClose">✕</button>
-    <div class="modal-title">Sign in to regctl.sh</div>
-    <div class="modal-sub">Manage domains, DNS, and sites</div>
+    <div class="modal-title" data-i18n="auth.title">Sign in to regctl.sh</div>
+    <div class="modal-sub" data-i18n="auth.sub">Manage domains, DNS, and sites</div>
     <div class="auth-tabs">
-      <button class="auth-tab active" data-tab="email">Email</button>
-      <button class="auth-tab" data-tab="google">Google</button>
+      <button class="auth-tab active" data-tab="email" data-i18n="auth.emailTab">Email</button>
+      <button class="auth-tab" data-tab="google" data-i18n="auth.googleTab">Google</button>
     </div>
     <div class="auth-panel active" id="tab-email">
       <div id="emailStep1">
-        <div class="form-label">Email address</div>
+        <div class="form-label" data-i18n="auth.emailLabel">Email address</div>
         <input class="input" type="email" id="authEmail" placeholder="you@example.com" style="margin-bottom:10px">
-        <button class="btn btn-primary" id="authSendCode" style="width:100%">Send Code →</button>
+        <button class="btn btn-primary" id="authSendCode" style="width:100%" data-i18n="auth.sendCode">Send Code →</button>
       </div>
       <div id="emailStep2" style="display:none">
-        <div class="form-label">Enter 6-digit code sent to <span id="authEmailDisplay"></span></div>
+        <div class="form-label"><span data-i18n="auth.verifyLabel">Enter 6-digit code sent to</span> <span id="authEmailDisplay"></span></div>
         <input class="code-input" id="authCode" maxlength="6" placeholder="000000">
-        <button class="btn btn-primary" id="authVerifyCode" style="width:100%">Verify →</button>
-        <button class="btn btn-ghost btn-sm" id="authBackBtn" style="width:100%;margin-top:8px">← Back</button>
+        <button class="btn btn-primary" id="authVerifyCode" style="width:100%" data-i18n="auth.verifyBtn">Verify →</button>
+        <button class="btn btn-ghost btn-sm" id="authBackBtn" style="width:100%;margin-top:8px" data-i18n="auth.backBtn">← Back</button>
       </div>
       <div id="emailMsg" style="margin-top:10px;font-size:.85rem"></div>
     </div>
     <div class="auth-panel" id="tab-google">
       <button class="oauth-btn" id="authGoogle">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20H24v8h11.3C33.6 33.1 29.3 36 24 36a12 12 0 110-24c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 1024 44c11 0 20-8.9 20-20 0-1.3-.1-2.7-.4-4z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8A12 12 0 0124 12c3 0 5.8 1.1 7.9 3l5.7-5.7A20 20 0 006.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-1.8 13.5-4.7l-6.2-5.2A12 12 0 0112.1 28l-6.6 4.8A20 20 0 0024 44z"/><path fill="#1976D2" d="M43.6 20H24v8h11.3a12.1 12.1 0 01-4.1 5.1l6.2 5.2C41.6 35 44 30 44 24c0-1.3-.1-2.7-.4-4z"/></svg>
-        Continue with Google
+        <span data-i18n="auth.google">Continue with Google</span>
       </button>
     </div>
   </div>
@@ -934,19 +935,19 @@ footer a{color:var(--blue)}
 <div class="modal-backdrop hidden" id="registerModal">
   <div class="modal">
     <button class="modal-close" id="registerModalClose">✕</button>
-    <div class="modal-title">Register Domain</div>
+    <div class="modal-title" data-i18n="register.title">Register Domain</div>
     <div class="modal-sub" id="registerDomainName" style="font-size:1rem;color:var(--green);font-weight:700"></div>
     <div style="margin:16px 0;font-size:.85rem">
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">Registrar</span>
+        <span style="color:var(--muted)" data-i18n="register.registrar">Registrar</span>
         <span id="regRegistrar" style="font-weight:600"></span>
       </div>
       <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
-        <span style="color:var(--muted)">Price (1yr)</span>
+        <span style="color:var(--muted)" data-i18n="register.price">Price (1yr)</span>
         <span id="regPrice" style="font-weight:700;color:var(--green)"></span>
       </div>
     </div>
-    <button class="btn btn-green" id="registerConfirmBtn" style="width:100%;padding:12px">Register Now →</button>
+    <button class="btn btn-green" id="registerConfirmBtn" style="width:100%;padding:12px" data-i18n="register.btn">Register Now →</button>
     <div id="registerMsg" style="margin-top:10px;font-size:.85rem"></div>
   </div>
 </div>
@@ -958,14 +959,14 @@ footer a{color:var(--blue)}
     <div class="modal-title">List Domain for Sale</div>
     <div class="modal-sub" id="sellDomainName" style="font-size:1rem;color:var(--accent);font-weight:700"></div>
     <div style="margin:16px 0">
-      <div class="form-label">Asking Price (USD)</div>
+      <div class="form-label" data-i18n="sell.price">Asking Price (USD)</div>
       <div style="position:relative">
         <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted)">$</span>
         <input class="input" type="number" min="1" step="0.01" id="sellPrice" placeholder="50.00" style="padding-left:28px">
       </div>
       <div id="sellFeePreview" style="margin-top:8px;font-size:.82rem;color:var(--muted)"></div>
     </div>
-    <button class="btn btn-primary" id="sellConfirmBtn" style="width:100%;padding:12px">List for Sale →</button>
+    <button class="btn btn-primary" id="sellConfirmBtn" style="width:100%;padding:12px" data-i18n="sell.btn">List for Sale →</button>
     <div id="sellMsg" style="margin-top:10px;font-size:.85rem"></div>
   </div>
 </div>
@@ -974,12 +975,12 @@ footer a{color:var(--blue)}
 <div class="modal-backdrop hidden" id="marketBuyModal">
   <div class="modal">
     <button class="modal-close" onclick="document.getElementById('marketBuyModal').classList.add('hidden')">✕</button>
-    <div class="modal-title">Buy Domain</div>
+    <div class="modal-title" data-i18n="buy.title">Buy Domain</div>
     <div class="modal-sub" id="mbDomain" style="font-size:1rem;color:var(--green);font-weight:700"></div>
     <div style="margin:16px 0;font-size:.85rem" id="mbDetails"></div>
     <div id="mbBalanceInfo" style="margin-bottom:12px;padding:10px;border-radius:8px;font-size:.85rem"></div>
-    <button class="btn btn-green" id="mbBuyBtn" style="width:100%;padding:12px;display:none">Buy Instantly →</button>
-    <button class="btn btn-primary" id="mbTopupBtn" style="width:100%;padding:12px;display:none">Top Up & Buy →</button>
+    <button class="btn btn-green" id="mbBuyBtn" style="width:100%;padding:12px;display:none" data-i18n="buy.btn">Buy Instantly →</button>
+    <button class="btn btn-primary" id="mbTopupBtn" style="width:100%;padding:12px;display:none" data-i18n="buy.topupBtn">Top Up & Buy →</button>
     <div id="mbMsg" style="margin-top:10px;font-size:.85rem"></div>
   </div>
 </div>
@@ -991,6 +992,186 @@ footer a{color:var(--blue)}
 'use strict';
 const API = (location.hostname === 'localhost' || location.hostname === '127.0.0.1') ? '' : 'https://regctl.sh';
 const PRICES_URL = '/prices.json';
+
+/* ── i18n ── */
+const TRANSLATIONS = {
+  en: {
+    'nav.prices':'Prices','nav.features':'Features','nav.plans':'Plans','nav.signin':'Sign In','nav.account':'Account ▾',
+    'hero.badge':'⚡ World\'s Cheapest Domain Registration',
+    'hero.desc':'Search 897 TLDs across Spaceship, Porkbun & Cloudflare. Always register at the lowest price — automatically.',
+    'hero.placeholder':'Search any domain... or just type a name','hero.searchBtn':'Search →',
+    'hero.tip':'Tip: visit regctl.sh/yourname to instantly see all available TLDs',
+    'hero.statTLDs':'TLDs Compared','hero.statRegistrars':'Registrars','hero.statCheapest':'Cheapest .xyz',
+    'hero.statFreeVal':'Free','hero.statFree':'1,000 checks/day','installCopy':'Copy',
+    'features.title':'Everything you need to manage domains','features.sub':'One CLI. Multiple registrars. Always the lowest price.',
+    'features.cheapest.title':'Always Cheapest','features.cheapest.desc':'Compares all registrars in real-time and auto-registers at the lowest available price.',
+    'features.dns.title':'DNS Management','features.dns.desc':'Add, edit, delete DNS records across all your registrars from a single command.',
+    'features.launch.title':'One-Command Launch','features.launch.desc':'regctl launch mysite.com — domain + hosting + DNS in 60 seconds.',
+    'features.url.title':'URL Search','features.url.desc':'Visit regctl.sh/anything to instantly check all TLDs for that name.',
+    'features.ai.title':'AI-Friendly','features.ai.desc':'--format json output for Claude, GPT, and any AI automation pipeline.',
+    'features.registrars.title':'5 Registrars','features.registrars.desc':'Spaceship, Porkbun, Cloudflare, Namecheap, Value Domain — all in one tool.',
+    'demo.title':'Quick Demo','demo.sub':'From install to live site in 3 steps.',
+    'prices.title':'Popular TLD Prices','prices.sub':'Renewal price/yr. Green = cheapest with API.',
+    'prices.tld':'TLD','prices.bestprice':'Best Price','prices.registrar':'Registrar','prices.loading':'Loading prices...',
+    'pricing.title':'Simple pricing','pricing.sub':'Domain costs pass-through at cost. We charge only for API usage.',
+    'pricing.free.name':'Free','pricing.free.desc':'Perfect for personal projects',
+    'pricing.free.f1':'1,000 domain checks/day','pricing.free.f2':'Price comparison','pricing.free.f3':'CLI tool','pricing.free.f4':'DNS management',
+    'pricing.starter.badge':'Most Popular','pricing.starter.name':'Starter','pricing.starter.desc':'For growing teams',
+    'pricing.starter.f1':'Unlimited checks','pricing.starter.f2':'Auto-registration','pricing.starter.f3':'Domain portfolio','pricing.starter.f4':'Site hosting','pricing.starter.f5':'Referral rewards (10%)',
+    'pricing.pro.name':'Pro','pricing.pro.desc':'For power users & agencies',
+    'pricing.pro.f1':'Everything in Starter','pricing.pro.f2':'Bulk operations','pricing.pro.f3':'API access','pricing.pro.f4':'Priority support','pricing.pro.f5':'Custom nameservers',
+    'discovery.title':'Domain Discovery','discovery.sub':'Available domains recently searched by users. Find gems before others do.',
+    'footer.note':'Domain prices are renewal costs (USD/yr). Registration may differ.',
+    'slug.title':'Available domains for','slug.sub':'Checking all TLDs — available ones appear in green with prices',
+    'slug.placeholder':'Try another name...','slug.searchBtn':'Search →',
+    'slug.available':'Available','slug.taken':'Taken','slug.checking':'Checking','slug.tlds':'TLDs',
+    'slug.filter':'Filter:','slug.filterAll':'All','slug.filterAvail':'Available only','slug.filterPopular':'Popular TLDs','slug.filterCheap':'Under $15/yr','slug.filterCountry':'Country codes',
+    'slug.footerNote':'Prices are renewal costs (USD/yr). Registration cost may differ.','slug.backLink':'← Back to regctl.sh',
+    'sidebar.menu':'Menu','sidebar.dashboard':'Dashboard','sidebar.domains':'Domains','sidebar.dns':'DNS','sidebar.sites':'Sites',
+    'sidebar.market':'Marketplace','sidebar.portfolio':'Portfolio','sidebar.account':'Account','sidebar.billing':'Billing',
+    'sidebar.apikeys':'API Keys','sidebar.balance':'Balance','sidebar.signout':'Sign Out',
+    'dash.title':'Dashboard','dash.register':'+ Register Domain',
+    'dash.statDomains':'Domains','dash.statDomainsub':'registered','dash.statSites':'Active Sites','dash.statSiteSub':'hosted',
+    'dash.statBalance':'Balance','dash.statBalanceSub':'credits','dash.statChecks':'Checks Today','dash.statChecksSub':'/ 1,000 free',
+    'dash.quickSearch':'Quick Search','dash.searchPlaceholder':'Search domain... e.g. mystartup.com','dash.checkBtn':'Check','dash.yourDomains':'Your Domains',
+    'domains.title':'Domains','domains.register':'+ Register Domain',
+    'domains.searchPlaceholder':'Check availability... e.g. startup.io','domains.checkBtn':'Check →',
+    'domains.th.domain':'Domain','domains.th.registrar':'Registrar','domains.th.expires':'Expires','domains.th.status':'Status','domains.th.actions':'Actions',
+    'domains.dns':'DNS','domains.renew':'Renew',
+    'dns.title':'DNS / Nameservers','dns.domain':'Domain','dns.selectPlaceholder':'— Select domain —','dns.loadBtn':'Load','dns.addBtn':'+ Add Record','dns.chooseD':'— Choose domain —',
+    'dns.ns.title':'Nameservers','dns.ns.changeBtn':'Change NS','dns.ns.empty':'Select a domain to view nameservers',
+    'dns.ns.presets':'Quick presets:','dns.ns.porkbun':'Porkbun (default)','dns.ns.custom':'Custom','dns.ns.saveBtn':'Save Nameservers',
+    'dns.ns.success':'Nameservers updated! Changes propagate in 24-48h.',
+    'dns.templates.title':'Quick Setup Templates','dns.templates.applyBtn':'Apply All Records →',
+    'dns.add.title':'Add DNS Record','dns.th.type':'Type','dns.th.name':'Name','dns.th.content':'Content','dns.th.ttl':'TTL',
+    'dns.namePlaceholder':'@ or subdomain','dns.contentPlaceholder':'IP or hostname','dns.addSubmit':'Add Record','dns.empty':'Select a domain to view DNS records',
+    'sites.title':'Sites','sites.new':'+ New Site','sites.th.domain':'Domain','sites.th.status':'Status','sites.th.provider':'Provider','sites.th.deploy':'Last Deploy','sites.th.actions':'Actions','sites.loading':'Loading sites...','sites.empty':'No sites yet.',
+    'billing.title':'Billing','billing.balance':'Current Balance','billing.credits':'credits','billing.addCredits':'Add Credits','billing.topup':'Top Up',
+    'billing.pricing':'Pricing','billing.op':'Operation','billing.cost':'Cost',
+    'billing.op.check':'Domain check','billing.cost.check':'Free (1,000/day)','billing.op.checkOver':'Domain check (over limit)','billing.op.dnsRead':'DNS read','billing.op.dnsWrite':'DNS write','billing.op.register':'Domain registration','billing.cost.register':'At cost (no markup)',
+    'market.title':'Marketplace','market.sub':'Buy domains from other users. Instant purchase with credits.','market.fee':'Platform fee: 10% of profit (min $1.00)',
+    'market.th.domain':'Domain','market.th.price':'Price','market.th.fee':'Fee','market.buyBtn':'Buy →','market.empty':'No domains listed yet.',
+    'portfolio.title':'My Portfolio','portfolio.sub':'Domains you\'ve registered via regctl.sh',
+    'portfolio.th.domain':'Domain','portfolio.th.cost':'Cost','portfolio.th.listed':'Listed','portfolio.th.actions':'Actions','portfolio.delist':'Delist','portfolio.sell':'Sell →','portfolio.empty':'No domains in portfolio yet.',
+    'secrets.title':'API Keys','secrets.new':'+ New Key','secrets.desc':'Your API key gives full access to your account. Keep it secret.',
+    'auth.title':'Sign in to regctl.sh','auth.sub':'Manage domains, DNS, and sites','auth.emailTab':'Email','auth.googleTab':'Google',
+    'auth.emailLabel':'Email address','auth.sendCode':'Send Code →','auth.verifyLabel':'Enter 6-digit code sent to','auth.verifyBtn':'Verify →','auth.backBtn':'← Back','auth.google':'Continue with Google',
+    'register.title':'Register Domain','register.registrar':'Registrar','register.price':'Price (1yr)','register.btn':'Register Now →',
+    'sell.title':'List Domain for Sale','sell.price':'Asking Price (USD)','sell.btn':'List for Sale →',
+    'buy.title':'Buy Domain','buy.btn':'Buy Instantly →','buy.topupBtn':'Top Up & Buy →',
+    'common.cancel':'Cancel',
+    'confirm.signout':'Sign out?','confirm.deleteDns':'Delete this DNS record?',
+    'sites.promptDomain':'Domain for new site:','sites.promptDesc':'Describe your site (AI will generate it):',
+    'toast.signedIn':'Signed in! 🎉','toast.siteCreated':'Site created! 🎉','toast.siteDeleted':'Site deleted',
+    'toast.creditsAdded':'Credits added! 🎉','toast.recordAdded':'Record added','toast.recordDeleted':'Record deleted',
+    'toast.renewOk':'Renewal initiated','toast.listingCancelled':'Listing cancelled','toast.creating':'Creating site...',
+    'toast.fail':'Request failed','toast.failDelete':'Failed to delete','toast.failLoad':'Failed to load DNS records',
+    'toast.selectDomain':'Select a domain first','toast.minNS':'Enter at least 2 nameservers','toast.minPrice':'Minimum price is $1.00',
+    'toast.nameRequired':'Name and content are required','toast.enterEmail':'Enter your email','toast.enterCode':'Enter the code',
+    'toast.enterDomain':'Enter a domain name','toast.renewFail':'Failed to renew','toast.failSite':'Failed to delete site',
+    'toast.payComplete':'Complete payment in the new tab, then return here to register','toast.paymentCancelled':'Payment cancelled',
+  },
+  ja: {
+    'nav.prices':'料金表','nav.features':'機能','nav.plans':'プラン','nav.signin':'ログイン','nav.account':'アカウント ▾',
+    'hero.badge':'⚡ 世界最安値でドメインを取得',
+    'hero.desc':'Spaceship・Porkbunなど5社をリアルタイム比較して、自動的に最安値で登録。897種類のTLD（.com / .io / .jp 等）対応。',
+    'hero.placeholder':'ドメイン名を入力... 例: startup','hero.searchBtn':'検索 →',
+    'hero.tip':'ヒント: regctl.sh/名前 にアクセスすると全TLDの空き状況を一覧表示',
+    'hero.statTLDs':'TLD比較数','hero.statRegistrars':'対応レジストラ','hero.statCheapest':'最安 .xyz',
+    'hero.statFreeVal':'無料','hero.statFree':'1日1,000回まで無料','installCopy':'コピー',
+    'features.title':'ドメイン管理に必要なすべてがここに','features.sub':'1つのCLIで複数のレジストラを一括管理。常に最安値。',
+    'features.cheapest.title':'常に最安値','features.cheapest.desc':'全レジストラをリアルタイム比較し、最安値のところに自動登録します。',
+    'features.dns.title':'DNS管理','features.dns.desc':'コマンド1つで全レジストラのDNSレコードを追加・編集・削除。',
+    'features.launch.title':'1コマンドで公開','features.launch.desc':'regctl launch mysite.com — ドメイン取得 + ホスティング + DNS設定が60秒で完了。',
+    'features.url.title':'URL検索','features.url.desc':'regctl.sh/名前 にアクセスするだけで全TLDの空き状況を即座に確認。',
+    'features.ai.title':'AI対応','features.ai.desc':'--format json でClaude・GPT・あらゆるAI自動化パイプラインと連携可能。',
+    'features.registrars.title':'5社対応','features.registrars.desc':'Spaceship・Porkbun・Cloudflare・Namecheap・Value Domain をまとめて管理。',
+    'demo.title':'使い方デモ','demo.sub':'インストールからサイト公開まで3ステップ。',
+    'prices.title':'人気TLDの料金','prices.sub':'更新料金（/年）。緑 = API対応で最安値。',
+    'prices.tld':'TLD','prices.bestprice':'最安値','prices.registrar':'レジストラ','prices.loading':'価格を読み込み中...',
+    'pricing.title':'シンプルな料金体系','pricing.sub':'ドメイン代は実費のみ。APIの利用料のみ課金します（中間マージンなし）。',
+    'pricing.free.name':'無料','pricing.free.desc':'個人プロジェクトに最適',
+    'pricing.free.f1':'1日1,000回のドメイン検索','pricing.free.f2':'料金比較','pricing.free.f3':'CLIツール','pricing.free.f4':'DNS管理',
+    'pricing.starter.badge':'人気No.1','pricing.starter.name':'Starter','pricing.starter.desc':'成長中のチームに',
+    'pricing.starter.f1':'無制限の検索','pricing.starter.f2':'自動登録','pricing.starter.f3':'ドメインポートフォリオ','pricing.starter.f4':'サイトホスティング','pricing.starter.f5':'紹介報酬（10%）',
+    'pricing.pro.name':'Pro','pricing.pro.desc':'パワーユーザー・代理店向け',
+    'pricing.pro.f1':'Starterの全機能','pricing.pro.f2':'一括操作','pricing.pro.f3':'APIアクセス','pricing.pro.f4':'優先サポート','pricing.pro.f5':'カスタムネームサーバー',
+    'discovery.title':'ドメイン発見フィード','discovery.sub':'他のユーザーが検索した空きドメイン一覧。お宝を先に見つけよう。',
+    'footer.note':'ドメイン価格は更新料金（USD/年）です。登録時は異なる場合があります。',
+    'slug.title':'空きドメイン一覧','slug.sub':'全TLDを確認中 — 緑色が取得可能（価格付き）',
+    'slug.placeholder':'別の名前を試す...','slug.searchBtn':'検索 →',
+    'slug.available':'取得可能','slug.taken':'取得済み','slug.checking':'確認中','slug.tlds':'TLD数',
+    'slug.filter':'絞り込み:','slug.filterAll':'すべて','slug.filterAvail':'取得可能のみ','slug.filterPopular':'人気TLD','slug.filterCheap':'$15/年以下','slug.filterCountry':'国別コード',
+    'slug.footerNote':'価格は更新料金（USD/年）です。登録時は異なる場合があります。','slug.backLink':'← regctl.sh に戻る',
+    'sidebar.menu':'メニュー','sidebar.dashboard':'ダッシュボード','sidebar.domains':'ドメイン一覧','sidebar.dns':'DNS設定','sidebar.sites':'サイト',
+    'sidebar.market':'売買マーケット','sidebar.portfolio':'所有ドメイン','sidebar.account':'アカウント','sidebar.billing':'課金・残高',
+    'sidebar.apikeys':'APIキー','sidebar.balance':'残高','sidebar.signout':'ログアウト',
+    'dash.title':'ダッシュボード','dash.register':'+ ドメインを取得',
+    'dash.statDomains':'ドメイン数','dash.statDomainsub':'登録済み','dash.statSites':'サイト数','dash.statSiteSub':'稼働中',
+    'dash.statBalance':'残高','dash.statBalanceSub':'クレジット','dash.statChecks':'今日の検索数','dash.statChecksSub':'/ 1,000 無料',
+    'dash.quickSearch':'ドメイン検索','dash.searchPlaceholder':'ドメイン名を入力... 例: mystartup.com','dash.checkBtn':'検索','dash.yourDomains':'所有ドメイン',
+    'domains.title':'ドメイン一覧','domains.register':'+ ドメインを取得',
+    'domains.searchPlaceholder':'空き確認... 例: startup.io','domains.checkBtn':'確認 →',
+    'domains.th.domain':'ドメイン','domains.th.registrar':'レジストラ','domains.th.expires':'有効期限','domains.th.status':'ステータス','domains.th.actions':'操作',
+    'domains.dns':'DNS','domains.renew':'更新',
+    'dns.title':'DNS / ネームサーバー','dns.domain':'ドメイン','dns.selectPlaceholder':'— ドメインを選択 —','dns.loadBtn':'読み込む','dns.addBtn':'+ レコード追加','dns.chooseD':'— ドメインを選択 —',
+    'dns.ns.title':'ネームサーバー','dns.ns.changeBtn':'NS変更','dns.ns.empty':'ドメインを選択するとNSが表示されます',
+    'dns.ns.presets':'クイックプリセット:','dns.ns.porkbun':'Porkbun（デフォルト）','dns.ns.custom':'カスタム','dns.ns.saveBtn':'ネームサーバーを保存',
+    'dns.ns.success':'ネームサーバーを更新しました！反映まで24〜48時間かかります。',
+    'dns.templates.title':'クイック設定テンプレート','dns.templates.applyBtn':'全レコードを適用 →',
+    'dns.add.title':'DNSレコードを追加','dns.th.type':'タイプ','dns.th.name':'ホスト名','dns.th.content':'値','dns.th.ttl':'TTL',
+    'dns.namePlaceholder':'@ またはサブドメイン','dns.contentPlaceholder':'IPアドレスまたはホスト名','dns.addSubmit':'レコードを追加','dns.empty':'ドメインを選択するとDNSレコードが表示されます',
+    'sites.title':'サイト','sites.new':'+ 新規サイト','sites.th.domain':'ドメイン','sites.th.status':'ステータス','sites.th.provider':'ホスト','sites.th.deploy':'最終デプロイ','sites.th.actions':'操作','sites.loading':'サイトを読み込み中...','sites.empty':'サイトがありません。',
+    'billing.title':'課金・残高','billing.balance':'現在の残高','billing.credits':'クレジット','billing.addCredits':'クレジット追加','billing.topup':'チャージ',
+    'billing.pricing':'料金表','billing.op':'操作','billing.cost':'料金',
+    'billing.op.check':'ドメイン検索','billing.cost.check':'無料（1日1,000回）','billing.op.checkOver':'ドメイン検索（上限超過）','billing.op.dnsRead':'DNS読み取り','billing.op.dnsWrite':'DNS書き込み','billing.op.register':'ドメイン登録','billing.cost.register':'実費のみ（手数料なし）',
+    'market.title':'売買マーケット','market.sub':'他のユーザーが出品したドメインを購入。残高があれば即購入できます。','market.fee':'プラットフォーム手数料: 利益の10%（最低$1.00）',
+    'market.th.domain':'ドメイン','market.th.price':'価格','market.th.fee':'手数料','market.buyBtn':'購入 →','market.empty':'出品中のドメインはありません。ドメインを登録してPortfolioから出品しよう！',
+    'portfolio.title':'所有ドメイン','portfolio.sub':'regctl.sh で取得・購入したドメインの一覧',
+    'portfolio.th.domain':'ドメイン','portfolio.th.cost':'取得コスト','portfolio.th.listed':'出品中','portfolio.th.actions':'操作','portfolio.delist':'出品取消','portfolio.sell':'売る →','portfolio.empty':'まだドメインがありません。最初の1つを取得しよう →',
+    'secrets.title':'APIキー','secrets.new':'+ 新規作成','secrets.desc':'APIキーはアカウントへの完全アクセス権を持ちます。第三者には絶対に見せないでください。',
+    'auth.title':'regctl.sh にログイン','auth.sub':'ドメイン・DNS・サイトを管理できます','auth.emailTab':'メール','auth.googleTab':'Google',
+    'auth.emailLabel':'メールアドレス','auth.sendCode':'確認コードを送信 →','auth.verifyLabel':'メールに届いた6桁のコードを入力','auth.verifyBtn':'確認する →','auth.backBtn':'← 戻る','auth.google':'Googleでログイン',
+    'register.title':'ドメインを取得','register.registrar':'レジストラ','register.price':'料金（1年）','register.btn':'今すぐ取得 →',
+    'sell.title':'ドメインを売りに出す','sell.price':'希望売却価格（USD）','sell.btn':'出品する →',
+    'buy.title':'ドメインを購入','buy.btn':'今すぐ購入 →','buy.topupBtn':'チャージして購入 →',
+    'common.cancel':'キャンセル',
+    'confirm.signout':'ログアウトしますか？','confirm.deleteDns':'このDNSレコードを削除しますか？',
+    'sites.promptDomain':'新しいサイトのドメイン:','sites.promptDesc':'サイトの説明を入力（AIが自動生成します）:',
+    'toast.signedIn':'ログインしました！ 🎉','toast.siteCreated':'サイトを作成しました！ 🎉','toast.siteDeleted':'サイトを削除しました',
+    'toast.creditsAdded':'クレジットを追加しました！ 🎉','toast.recordAdded':'レコードを追加しました','toast.recordDeleted':'レコードを削除しました',
+    'toast.renewOk':'更新を申請しました','toast.listingCancelled':'出品を取り消しました','toast.creating':'サイトを作成中...',
+    'toast.fail':'リクエストが失敗しました','toast.failDelete':'削除に失敗しました','toast.failLoad':'DNSレコードの読み込みに失敗しました',
+    'toast.selectDomain':'先にドメインを選択してください','toast.minNS':'ネームサーバーを2つ以上入力してください','toast.minPrice':'最低価格は$1.00です',
+    'toast.nameRequired':'ホスト名と値は必須です','toast.enterEmail':'メールアドレスを入力してください','toast.enterCode':'コードを入力してください',
+    'toast.enterDomain':'ドメイン名を入力してください','toast.renewFail':'更新に失敗しました','toast.failSite':'サイトの削除に失敗しました',
+    'toast.payComplete':'新しいタブで支払いを完了してから、こちらに戻ってください','toast.paymentCancelled':'支払いをキャンセルしました',
+  }
+};
+
+let currentLang = localStorage.getItem('regctl_lang') || 'en';
+
+function t(key){ return TRANSLATIONS[currentLang]?.[key] ?? TRANSLATIONS.en?.[key] ?? key; }
+
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.dataset.i18n;
+    // Don't overwrite if element has child elements (only update text)
+    if(el.children.length === 0) el.textContent = t(key);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  const btn = document.getElementById('langToggle');
+  if(btn) btn.textContent = currentLang === 'en' ? '日本語' : 'English';
+  document.documentElement.lang = currentLang === 'ja' ? 'ja' : 'en';
+}
+
+function toggleLang(){
+  currentLang = currentLang === 'en' ? 'ja' : 'en';
+  localStorage.setItem('regctl_lang', currentLang);
+  applyLang();
+}
 
 /* ── AUTH STATE ── */
 let user = null;
@@ -1398,7 +1579,7 @@ async function loadDNS(domain){
       const records = Array.isArray(data) ? data : (data.records||[]);
       renderDNSTable(records, domain);
     }
-  } catch(e){ toast('Failed to load DNS records','error'); }
+  } catch(e){ toast(t('toast.failLoad'),'error'); }
 }
 
 async function loadNameservers(domain){
@@ -1436,10 +1617,10 @@ function applyNSPreset(preset){
 
 async function saveNameservers(){
   const domain = document.getElementById('dnsSelectDomain').value;
-  if(!domain){ toast('Select a domain first','error'); return; }
+  if(!domain){ toast(t('toast.selectDomain'),'error'); return; }
   const raw = document.getElementById('nsTextarea').value;
   const ns = raw.split('\n').map(s=>s.trim()).filter(Boolean);
-  if(ns.length < 2){ toast('Enter at least 2 nameservers','error'); return; }
+  if(ns.length < 2){ toast(t('toast.minNS'),'error'); return; }
   const msgEl = document.getElementById('nsMsg');
   msgEl.textContent = 'Saving...';
   try{
@@ -1523,7 +1704,7 @@ function applyDNSTemplate(tmpl){
 
 async function applyTemplateRecords(){
   const domain = document.getElementById('dnsSelectDomain').value;
-  if(!domain){ toast('Select a domain first','error'); return; }
+  if(!domain){ toast(t('toast.selectDomain'),'error'); return; }
   if(!pendingDNSTemplate || !pendingDNSTemplate.length) return;
   const btn = document.getElementById('dnsTemplateApplyBtn');
   btn.disabled=true; btn.textContent='Applying...';
@@ -1567,29 +1748,29 @@ async function addDNSRecord(domain){
   const name = document.getElementById('dnsName').value.trim();
   const content = document.getElementById('dnsContent').value.trim();
   const ttl = parseInt(document.getElementById('dnsTTL').value)||3600;
-  if(!name||!content){ toast('Name and content are required','error'); return; }
+  if(!name||!content){ toast(t('toast.nameRequired'),'error'); return; }
   try{
     const r = await fetch(`${API}/v1/dns/${encodeURIComponent(domain)}`, {
       method:'POST', headers: authedHeaders(),
       body: JSON.stringify({type,name,content,ttl})
     });
-    if(r.ok){ toast('Record added','success'); document.getElementById('addRecordForm').classList.remove('show'); loadDNS(domain); }
+    if(r.ok){ toast(t('toast.recordAdded'),'success'); document.getElementById('addRecordForm').classList.remove('show'); loadDNS(domain); }
     else { const e = await r.json(); toast(e.error||'Failed','error'); }
-  } catch(e){ toast('Request failed','error'); }
+  } catch(e){ toast(t('toast.fail'),'error'); }
 }
 
 async function deleteDNSRecord(domain, id){
-  if(!confirm('Delete this DNS record?')) return;
+  if(!confirm(t('confirm.deleteDns'))) return;
   try{
     const r = await fetch(`${API}/v1/dns/${encodeURIComponent(domain)}/${id}`, {method:'DELETE', headers: authedHeaders()});
-    if(r.ok){ toast('Record deleted','success'); loadDNS(domain); }
-    else toast('Failed to delete','error');
-  } catch(e){ toast('Request failed','error'); }
+    if(r.ok){ toast(t('toast.recordDeleted'),'success'); loadDNS(domain); }
+    else toast(t('toast.failDelete'),'error');
+  } catch(e){ toast(t('toast.fail'),'error'); }
 }
 
 /* ── DOMAIN CHECK (app) ── */
 async function checkDomain(domain, resultEl){
-  if(!domain){ toast('Enter a domain name','error'); return; }
+  if(!domain){ toast(t('toast.enterDomain'),'error'); return; }
   resultEl.innerHTML = `<span style="color:var(--muted)">Checking ${escHtml(domain)}...</span>`;
   try{
     const r = await fetch(`${API}/v1/domains/check/${encodeURIComponent(domain)}`);
@@ -1634,7 +1815,7 @@ async function confirmRegister(){
     });
     const data = await r.json();
     if(r.ok){
-      toast('Domain registered! 🎉','success');
+      toast(currentLang==='ja'?'ドメインを取得しました！ 🎉':'Domain registered! 🎉','success');
       document.getElementById('registerModal').classList.add('hidden');
       loadDomains();
       setTimeout(()=>{
@@ -1695,9 +1876,9 @@ async function quickTopup(shortfallCents, domain, info){
       const url = d.checkout_url || d.data?.checkout_url;
       pendingRegister = {domain, info};
       window.open(url, '_blank');
-      toast('Complete payment in the new tab, then return here to register','success');
+      toast(t('toast.payComplete'),'success');
     } else toast(d.error||'Topup failed','error');
-  } catch(e){ toast('Request failed','error'); }
+  } catch(e){ toast(t('toast.fail'),'error'); }
   if(btn){ btn.disabled=false; btn.textContent='Top Up →'; }
 }
 
@@ -1888,7 +2069,7 @@ function openSellModal(domain, purchasePriceCents){
 
 async function confirmSell(domain, purchasePriceCents){
   const askPrice = parseFloat(document.getElementById('sellPrice').value)||0;
-  if(askPrice < 1){ toast('Minimum price is $1.00','error'); return; }
+  if(askPrice < 1){ toast(t('toast.minPrice'),'error'); return; }
   const btn = document.getElementById('sellConfirmBtn');
   const msgEl = document.getElementById('sellMsg');
   btn.disabled=true; btn.textContent='Listing...';
@@ -1916,8 +2097,8 @@ async function cancelListing(domain){
   try{
     const r = await fetch(`${API}/v1/market/list/${encodeURIComponent(domain)}`, {method:'DELETE', headers: authedHeaders()});
     if(r.ok){ toast('Listing cancelled','success'); loadPortfolio(); loadMarket(); }
-    else toast('Failed to cancel','error');
-  } catch(e){ toast('Request failed','error'); }
+    else toast(t('toast.failDelete'),'error');
+  } catch(e){ toast(t('toast.fail'),'error'); }
 }
 
 /* ── AUTH ── */
@@ -1928,7 +2109,7 @@ function openAuthModal(){
 
 async function sendCode(){
   const email = document.getElementById('authEmail').value.trim();
-  if(!email){ toast('Enter your email','error'); return; }
+  if(!email){ toast(t('toast.enterEmail'),'error'); return; }
   const btn = document.getElementById('authSendCode');
   btn.disabled=true; btn.textContent='Sending...';
   try{
@@ -1949,7 +2130,7 @@ async function sendCode(){
 async function verifyCode(){
   const email = document.getElementById('authEmail').value.trim();
   const code = document.getElementById('authCode').value.trim();
-  if(!code){ toast('Enter the code','error'); return; }
+  if(!code){ toast(t('toast.enterCode'),'error'); return; }
   const btn=document.getElementById('authVerifyCode');
   btn.disabled=true; btn.textContent='Verifying...';
   try{
@@ -1958,7 +2139,7 @@ async function verifyCode(){
       const d=await r.json();
       saveUser({email, token: d.token||d.api_key});
       document.getElementById('authModal').classList.add('hidden');
-      toast('Signed in! 🎉','success');
+      toast(t('toast.signedIn'),'success');
       updateNav(true);
       showApp('dashboard');
       if(pendingRegister) setTimeout(()=>openInstantBuy(pendingRegister.domain,pendingRegister.info),500);
@@ -1972,12 +2153,12 @@ async function verifyCode(){
 
 /* ── SITE ACTIONS ── */
 async function deleteSite(domain){
-  if(!confirm(`Delete site ${domain}?`)) return;
+  if(!confirm(`${t('confirm.deleteDns').replace('DNS record',`site ${domain}`)}`)) return;
   try{
     const r = await fetch(`${API}/v1/sites/${encodeURIComponent(domain)}`,{method:'DELETE',headers:authedHeaders()});
-    if(r.ok){ toast('Site deleted','success'); loadSites(); }
-    else toast('Failed to delete site','error');
-  } catch(e){ toast('Request failed','error'); }
+    if(r.ok){ toast(t('toast.siteDeleted'),'success'); loadSites(); }
+    else toast(t('toast.failSite'),'error');
+  } catch(e){ toast(t('toast.fail'),'error'); }
 }
 
 function goToDNS(domain){
@@ -2003,9 +2184,9 @@ async function renewDomain(domain){
   if(!confirm(`Renew ${domain}?`)) return;
   try{
     const r = await fetch(`${API}/v1/domains/${encodeURIComponent(domain)}/renew`,{method:'POST',headers:authedHeaders()});
-    if(r.ok) toast('Renewal initiated','success');
-    else toast('Failed to renew','error');
-  } catch(e){ toast('Request failed','error'); }
+    if(r.ok) toast(t('toast.renewOk'),'success');
+    else toast(t('toast.renewFail'),'error');
+  } catch(e){ toast(t('toast.fail'),'error'); }
 }
 
 /* ── LANDING PRICES TABLE ── */
@@ -2133,7 +2314,7 @@ document.getElementById('billingTopupBtn')?.addEventListener('click', async ()=>
       // Poll for session
       pollBillingSession(d.session_id);
     } else toast(d.error||'Failed','error');
-  } catch(e){ toast('Request failed','error'); }
+  } catch(e){ toast(t('toast.fail'),'error'); }
 });
 
 async function pollBillingSession(sid){
@@ -2141,8 +2322,8 @@ async function pollBillingSession(sid){
     try{
       const r = await fetch(`${API}/v1/billing/session/${sid}`);
       const d = await r.json();
-      if(d.status==='paid'){ clearInterval(interval); toast('Credits added! 🎉','success'); loadBalance(); }
-      else if(d.status==='expired'||d.status==='cancelled'){ clearInterval(interval); toast('Payment cancelled','error'); }
+      if(d.status==='paid'){ clearInterval(interval); toast(t('toast.creditsAdded'),'success'); loadBalance(); }
+      else if(d.status==='expired'||d.status==='cancelled'){ clearInterval(interval); toast(t('toast.paymentCancelled'),'error'); }
       if(d.checkout_url && d.status==='pending') window.open(d.checkout_url,'_blank');
     } catch(e){ clearInterval(interval); }
   }, 2000);
@@ -2165,6 +2346,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   renderLandingPrices();
   loadDiscovery();
 
+  // i18n
+  applyLang();
+
   // Nav
   updateNav(!!user);
 
@@ -2173,7 +2357,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // User menu
   document.getElementById('userMenuBtn').addEventListener('click', ()=>{
-    if(confirm('Sign out?')){ clearUser(); location.href='/'; }
+    if(confirm(t('confirm.signout'))){ clearUser(); location.href='/'; }
   });
 
   // Install copy
@@ -2206,7 +2390,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // Sign out
   document.getElementById('sidebarSignOut').addEventListener('click', ()=>{
-    if(confirm('Sign out?')){ clearUser(); location.href='/'; }
+    if(confirm(t('confirm.signout'))){ clearUser(); location.href='/'; }
   });
 
   // Auth tabs
@@ -2260,9 +2444,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   // Sites
   document.getElementById('sitesNewBtn').addEventListener('click', ()=>{
-    const domain = prompt('Domain for new site:');
+    const domain = prompt(t('sites.promptDomain'));
     if(!domain) return;
-    const desc = prompt('Describe your site (AI will generate it):');
+    const desc = prompt(t('sites.promptDesc'));
     if(!desc) return;
     createSite(domain, desc);
   });
@@ -2279,7 +2463,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(tokenParam){
     saveUser({token:tokenParam, email:emailParam||'user'});
     history.replaceState(null,'',location.pathname);
-    toast('Signed in! 🎉','success');
+    toast(t('toast.signedIn'),'success');
     updateNav(true);
     showApp('dashboard');
   }
@@ -2287,15 +2471,15 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 async function createSite(domain, desc){
   if(!getToken()){ openAuthModal(); return; }
-  toast('Creating site...','');
+  toast(t('toast.creating'),'');
   try{
     const r = await fetch(`${API}/v1/sites/${encodeURIComponent(domain)}/generate`,{
       method:'POST',headers:authedHeaders(),
       body:JSON.stringify({description:desc})
     });
-    if(r.ok){ toast('Site created! 🎉','success'); navigateToPage('sites'); loadSites(); }
+    if(r.ok){ toast(t('toast.siteCreated'),'success'); navigateToPage('sites'); loadSites(); }
     else{ const d=await r.json(); toast(d.error||'Failed to create site','error'); }
-  } catch(e){ toast('Request failed','error'); }
+  } catch(e){ toast(t('toast.fail'),'error'); }
 }
 </script>
 </body>
