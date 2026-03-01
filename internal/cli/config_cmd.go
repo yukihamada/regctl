@@ -13,6 +13,7 @@ var allConfigKeys = []string{
 	"api_key", "porkbun_api_key", "porkbun_secret_key",
 	"spaceship_api_key", "spaceship_api_secret",
 	"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id",
+	"godaddy_api_key", "godaddy_api_secret",
 	"regctl_api_key", "regctl_billing_key", "regctl_api_url", "server_port",
 	"email",
 }
@@ -27,6 +28,7 @@ var secretKeys = map[string]bool{
 	"api_key": true, "porkbun_api_key": true, "porkbun_secret_key": true,
 	"spaceship_api_key": true, "spaceship_api_secret": true,
 	"cloudflare_token": true, "cloudflare_global_key": true,
+	"godaddy_api_key": true, "godaddy_api_secret": true,
 	"regctl_api_key": true, "regctl_billing_key": true,
 }
 
@@ -153,10 +155,12 @@ func newConfigShowCmd() *cobra.Command {
 				keys []string
 			}{
 				{"regctl", []string{"regctl_billing_key", "email", "regctl_api_url"}},
-				{"Value Domain", []string{"api_key"}},
+				{"GoDaddy", []string{"godaddy_api_key", "godaddy_api_secret"}},
 				{"Porkbun", []string{"porkbun_api_key", "porkbun_secret_key"}},
 				{"Spaceship", []string{"spaceship_api_key", "spaceship_api_secret"}},
 				{"Cloudflare", []string{"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id"}},
+				{"Namecheap", []string{"namecheap_api_key", "namecheap_api_user"}},
+				{"Value Domain", []string{"api_key"}},
 				{"General", []string{"regctl_api_key", "server_port"}},
 			}
 

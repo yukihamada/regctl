@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/yukihamada/regctl/internal/config"
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
+	"github.com/yukihamada/regctl/internal/provider/godaddy"
 	"github.com/yukihamada/regctl/internal/provider/namecheap"
 	"github.com/yukihamada/regctl/internal/provider/netim"
 	"github.com/yukihamada/regctl/internal/provider/porkbun"
@@ -23,6 +24,7 @@ var (
 	spaceshipClient  *spaceship.Client
 	namecheapClient  *namecheap.Client
 	netimClient      *netim.Client
+	godaddyClient    *godaddy.Client
 )
 
 // NewRootCmd creates the root command for regctl.
@@ -176,6 +178,9 @@ func initProviders(cfg *config.Config) {
 	}
 	if cfg.NetimLogin != "" && cfg.NetimPassword != "" {
 		netimClient = netim.NewClient(cfg.NetimLogin, cfg.NetimPassword)
+	}
+	if cfg.GoDaddyAPIKey != "" && cfg.GoDaddyAPISecret != "" {
+		godaddyClient = godaddy.NewClient(cfg.GoDaddyAPIKey, cfg.GoDaddyAPISecret)
 	}
 }
 

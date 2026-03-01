@@ -43,6 +43,10 @@ type Config struct {
 	NetimLogin    string `mapstructure:"netim_login"`
 	NetimPassword string `mapstructure:"netim_password"`
 
+	// GoDaddy
+	GoDaddyAPIKey    string `mapstructure:"godaddy_api_key"`
+	GoDaddyAPISecret string `mapstructure:"godaddy_api_secret"`
+
 	// General
 	RegctlKey  string `mapstructure:"regctl_api_key"`
 	OutputJSON bool   `mapstructure:"output_json"`
@@ -90,6 +94,8 @@ func Load() (*Config, error) {
 	viper.BindEnv("namecheap_client_ip", "NAMECHEAP_CLIENT_IP")
 	viper.BindEnv("netim_login", "NETIM_LOGIN")
 	viper.BindEnv("netim_password", "NETIM_PASSWORD")
+	viper.BindEnv("godaddy_api_key", "GODADDY_API_KEY")
+	viper.BindEnv("godaddy_api_secret", "GODADDY_API_SECRET")
 	viper.BindEnv("regctl_api_key", "REGCTL_API_KEY")
 	viper.BindEnv("regctl_billing_key", "REGCTL_BILLING_KEY")
 	viper.BindEnv("regctl_api_url", "REGCTL_API_URL")
@@ -148,5 +154,5 @@ func GetConfigPath() string {
 
 // HasAnyProvider returns true if at least one provider or billing key is configured.
 func (c *Config) HasAnyProvider() bool {
-	return c.APIKey != "" || c.PorkbunAPIKey != "" || c.CloudflareToken != "" || c.CloudflareGlobalKey != "" || c.SpaceshipAPIKey != "" || c.NamecheapAPIKey != "" || c.NetimLogin != "" || c.RegctlBillingKey != ""
+	return c.APIKey != "" || c.PorkbunAPIKey != "" || c.CloudflareToken != "" || c.CloudflareGlobalKey != "" || c.SpaceshipAPIKey != "" || c.NamecheapAPIKey != "" || c.NetimLogin != "" || c.RegctlBillingKey != "" || c.GoDaddyAPIKey != ""
 }

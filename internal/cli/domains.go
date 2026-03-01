@@ -119,6 +119,24 @@ func newDomainsListCmd() *cobra.Command {
 				}
 			}
 
+			// Collect from GoDaddy
+			if godaddyClient != nil {
+				domains, err := godaddyClient.ListDomains()
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("GoDaddy: %v", err))
+				} else {
+					for _, d := range domains {
+						allDomains = append(allDomains, provider.Domain{
+							Name:      d.Domain,
+							Registrar: "GoDaddy",
+							Status:    d.Status,
+							ExpiresAt: d.Expires,
+							AutoRenew: d.AutoRenew,
+						})
+					}
+				}
+			}
+
 			// Collect from all providers
 			if porkbunClient != nil {
 				domains, err := porkbunClient.ListDomains()
