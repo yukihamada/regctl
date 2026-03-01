@@ -45,12 +45,13 @@ func (s *Server) handleEmailAuth(w http.ResponseWriter, r *http.Request) {
 
 	if s.emailClient != nil {
 		if err := s.emailClient.SendVerificationCode(req.Email, code); err != nil {
-			log.Printf("send verification email to %s: %v", req.Email, err)
+			log.Printf("send verification email: %v", err) // no PII in logs
 			writeError(w, http.StatusInternalServerError, "failed to send email", "")
 			return
 		}
 	} else {
-		log.Printf("email client not configured, code for %s: %s", req.Email, code)
+		// Never log the code itself — use server logs/DB for debugging
+		log.Printf("email client not configured; auth code stored for %s (check DB)", req.Email)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]string{
@@ -199,10 +200,12 @@ func (s *Server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Redirect to local_redirect (web or CLI) if provided via state
-	if localRedirect != "" {
+	// Redirect to local_redirect (web or CLI) if provided via state — whitelist only
+	if localRedirect != "" && isAllowedRedirect(localRedirect) {
 		http.Redirect(w, r, localRedirect+"?key="+apiKey+"&email="+email, http.StatusFound)
 		return
+	} else if localRedirect != "" {
+		log.Printf("WARN: blocked open redirect attempt to: %s", localRedirect)
 	}
 
 	// Return HTML page that shows the API key and tries to redirect to CLI
@@ -219,7 +222,7 @@ body { font-family: -apple-system, sans-serif; max-width: 500px; margin: 80px au
 <p>Your API key:</p>
 <div class="key" onclick="navigator.clipboard.writeText(this.textContent)">%s</div>
 <p style="color:#666; font-size:14px;">Click to copy. Save this in your terminal:</p>
-<pre style="background:#f5f5f5; padding:12px; border-radius:8px;">regctl config set regctl_billing_key %s</pre>
+<pre style="background:#f5f5f5; padding:12px; border-radius:8px;">regctl config set api-key %s</pre>
 <p style="color:#999; font-size:12px;">You can close this window.</p>
 </body></html>`, apiKey, apiKey)
 }
@@ -261,6 +264,15 @@ func getGoogleEmail(accessToken string) (string, error) {
 func generateCode() string {
 	n, _ := rand.Int(rand.Reader, big.NewInt(1000000))
 	return fmt.Sprintf("%06d", n.Int64())
+}
+
+// isAllowedRedirect validates that a localRedirect target is safe.
+// Only regctl:// deep links and known origins are allowed to prevent open redirect attacks.
+func isAllowedRedirect(u string) bool {
+	return strings.HasPrefix(u, "regctl://") ||
+		strings.HasPrefix(u, "http://localhost") ||
+		strings.HasPrefix(u, "https://regctl.sh") ||
+		strings.HasPrefix(u, "https://regctl-api.fly.dev")
 }
 
 // generateState returns a random state string for OAuth flows.

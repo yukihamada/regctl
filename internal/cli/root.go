@@ -55,7 +55,7 @@ func NewRootCmd(version string) *cobra.Command {
 				"init": true, "set": true, "show": true,
 				"help": true, "version": true, "completion": true,
 				"check": true, // check works with public pricing APIs
-				"signup": true, "server": true,
+				"signup": true, "server": true, "login": true,
 				"providers": true, // sites providers doesn't need API key
 				"launch":    true, // launch loads config internally
 			}
@@ -130,6 +130,7 @@ func NewRootCmd(version string) *cobra.Command {
 	}
 
 	rootCmd.AddCommand(
+		newLoginCmd(),
 		newInitCmd(),
 		newDomainsCmd(),
 		newDNSCmd(),
