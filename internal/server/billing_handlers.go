@@ -110,14 +110,18 @@ func (s *Server) handleTopUp(w http.ResponseWriter, r *http.Request) {
 			`Expected JSON: {"amount_cents": 1000}`)
 		return
 	}
-	if req.AmountCents <= 0 {
-		writeError(w, http.StatusBadRequest, "amount must be positive", "")
+	const minTopUp = int64(50) // $0.50 Stripe minimum
+	if req.AmountCents < minTopUp {
+		writeError(w, http.StatusBadRequest,
+			fmt.Sprintf("minimum top-up is $%.2f", float64(minTopUp)/100), "")
 		return
 	}
 
 	sess, err := s.billingClient.CreateTopUpSession(customerID, req.AmountCents)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, err.Error(), "")
+		log.Printf("WARN: create topup session for %s: %v", customerID, err)
+		writeError(w, http.StatusInternalServerError, "failed to create checkout session",
+			"Please try again or contact support")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{

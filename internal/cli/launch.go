@@ -16,6 +16,7 @@ import (
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
 	"github.com/yukihamada/regctl/internal/provider/porkbun"
 	ssprovider "github.com/yukihamada/regctl/internal/provider/spaceship"
+	"github.com/yukihamada/regctl/internal/provider/netim"
 )
 
 func newLaunchCmd() *cobra.Command {
@@ -265,6 +266,7 @@ func checkPrices(domain, tld string) []priceEntry {
 	go func() {
 		defer wg.Done()
 		if porkbunClient != nil {
+			// API configured: use real availability check only (no fallback to static)
 			avail, err := porkbunClient.CheckAvailability(domain)
 			if err == nil {
 				mu.Lock()
@@ -276,9 +278,11 @@ func checkPrices(domain, tld string) []priceEntry {
 					CanRegAPI: true,
 				})
 				mu.Unlock()
-				return
 			}
+			// API error → skip entirely; don't assume Available=true
+			return
 		}
+		// No client: static pricing for comparison only (CanRegAPI=false, Available=false)
 		allPricing, err := porkbun.FetchPricingStatic()
 		if err == nil {
 			if p, ok := allPricing[tld]; ok {
@@ -287,8 +291,8 @@ func checkPrices(domain, tld string) []priceEntry {
 					Registrar: "Porkbun",
 					RegPrice:  p.RegPrice,
 					RenPrice:  p.RenPrice,
-					Available: true,
-					CanRegAPI: porkbunClient != nil,
+					Available: false, // unknown — no API to verify
+					CanRegAPI: false,
 				})
 				mu.Unlock()
 			}
@@ -325,7 +329,7 @@ func checkPrices(domain, tld string) []priceEntry {
 					Registrar: "Spaceship",
 					RegPrice:  reg,
 					RenPrice:  ren,
-					Available: true,
+					Available: false, // unknown — no API to verify
 					CanRegAPI: false,
 				})
 				mu.Unlock()
@@ -344,7 +348,7 @@ func checkPrices(domain, tld string) []priceEntry {
 				Registrar: "Cloudflare",
 				RegPrice:  reg,
 				RenPrice:  renew,
-				Available: true,
+				Available: false, // unknown — no API to verify
 				CanRegAPI: false,
 			})
 			mu.Unlock()
@@ -400,6 +404,44 @@ func checkPrices(domain, tld string) []priceEntry {
 		}()
 	}
 
+	// Netim (ccTLD specialist: .jp, .fr, .it, .es, .au, etc.)
+	if netimClient != nil {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			avail, err := netimClient.CheckAvailability(domain)
+			if err != nil {
+				return
+			}
+			mu.Lock()
+			prices = append(prices, priceEntry{
+				Registrar: "Netim",
+				RegPrice:  avail.RegPrice,
+				RenPrice:  avail.RenPrice,
+				Available: avail.Available,
+				CanRegAPI: true,
+			})
+			mu.Unlock()
+		}()
+	} else {
+		// Show static Netim prices for ccTLDs even without credentials
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if p := netim.GetStaticPrice(tld); p > 0 {
+				mu.Lock()
+				prices = append(prices, priceEntry{
+					Registrar: "Netim",
+					RegPrice:  p,
+					RenPrice:  p,
+					Available: false, // unknown — no API to verify
+					CanRegAPI: false,
+				})
+				mu.Unlock()
+			}
+		}()
+	}
+
 	wg.Wait()
 
 	sort.Slice(prices, func(i, j int) bool {
@@ -420,6 +462,8 @@ func registerDomain(domain, registrar string) error {
 		return namecheapClient.RegisterDomain(domain)
 	case "Value Domain":
 		return client.RegisterDomain(domain, 1)
+	case "Netim":
+		return netimClient.RegisterDomain(domain)
 	default:
 		return fmt.Errorf("unsupported registrar: %s", registrar)
 	}

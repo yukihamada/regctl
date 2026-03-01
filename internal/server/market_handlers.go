@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/yukihamada/regctl/internal/billing"
@@ -230,7 +231,7 @@ func (s *Server) handleMarketBuy(w http.ResponseWriter, r *http.Request) {
 	// Transfer portfolio ownership
 	if err := s.store.TransferPortfolio(domain, customerID, askCents); err != nil {
 		// Non-fatal — ownership transfer can be retried
-		fmt.Printf("WARN: failed to transfer portfolio for %s: %v\n", domain, err)
+		log.Printf("WARN: failed to transfer portfolio for %s: %v", domain, err)
 	}
 
 	// Mark listing as sold

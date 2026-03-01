@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/big"
 	"net/http"
+	"os"
 	"strings"
 	"time"
 
@@ -105,6 +106,35 @@ func (s *Server) handleVerify(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+
+// handleAdminAuthCode returns the latest unused OTP for an email.
+// Only accessible with the correct X-Admin-Key header.
+// GET /v1/admin/auth-code?email=x
+func (s *Server) handleAdminAuthCode(w http.ResponseWriter, r *http.Request) {
+	adminKey := os.Getenv("REGCTL_ADMIN_KEY")
+	if adminKey == "" {
+		adminKey = s.signingSecret
+	}
+	if adminKey == "" || r.Header.Get("X-Admin-Key") != adminKey {
+		writeError(w, http.StatusForbidden, "forbidden", "")
+		return
+	}
+	email := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("email")))
+	if email == "" {
+		writeError(w, http.StatusBadRequest, "missing email parameter", "")
+		return
+	}
+	if s.store == nil {
+		writeError(w, http.StatusInternalServerError, "storage not configured", "")
+		return
+	}
+	code, err := s.store.GetLatestAuthCode(email)
+	if err != nil {
+		writeError(w, http.StatusNotFound, "no active code found", "")
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{"code": code, "email": email})
+}
 
 // handleGoogleStart initiates Google OAuth flow.
 // POST /v1/auth/google/start  {local_redirect}

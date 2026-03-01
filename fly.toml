@@ -1,5 +1,5 @@
 app = "regctl-api"
-primary_region = "nrt"
+primary_region = "sin"
 
 [build]
 

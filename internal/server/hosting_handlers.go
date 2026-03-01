@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/stripe/stripe-go/v81"
@@ -325,8 +326,12 @@ func (s *Server) handleSponsorSite(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "invalid JSON body", "")
 		return
 	}
-	if req.Email == "" || req.AmountCents < 100 {
-		writeError(w, http.StatusBadRequest, "email and amount_cents (min 100) required", "")
+	if req.Email == "" || !strings.Contains(req.Email, "@") || !strings.Contains(req.Email, ".") {
+		writeError(w, http.StatusBadRequest, "valid email required", "")
+		return
+	}
+	if req.AmountCents < 100 || req.AmountCents > 100_000_00 { // max $10,000
+		writeError(w, http.StatusBadRequest, "amount_cents must be between 100 and 1000000", "")
 		return
 	}
 
@@ -376,13 +381,15 @@ func (s *Server) handleSponsorSite(w http.ResponseWriter, r *http.Request) {
 
 // handleSiteRequestBatch receives request count batches from site machines.
 func (s *Server) handleSiteRequestBatch(w http.ResponseWriter, r *http.Request) {
-	// Validate internal secret
-	if s.internalSecret != "" {
-		auth := r.Header.Get("Authorization")
-		if auth != "Bearer "+s.internalSecret {
-			writeError(w, http.StatusUnauthorized, "invalid internal secret", "")
-			return
-		}
+	// Validate internal secret — always required for this endpoint
+	if s.internalSecret == "" {
+		writeError(w, http.StatusServiceUnavailable, "internal endpoint not configured", "")
+		return
+	}
+	auth := r.Header.Get("Authorization")
+	if auth != "Bearer "+s.internalSecret {
+		writeError(w, http.StatusUnauthorized, "invalid internal secret", "")
+		return
 	}
 
 	if s.store == nil {

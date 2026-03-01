@@ -327,6 +327,23 @@ func (s *Store) VerifyAuthCode(email, code string) (bool, error) {
 	return n > 0, nil
 }
 
+// GetLatestAuthCode returns the most recent unused, non-expired code for the email.
+// Used only by the admin debug endpoint.
+func (s *Store) GetLatestAuthCode(email string) (string, error) {
+	now := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	var code string
+	err := s.db.QueryRow(
+		`SELECT code FROM auth_codes
+		 WHERE email = ? AND used = 0 AND expires_at > ?
+		 ORDER BY created_at DESC LIMIT 1`,
+		email, now,
+	).Scan(&code)
+	if err != nil {
+		return "", fmt.Errorf("get auth code: %w", err)
+	}
+	return code, nil
+}
+
 // Site represents a hosted site.
 type Site struct {
 	ID         int64  `json:"id"`

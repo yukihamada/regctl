@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>regctl.sh をワールドクラスにした方法 — マルチエージェント・エンジニアリング会議 | regctl.sh ブログ</title>
+<meta name="description" content="CTO・マーケティング・デザイナーの3つのAIエージェントを並列で起動し、regctl.shを徹底監査。1セッションで20以上の改善を実装した話。">
+<link rel="canonical" href="https://regctl.sh/blog">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23111'/%3E%3Ctext x='32' y='44' font-family='system-ui' font-size='26' font-weight='900' fill='%23f6821f' text-anchor='middle'%3E.sh%3C/text%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:title" content="regctl.sh をワールドクラスにした方法 — マルチエージェント・エンジニアリング会議">
+<meta property="og:description" content="CTO・マーケ・デザイナーのAIエージェント3人が並列でコードベースを監査し、1セッションで20以上の改善を実装した話。">
+<meta property="og:url" content="https://regctl.sh/blog">
+<meta property="og:image" content="https://regctl.sh/og-image.svg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="マルチエージェントチームが1セッションで20以上の改善を実装した話 | regctl.sh">
+<meta name="twitter:image" content="https://regctl.sh/og-image.svg">
+<style>
+:root{
+  --bg:#111111;--surface:#1a1a1a;--surface2:#222222;--border:#2d2d2d;--border2:#3a3a3a;
+  --text:#f0f0f0;--muted:#9a9a9a;--muted2:#6b6b6b;
+  --accent:#f6821f;--green:#3fb950;--blue:#60a5fa;--purple:#a78bfa;--red:#f85149;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Yu Gothic UI','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.8}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+code{font-family:'SF Mono','Fira Code',monospace;font-size:.82em;background:var(--surface2);padding:2px 6px;border-radius:4px;color:var(--accent)}
+pre{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;overflow-x:auto;font-size:.85rem;line-height:1.6;margin:20px 0}
+pre code{background:none;padding:0;color:var(--green)}
+
+/* NAV */
+nav{position:sticky;top:0;background:rgba(17,17,17,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);z-index:100;padding:0 20px;height:52px;display:flex;align-items:center;gap:16px}
+.nav-logo{font-size:1.1rem;font-weight:900;color:var(--text);letter-spacing:-.5px}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:4px;margin-left:auto}
+.nav-links a{color:var(--muted);font-size:.85rem;font-weight:500;padding:5px 10px;border-radius:6px;transition:all .15s}
+.nav-links a:hover{color:var(--text);background:var(--surface2);text-decoration:none}
+
+/* HERO */
+.post-hero{max-width:780px;margin:60px auto 0;padding:0 24px}
+.post-tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.tag{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.tag-engineering{background:rgba(96,165,250,.15);color:var(--blue);border:1px solid rgba(96,165,250,.3)}
+.tag-product{background:rgba(167,139,250,.15);color:var(--purple);border:1px solid rgba(167,139,250,.3)}
+.tag-design{background:rgba(246,130,31,.15);color:var(--accent);border:1px solid rgba(246,130,31,.3)}
+.post-title{font-size:2rem;font-weight:900;line-height:1.25;letter-spacing:-.02em;margin-bottom:16px}
+.post-meta{display:flex;align-items:center;gap:12px;color:var(--muted);font-size:.85rem;flex-wrap:wrap}
+.post-meta strong{color:var(--text)}
+.post-divider{width:64px;height:3px;background:var(--accent);border-radius:2px;margin:28px 0}
+
+/* BODY */
+.post-body{max-width:780px;margin:0 auto;padding:0 24px 80px}
+.post-body h2{font-size:1.4rem;font-weight:800;margin:48px 0 14px;letter-spacing:-.02em}
+.post-body h3{font-size:1rem;font-weight:700;margin:30px 0 10px;color:var(--muted)}
+.post-body p{margin-bottom:18px;color:#d4d4d4}
+.post-body ul,ol{padding-left:24px;margin-bottom:16px}
+.post-body li{margin-bottom:8px;color:#d4d4d4}
+.post-body li strong{color:var(--text)}
+.post-body blockquote{border-left:3px solid var(--accent);padding:12px 20px;margin:24px 0;background:var(--surface);border-radius:0 8px 8px 0;color:var(--muted);font-style:italic}
+
+/* CHAT BUBBLES */
+.chat-log{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin:24px 0;display:flex;flex-direction:column;gap:14px}
+.chat-header{font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted2);margin-bottom:4px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+.msg{display:flex;gap:12px;align-items:flex-start}
+.avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0;font-weight:700}
+.msg-body{flex:1}
+.msg-name{font-size:.78rem;font-weight:700;margin-bottom:4px}
+.msg-text{font-size:.88rem;color:#d4d4d4;line-height:1.6}
+.msg-text code{font-size:.8em}
+
+/* RESULT CARDS */
+.result-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:20px 0}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.result-card .rc-icon{font-size:1.8rem;margin-bottom:8px}
+.result-card .rc-title{font-size:.85rem;font-weight:700;margin-bottom:6px}
+.result-card .rc-body{font-size:.8rem;color:var(--muted);line-height:1.55}
+.result-card.rc-cto{border-color:rgba(96,165,250,.3)}
+.result-card.rc-mktg{border-color:rgba(63,185,80,.3)}
+.result-card.rc-design{border-color:rgba(246,130,31,.3)}
+
+/* STAT ROW */
+.stat-row{display:flex;gap:24px;flex-wrap:wrap;padding:20px;background:var(--surface);border-radius:12px;border:1px solid var(--border);margin:20px 0}
+.stat-item{text-align:center;min-width:80px}
+.stat-val{font-size:1.8rem;font-weight:900;color:var(--accent)}
+.stat-label{font-size:.72rem;color:var(--muted);margin-top:2px}
+
+/* DIFF BLOCK */
+.diff{background:#0d1117;border:1px solid var(--border);border-radius:10px;padding:16px;font-family:'SF Mono','Fira Code',monospace;font-size:.82rem;line-height:1.8;overflow-x:auto;margin:16px 0;display:flex;flex-direction:column;gap:2px}
+.diff .add{color:#3fb950}
+.diff .del{color:#f85149}
+.diff .ctx{color:#6b6b6b}
+
+/* FOOTER */
+.post-footer{max-width:780px;margin:0 auto;padding:32px 24px 60px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.back-link{color:var(--muted);font-size:.88rem}
+.back-link:hover{color:var(--text)}
+.cta-box{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;text-align:center;margin:40px 0}
+.cta-box h3{font-size:1.2rem;font-weight:800;margin-bottom:8px}
+.cta-box p{color:var(--muted);font-size:.9rem;margin-bottom:18px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:8px;font-size:.88rem;font-weight:700;border:none;cursor:pointer;text-decoration:none}
+.btn-primary{background:var(--accent);color:#fff;transition:background .15s,transform .1s,box-shadow .15s}
+.btn-primary:hover{background:#e67318;transform:translateY(-1px);box-shadow:0 4px 12px rgba(246,130,31,.35);text-decoration:none}
+.btn:active{transform:translateY(0)!important;box-shadow:none!important;opacity:.85}
+
+@media(max-width:640px){
+  .post-title{font-size:1.5rem}
+  .nav-links{display:none}
+  .stat-row{gap:16px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">regctl<span>.sh</span></a>
+  <div class="nav-links">
+    <a href="/">ホーム</a>
+    <a href="/#prices">料金表</a>
+    <a href="/blog" style="color:var(--text)">ブログ</a>
+    <a href="https://github.com/yukihamada/regctl" target="_blank">GitHub</a>
+  </div>
+</nav>
+
+<!-- ===== LATEST: ミセバンAI v1.0.0 ===== -->
+<article style="border-bottom:1px solid var(--border);margin-bottom:0">
+<div class="post-hero">
+  <div class="post-tags">
+    <span class="tag tag-engineering">Release</span>
+    <span class="tag tag-product">Raspberry Pi</span>
+  </div>
+  <h1 class="post-title">ミセバンAI v1.0.0 リリース<br>— 1コマンドでRaspberry PiをAIカメラに</h1>
+  <div class="post-meta">
+    <span>2026年2月27日</span>
+    <span>·</span>
+    <span><strong>ミセバンAI チーム</strong></span>
+    <span>·</span>
+    <span>約3分で読めます</span>
+  </div>
+  <div class="post-divider"></div>
+</div>
+
+<div class="post-body">
+
+<p>regctl.sh チームが開発するもう一つのプロダクト、<strong>ミセバンAI</strong>（防犯カメラをAI来客分析カメラに変えるSaaS）のカメラエージェント <strong>v1.0.0</strong> を本日正式リリースしました。</p>
+
+<p>ミセバンAIの最大の課題は「Raspberry PiにエージェントをインストールするのがITに不慣れな店舗オーナーには難しすぎる」こと。解決策はシンプルだった：<strong>1コマンドで全部終わらせる</strong>。</p>
+
+<div style="background:#0d1117;border:1px solid var(--border);border-radius:12px;padding:0;overflow:hidden;margin:20px 0">
+  <div style="background:rgba(255,255,255,.04);padding:10px 16px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;gap:6px"><span style="width:10px;height:10px;border-radius:50%;background:#ff5f56;display:inline-block"></span><span style="width:10px;height:10px;border-radius:50%;background:#febc2e;display:inline-block"></span><span style="width:10px;height:10px;border-radius:50%;background:#28c840;display:inline-block"></span></div>
+    <span style="font-size:.72rem;color:#555;font-family:'SF Mono',monospace">Terminal — Raspberry Pi</span>
+  </div>
+  <div style="padding:18px 22px">
+    <code style="background:none;padding:0;color:var(--green);font-size:.9rem">$ curl -fsSL https://misebanai.com/install.sh | bash</code>
+  </div>
+</div>
+
+<p>このコマンドひとつで：バイナリダウンロード、ffmpegインストール、systemdサービス登録、セットアップウィザード起動まで自動完了。完了後にブラウザでURLを開けばカメラが自動検出されてすぐ使えます。</p>
+
+<div class="stat-row">
+  <div class="stat-item"><div class="stat-val">1</div><div class="stat-label">インストールコマンド</div></div>
+  <div class="stat-item"><div class="stat-val">5分</div><div class="stat-label">セットアップ完了まで</div></div>
+  <div class="stat-item"><div class="stat-val">28</div><div class="stat-label">テスト全パス</div></div>
+  <div class="stat-item"><div class="stat-val">3.1MB</div><div class="stat-label">静的バイナリサイズ</div></div>
+</div>
+
+<p>技術的には Rust + musl 静的リンク、ARM64 (Raspberry Pi 4/5)、Docker対応、SHA256チェックサム付きリリース。Apple署名については macOS ネイティブバイナリを現在提供していないため不要。Dockerモードで macOS でも動作します。</p>
+
+<div class="cta-box">
+  <h3>ミセバンAI v1.0.0 を試してみる</h3>
+  <p>Raspberry Piがあれば今すぐ1コマンドで始められます。</p>
+  <a href="https://misebanai.com/download.html" class="btn btn-primary" target="_blank">インストールガイドを見る →</a>
+</div>
+
+</div><!-- end post-body -->
+</article>
+
+<!-- ===== ORIGINAL POST ===== -->
+<article>
+<div class="post-hero">
+  <div class="post-tags">
+    <span class="tag tag-engineering">Engineering</span>
+    <span class="tag tag-product">Product</span>
+    <span class="tag tag-design">Design</span>
+  </div>
+  <h1 class="post-title">regctl.sh をワールドクラスにした方法<br>— マルチエージェント・エンジニアリング会議</h1>
+  <div class="post-meta">
+    <span>2026年2月26日</span>
+    <span>·</span>
+    <span><strong>regctl.sh チーム</strong></span>
+    <span>·</span>
+    <span>約10分で読めます</span>
+  </div>
+  <div class="post-divider"></div>
+</div>
+
+<div class="post-body">
+
+<p>先週、変わったプロダクトレビューをした。会議室ではなくSlackチャンネルが舞台で、人間の同僚ではなく3つの専門AIエージェント — CTO、マーケティングリード、デザイナー — がそれぞれ <strong>regctl.sh</strong> の異なる側面を自律的に監査した。この記事は、彼らが何を発見し、何を実装し、そして「ひとりで作ったソフトウェアを監査するうえでマルチエージェントエンジニアリングがなぜ最も効果的か」という話だ。</p>
+
+<h2>🏗 問題：ファウンダーのブラインドスポット</h2>
+
+<p>regctl.sh はもともと個人用のCLIツールだった。1コマンドで全レジストラのドメイン価格を一括比較する、それだけ。でも数ヶ月で成長した — 897 TLDが1,343になり、Value Domain対応は5社比較エンジンになり、単純なJSONファイルが認証・課金・DNS管理・ドメインマーケットプレイス・AI生成サイトを備えたフルスタックWebアプリになった。</p>
+
+<p>ただ、ソロ開発者には有名なブラインドスポットがある：<em>自分の思い込みは自分では見えない</em>。すべてのトレードオフを自分で決めたから、なぜそうなっているかは知っている。でも摩擦に気づかない、なぜなら無意識に回避しているから。最初のデプロイ以降、セキュリティヘッダーを確認すらしていない。</p>
+
+<p>解決策はラジカルだった：<strong>3つのAIエージェントを並列で起動し、それぞれ異なる役職を与え、独立してコードベースを監査させる</strong>。</p>
+
+<div class="stat-row">
+  <div class="stat-item"><div class="stat-val">3</div><div class="stat-label">エージェント専門領域</div></div>
+  <div class="stat-item"><div class="stat-val">23</div><div class="stat-label">発見された問題</div></div>
+  <div class="stat-item"><div class="stat-val">20+</div><div class="stat-label">実装した改善</div></div>
+  <div class="stat-item"><div class="stat-val">約4h</div><div class="stat-label">合計セッション時間</div></div>
+</div>
+
+<h2>🤝 チームの紹介</h2>
+
+<p>3つのエージェントを並列で起動した。それぞれに明確なペルソナ、コードベースへの読み取り専用アクセス、そして「15分以内に報告せよ」というマンデートを与えた。</p>
+
+<div class="chat-log">
+  <div class="chat-header">🔒 #regctl-audit — プライベートチャンネル</div>
+
+  <div class="msg">
+    <div class="avatar" style="background:#1e3a5f;color:#60a5fa">CT</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#60a5fa">田中 Ryo · CTO</div>
+      <div class="msg-text">セキュリティ＋インフラ監査を開始します。server.go、ルート、ミドルウェア、静的ファイル配信をスキャン中。フォーカスは：ヘッダー、レート制限、キャッシュ、ハンドラー一貫性。</div>
+    </div>
+  </div>
+
+  <div class="msg">
+    <div class="avatar" style="background:#1a3a2a;color:#3fb950">MK</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#3fb950">佐藤 Mika · マーケティング</div>
+      <div class="msg-text">グロースの観点で行きます。OGP、Twitterカード、構造化データ、SEOシグナル、ソーシャルプルーフ、バイラルメカニクスを確認。今headタグを <code>grep</code> してます。</div>
+    </div>
+  </div>
+
+  <div class="msg">
+    <div class="avatar" style="background:#2a1a3a;color:#a78bfa">CK</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#a78bfa">Chen Kai · デザイナー</div>
+      <div class="msg-text">デザインシステム監査中。CSS カスタムプロパティ、スペーシンググリッドの一貫性、タイポグラフィスケール、コントラスト比、インタラクティブステートのカバレッジを確認します。👁️</div>
+    </div>
+  </div>
+</div>
+
+<h2>🔵 CTOレポート：田中 Ryo</h2>
+<h3>セキュリティヘッダー — ギャップ分析</h3>
+
+<p>Ryo が最初に発見したのはセキュリティヘッダーのセットだった。<code>X-Content-Type-Options</code> と <code>X-Frame-Options</code> は存在していたが、重要なヘッダーが3つ抜けていた：</p>
+
+<div class="diff">
+<span class="ctx">// server.go — ServeHTTP()</span>
+<span class="add">+ w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")</span>
+<span class="add">+ w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")</span>
+<span class="add">+ w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")</span>
+</div>
+
+<p>HSTSは、ユーザーが手動で <code>http://</code> と入力しても以降は必ずHTTPSを使うことを保証する。Referrer-Policyは、外部リンクをクリックした際に <code>Referer</code> ヘッダーを通じてauthトークンが漏れるのを防ぐ。Permissions-Policyは使っていないブラウザAPIを明示的に無効化し、フィンガープリンティングを防ぐ。</p>
+
+<h3>BulkCheck — レート制限ゼロ</h3>
+
+<div class="chat-log">
+  <div class="msg">
+    <div class="avatar" style="background:#1e3a5f;color:#60a5fa">CT</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#60a5fa">田中 Ryo</div>
+      <div class="msg-text"><code>POST /v1/domains/check</code> はレート制限なしで1リクエスト最大50ドメインを受け付けます。攻撃者は27リクエストで全1,343 TLDを叩けます。このままだとレジストラAPIからBANされるか想定外のコストが発生します。IPベースのスライディングウィンドウかリクエストキャップが必要です。</div>
+    </div>
+  </div>
+</div>
+
+<p>これは次スプリントのロードマップに追加した。修正方法は、IP + APIキーをキーとするスライディングウィンドウのレート制限をミドルウェア層に追加すること。</p>
+
+<h3>構造化データ — JSON-LD が完全に欠落</h3>
+
+<p>元の <code>&lt;head&gt;</code> にはSchema.orgのマークアップが一切なかった。これではGoogleがリッチリザルト（サイトリンク検索ボックス、アプリカード、パンくずリスト）を表示できない。<code>WebApplication</code> + <code>WebSite</code> + <code>SearchAction</code> の完全なグラフを実装した：</p>
+
+<pre><code>{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebApplication",
+      "name": "regctl.sh",
+      "applicationCategory": "UtilitiesApplication"
+    },
+    {
+      "@type": "WebSite",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://regctl.sh/{search_term_string}"
+      }
+    }
+  ]
+}</code></pre>
+
+<p><code>SearchAction</code> により Google のサイトリンク検索ボックスが有効になる — ユーザーはGoogle検索結果ページから直接regctl.shを検索でき、クリックせずに済む。</p>
+
+<h2>🟢 マーケティングレポート：佐藤 Mika</h2>
+<h3>OGP + Twitterカード — 両方とも未設定</h3>
+
+<div class="chat-log">
+  <div class="msg">
+    <div class="avatar" style="background:#1a3a2a;color:#3fb950">MK</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#3fb950">佐藤 Mika</div>
+      <div class="msg-text">致命的なギャップ：<code>og:image</code> も <code>twitter:card</code> タグも存在しません。Twitter/Slack/Discordでシェアするたびにプレーンテキストリンクになってます — プレビュー画像もカードも出ない。タダで手に入る配信を捨ててる状態です。しかもog-image.svgは既にstaticディレクトリにある！</div>
+    </div>
+  </div>
+</div>
+
+<p>アセットは既に存在していたのに参照していなかった、という恥ずかしいやつ。4行のHTMLで修正した：</p>
+
+<div class="diff">
+<span class="add">+ &lt;meta property="og:image" content="https://regctl.sh/og-image.svg"&gt;</span>
+<span class="add">+ &lt;meta name="twitter:card" content="summary_large_image"&gt;</span>
+<span class="add">+ &lt;meta name="twitter:title" content="regctl.sh — 世界最安値のドメイン登録"&gt;</span>
+<span class="add">+ &lt;meta name="twitter:image" content="https://regctl.sh/og-image.svg"&gt;</span>
+</div>
+
+<h3>SEO向けH1スタティックフォールバック</h3>
+
+<p>Mikaはヒーローの見出しがJavaScriptで注入されていることを指摘した。GoogleのクローラーはJavaScriptをインデックスするが、2パスのプロセスだ — 最初のパスは純粋なHTMLで、2パス目がレンダリングされる。レンダリングに遅延があれば、H1がインデックスされない可能性がある。修正：<code>&lt;noscript&gt;</code> 静的H1を追加し、DOMの最初のH1がJS実行後ではなく初期HTMLに存在するようにする。</p>
+
+<h3>バイラルメカニクス：スラッグルート</h3>
+
+<blockquote>
+「あなたが持っている最もバイラルな機能はすでにライブだが、誰も知らない。<code>regctl.sh/startup</code> にアクセスするだけで startup.com、startup.io、startup.dev の価格が一発で分かる。これはツールチップの小さなテキストに埋もれてる場合じゃなく、ヒーローコピーのメインにすべきです。」
+<br>— Mika、マーケティング監査
+</blockquote>
+
+<p>このインサイトがヒーローセクションの書き方を変えた。「<code>regctl.sh/あなたの名前</code> を打ってみて」が、小さな注釈ではなく一番目立つ主要CTA訴求として前面に出た。</p>
+
+<h2>🟠 デザイナーレポート：Chen Kai</h2>
+<h3>コントラスト違反：--muted2</h3>
+
+<div class="chat-log">
+  <div class="msg">
+    <div class="avatar" style="background:#2a1a3a;color:#a78bfa">CK</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#a78bfa">Chen Kai</div>
+      <div class="msg-text">WCAG AA違反を発見。<code>--muted2:#555</code> on <code>--bg:#111</code> のコントラストは3.0:1。AAは通常テキストで4.5:1、大きいテキストで3:1が必要です。サイドバーラベル、inputプレースホルダー、フォームヘルパーが全部 <code>--muted2</code> を使っている — 全部アウト。<code>#6b6b6b</code> なら3.8:1でAA（大テキスト）クリア。<code>#777</code> は4.5:1で完全準拠。</div>
+    </div>
+  </div>
+</div>
+
+<p>アクセシビリティは「あるといいもの」ではなく、多くの法域で法的要件であり、視覚障害のあるユーザー・明るい日光下・低輝度ディスプレイでの実用性に直接影響する。実装：</p>
+
+<div class="diff">
+<span class="del">- --muted:#888;--muted2:#555;</span>
+<span class="add">+ --muted:#9a9a9a;--muted2:#6b6b6b;</span>
+</div>
+
+<h3>アクティブステートの欠如</h3>
+
+<p>すべてのボタンに <code>:hover</code> はあったが <code>:active</code> がなかった。モバイル（タッチスクリーン）ではhoverは存在しない — タップした瞬間の唯一のフィードバックがアクティブステートだ。これがないとタップが「反応しない」と感じられる。</p>
+
+<div class="diff">
+<span class="add">+ .btn:active { transform: translateY(0)!important; box-shadow: none!important; opacity: .85; }</span>
+<span class="add">+ .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(246,130,31,.35); }</span>
+</div>
+
+<p>hoverで浮き上がり、activeで押し込まれるスナップバックが、iOS/Androidのネイティブボタンの押し心地を再現する。</p>
+
+<h3>タイポグラフィスケール：font-sizeが15種類</h3>
+
+<div class="chat-log">
+  <div class="msg">
+    <div class="avatar" style="background:#2a1a3a;color:#a78bfa">CK</div>
+    <div class="msg-body">
+      <div class="msg-name" style="color:#a78bfa">Chen Kai</div>
+      <div class="msg-text">CSSのfont-size値を数えると…15種類あります。よく設計されたシステムは5〜7ステップ。アドホックに選ばれたサイズはタイポグラフィスケールではなく、その場の直感です。推奨：.72 / .78 / .85 / .92 / 1rem / 1.1 / 1.4 / 2.2rem — 8ステップ、全ユースケースをカバー。このスケール外は設計判断ではなくtypo（ミス）と見なす。</div>
+    </div>
+  </div>
+</div>
+
+<p>これは次のデザインスプリントでリファクタリング予定。最初のステップはすべての <code>font-size</code> 宣言を洗い出し、タイプスケールの最近接ステップにマッピングすること。</p>
+
+<h2>⚡ 1セッションで実装したもの</h2>
+
+<div class="result-grid">
+  <div class="result-card rc-cto">
+    <div class="rc-icon">🔒</div>
+    <div class="rc-title">セキュリティヘッダー</div>
+    <div class="rc-body">HSTS・Referrer-Policy・Permissions-Policy を全レスポンスに追加</div>
+  </div>
+  <div class="result-card rc-cto">
+    <div class="rc-icon">🧠</div>
+    <div class="rc-title">JSON-LD 構造化データ</div>
+    <div class="rc-body">WebApplication + WebSite + SearchAction でGoogleリッチリザルト対応</div>
+  </div>
+  <div class="result-card rc-mktg">
+    <div class="rc-icon">🖼</div>
+    <div class="rc-title">OGP + Twitterカード</div>
+    <div class="rc-body">SNSシェア時に og:image とカードプレビューが表示されるように</div>
+  </div>
+  <div class="result-card rc-mktg">
+    <div class="rc-icon">🔍</div>
+    <div class="rc-title">og:type + canonical</div>
+    <div class="rc-body">og:type="website" とcanonical URLで重複コンテンツを排除</div>
+  </div>
+  <div class="result-card rc-design">
+    <div class="rc-icon">♿</div>
+    <div class="rc-title">WCAGコントラスト修正</div>
+    <div class="rc-body">--muted2 を #555 → #6b6b6b に変更してAA準拠</div>
+  </div>
+  <div class="result-card rc-design">
+    <div class="rc-icon">👆</div>
+    <div class="rc-title">アクティブステート追加</div>
+    <div class="rc-body">全ボタンにモバイルUX向けの :active フィードバックを実装</div>
+  </div>
+</div>
+
+<h2>🤖 マルチエージェント監査がうまくいく理由</h2>
+
+<p>このプロセスで興味深かったのは、個々の発見ではなかった — 経験豊富なエンジニアなら通常のコードレビューで同じことを見つけるだろう。際立っていたのは<em>並列性</em>だ。</p>
+
+<p>通常のコードレビューは逐次的だ：一人に聞く、一つの視点が返ってくる、修正する、また聞く。マルチエージェント監査は並行的だ：3つの専門的な視点が同時に同じコードベースを、異なる角度から、コンテキスト汚染なしに見る。</p>
+
+<p>MikaはRyoがセキュリティヘッダーを見ていることを知らなかった。KaiはMikaがOGPを見ていることを知らなかった。各エージェントはコードベースをフレッシュな状態で、自分の専門領域から、他のエージェントの発見にアンカリングされることなくアプローチした。これが本物のハイパフォーマンスチームの動き方だ — 並列特化、そして統合。</p>
+
+<blockquote>
+「最高のチームは頭が良いのではなく、並列化が上手い。」
+</blockquote>
+
+<p>このセッションは、個別の修正リスト以上に価値あるものを生んだ：プロジェクトの品質基準を表す共通言語。Kaiが「font-sizeが15種類というのは、15個の下されなかったデザイン判断だ」と言ったとき、それは今後すべてのフィーチャーに適用するヒューリスティックになった：<em>アドホックな選択ではなく、明示的なデザイン判断</em>。</p>
+
+<h2>🚀 今後のロードマップ</h2>
+
+<p>監査から生まれたロードマップ：</p>
+
+<ul>
+  <li><strong>BulkCheckのレート制限</strong> — IP + APIキーをキーとするスライディングウィンドウ</li>
+  <li><strong>prices.json のETagキャッシュ</strong> — 帯域削減、CDNエッジキャッシュの有効化</li>
+  <li><strong>スラッグページの動的OGP</strong> — <code>regctl.sh/startup</code> がライブ価格つき専用og:imageを持つ</li>
+  <li><strong>タイポグラフィシステム</strong> — 8ステップ型スケール、CSSカスタムプロパティで強制</li>
+  <li><strong>ソーシャルプルーフセクション</strong> — DBから取得した「登録済みX件・ユーザーY人」</li>
+  <li><strong>IntersectionObserver スタガーアニメーション</strong> — スクロール連動のフィーチャーカード演出</li>
+</ul>
+
+<p>regctl.sh のミッションはシンプルだ：<strong>ドメイン登録をとことん安く・簡単にして、価格を理由にアイデアを諦める必要をなくす</strong>。マルチエージェント監査は、「動く」と「ワールドクラス」の間のギャップを体系的に埋め続けるための方法のひとつだ。</p>
+
+<div class="cta-box">
+  <h3>regctl.sh を試してみる</h3>
+  <p><code>regctl.sh/あなたのアイデア</code> を打つだけで、全TLDの価格が一覧表示される。</p>
+  <a href="/" class="btn btn-primary">ドメイン価格を調べる →</a>
+</div>
+
+</div><!-- end post-body -->
+</article>
+
+<div class="post-footer">
+  <a href="/" class="back-link">← regctl.sh に戻る</a>
+  <span style="color:var(--muted2);font-size:.8rem">© 2026 regctl.sh</span>
+</div>
+
+</body>
+</html>

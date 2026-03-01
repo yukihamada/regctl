@@ -39,7 +39,8 @@ func HandleWebhook(payload []byte, sigHeader, webhookSecret, signingSecret strin
 		return nil, errors.New("webhook secret not configured")
 	}
 
-	event, err := webhook.ConstructEvent(payload, sigHeader, webhookSecret)
+	event, err := webhook.ConstructEventWithOptions(payload, sigHeader, webhookSecret,
+		webhook.ConstructEventOptions{IgnoreAPIVersionMismatch: true})
 	if err != nil {
 		return nil, fmt.Errorf("verify webhook signature: %w", err)
 	}

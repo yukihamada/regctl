@@ -16,7 +16,7 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /build/regctl /usr/local/bin/regctl
 
 # Static files for web serving
-COPY index.html install.sh llms.txt prices.json og-image.svg /static/
+COPY index.html blog.html install.sh llms.txt prices.json og-image.svg /static/
 
 EXPOSE 8080
 

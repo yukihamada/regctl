@@ -143,6 +143,9 @@ Billing endpoints (when STRIPE_SECRET_KEY is set):
 			if porkbunClient != nil {
 				registrars = append(registrars, porkbunClient)
 			}
+			if netimClient != nil {
+				registrars = append(registrars, netimClient)
+			}
 			srvCfg.Registrars = registrars
 
 			// DNS & NS providers (Porkbun supports both)

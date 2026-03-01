@@ -1,501 +1,224 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>regctl - ドメイン登録CLI</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>regctl.sh — Domain Search</title>
+<style>
+:root {
+  --bg: #111111; --surface: #1a1a1a; --surface2: #222222; --surface3: #2a2a2a;
+  --border: #2d2d2d; --border2: #3a3a3a;
+  --text: #f0f0f0; --muted: #888888; --muted2: #555555;
+  --accent: #f6821f; --accent-h: #e07010;
+  --green: #3fb950; --blue: #60a5fa; --red: #f87171;
+  --radius: 8px; --radius-sm: 4px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; font-size: 14px; min-height: 100vh; }
+a { color: var(--blue); text-decoration: none; }
+input, select { background: var(--surface2); border: 1px solid var(--border2); color: var(--text); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 14px; outline: none; width: 100%; transition: border-color .15s; }
+input:focus { border-color: var(--accent); }
+button { cursor: pointer; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 500; padding: 8px 16px; transition: all .15s; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+.btn-secondary:hover { background: var(--surface3); }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.badge-green { background: rgba(63,185,80,.15); color: var(--green); }
+.badge-gray { background: var(--surface2); color: var(--muted); }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
+/* Layout */
+.topbar { height: 48px; background: rgba(17,17,17,.95); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 24px; gap: 16px; }
+.topbar-logo { font-size: 16px; font-weight: 800; color: var(--text); }
+.topbar-logo span { color: var(--accent); }
+.topbar-back { color: var(--muted); font-size: 13px; }
+.topbar-back:hover { color: var(--text); }
+.main { max-width: 780px; margin: 0 auto; padding: 40px 24px; }
 
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
+/* Search */
+.search-box { display: flex; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; transition: border-color .15s; }
+.search-box:focus-within { border-color: var(--accent); }
+.search-box input { flex: 1; border: none; background: transparent; font-size: 16px; padding: 14px 20px; border-radius: 0; }
+.search-box button { border-radius: 0; padding: 14px 28px; font-size: 15px; font-weight: 600; background: var(--accent); color: #fff; }
+.search-box button:hover { background: var(--accent-h); }
 
-        .header {
-            text-align: center;
-            color: white;
-            margin-bottom: 40px;
-        }
+/* Results */
+.result-info { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.result-title { font-size: 18px; font-weight: 700; }
+.spinner { width: 14px; height: 14px; border: 2px solid var(--border2); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
 
-        .header h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
+.tld-list { display: flex; flex-direction: column; gap: 6px; }
+.tld-row { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; gap: 12px; transition: border-color .15s; }
+.tld-row:hover { border-color: var(--border2); }
+.tld-row.available { border-left: 3px solid var(--green); }
+.tld-row.taken { border-left: 3px solid var(--muted2); opacity: .6; }
+.tld-row.loading { opacity: .4; }
+.tld-name { font-weight: 600; font-size: 15px; min-width: 200px; }
+.tld-status { flex: 1; font-size: 12px; color: var(--muted); }
+.tld-price { font-size: 16px; font-weight: 700; color: var(--accent); min-width: 100px; text-align: right; }
+.tld-reg { font-size: 11px; color: var(--muted); }
+.tld-action { min-width: 80px; text-align: right; }
 
-        .header p {
-            font-size: 1.2rem;
-            opacity: 0.9;
-        }
+/* History */
+.history { margin-top: 40px; }
+.history-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 12px; }
+.history-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.history-chip { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 4px 12px; font-size: 13px; color: var(--muted); cursor: pointer; transition: all .15s; }
+.history-chip:hover { color: var(--text); border-color: var(--border2); }
 
-        .search-box {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            margin-bottom: 30px;
-        }
-
-        .search-input-wrapper {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        input[type="text"] {
-            flex: 1;
-            padding: 18px 24px;
-            font-size: 1.1rem;
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            transition: all 0.3s;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        }
-
-        button {
-            padding: 18px 40px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: white;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        button:active {
-            transform: translateY(0);
-        }
-
-        button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #667eea;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .results {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .result-header {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .result-header h2 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .domain-status {
-            display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        .status-available {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-unavailable {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .price-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        .price-table thead {
-            background: #f8f9fa;
-        }
-
-        .price-table th {
-            padding: 15px;
-            text-align: left;
-            font-weight: 600;
-            color: #555;
-            border-bottom: 2px solid #dee2e6;
-        }
-
-        .price-table td {
-            padding: 15px;
-            border-bottom: 1px solid #dee2e6;
-        }
-
-        .price-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .cheapest {
-            background: #fff3cd !important;
-            border-left: 4px solid #ffc107;
-        }
-
-        .price {
-            font-weight: 700;
-            color: #28a745;
-            font-size: 1.1rem;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-right: 5px;
-        }
-
-        .badge-success {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .badge-secondary {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-
-        .register-btn {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        .best-deal {
-            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .best-deal h3 {
-            color: #333;
-            margin-bottom: 10px;
-        }
-
-        .best-deal .registrar {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #667eea;
-        }
-
-        .features {
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #dc3545;
-        }
-
-        .history {
-            background: white;
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            margin-top: 30px;
-        }
-
-        .history h3 {
-            margin-bottom: 20px;
-            color: #333;
-        }
-
-        .history-item {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .history-item:hover {
-            background: #f8f9fa;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-domain {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-        }
-
-        .history-date {
-            font-size: 0.9rem;
-            color: #999;
-        }
-    </style>
+/* Toast */
+#toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 10px 16px; font-size: 13px; display: none; z-index: 99; }
+.toast-success { border-left: 3px solid var(--green); }
+.toast-error { border-left: 3px solid var(--red); }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🌐 regctl</h1>
-            <p>897 TLD対応 - 最安値レジストラで自動登録</p>
-        </div>
+<div class="topbar">
+  <a class="topbar-logo" href="/">regctl<span>.sh</span></a>
+  <span style="color:var(--muted2)">·</span>
+  <a class="topbar-back" href="/">← Back to home</a>
+</div>
 
-        <div class="search-box">
-            <div class="search-input-wrapper">
-                <input
-                    type="text"
-                    id="domainInput"
-                    placeholder="example.com"
-                    autocomplete="off"
-                >
-                <button id="searchBtn" onclick="searchDomain()">検索</button>
-            </div>
-        </div>
+<div class="main">
+  <div style="margin-bottom:32px">
+    <h1 style="font-size:24px;font-weight:700;margin-bottom:6px">Domain Search</h1>
+    <p style="color:var(--muted)">Check availability and compare prices across 1,343 TLDs</p>
+  </div>
 
-        <div id="loading" class="loading" style="display: none;">
-            <div class="spinner"></div>
-            <p>価格を比較しています...</p>
-        </div>
+  <div class="search-box">
+    <input id="q" type="text" placeholder="Enter a domain name or keyword…" autocomplete="off"
+      onkeydown="if(event.key==='Enter')doSearch()">
+    <button onclick="doSearch()">Search</button>
+  </div>
 
-        <div id="error" class="error" style="display: none;"></div>
-
-        <div id="results" class="results" style="display: none;">
-            <div class="result-header">
-                <h2 id="resultDomain"></h2>
-                <span id="domainStatus" class="domain-status"></span>
-            </div>
-
-            <div id="bestDeal" class="best-deal" style="display: none;">
-                <h3>💰 最安値</h3>
-                <div class="registrar" id="bestRegistrar"></div>
-                <div class="price" id="bestPrice"></div>
-            </div>
-
-            <table class="price-table">
-                <thead>
-                    <tr>
-                        <th>レジストラ</th>
-                        <th>登録価格</th>
-                        <th>更新価格</th>
-                        <th>ステータス</th>
-                        <th>特徴</th>
-                        <th>アクション</th>
-                    </tr>
-                </thead>
-                <tbody id="priceTableBody">
-                </tbody>
-            </table>
-        </div>
-
-        <div class="history" id="history" style="display: none;">
-            <h3>📜 検索履歴</h3>
-            <div id="historyList"></div>
-        </div>
+  <div id="result-area" style="display:none">
+    <div class="result-info">
+      <span class="result-title" id="result-label"></span>
+      <span class="spinner" id="result-spinner" style="display:none"></span>
     </div>
+    <div class="tld-list" id="tld-list"></div>
+  </div>
 
-    <script>
-        // Load search history from localStorage
-        function loadHistory() {
-            const history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-            if (history.length > 0) {
-                document.getElementById('history').style.display = 'block';
-                const historyList = document.getElementById('historyList');
-                historyList.innerHTML = history.map(item => `
-                    <div class="history-item" onclick="searchDomain('${item.domain}')">
-                        <div class="history-domain">${item.domain}</div>
-                        <div class="history-date">${new Date(item.date).toLocaleString('ja-JP')}</div>
-                    </div>
-                `).join('');
-            }
-        }
+  <div class="history" id="history-area" style="display:none">
+    <div class="history-title">Recent Searches</div>
+    <div class="history-chips" id="history-chips"></div>
+  </div>
+</div>
 
-        // Save to history
-        function saveToHistory(domain) {
-            let history = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-            history = history.filter(item => item.domain !== domain);
-            history.unshift({ domain, date: new Date().toISOString() });
-            history = history.slice(0, 10); // Keep last 10
-            localStorage.setItem('searchHistory', JSON.stringify(history));
-            loadHistory();
-        }
+<div id="toast"></div>
 
-        async function searchDomain(domain) {
-            if (!domain) {
-                domain = document.getElementById('domainInput').value.trim();
-            }
+<script>
+const POPULAR_TLDS = ['.com','.io','.net','.org','.dev','.ai','.app','.co','.sh','.xyz','.me','.info','.tech','.site'];
 
-            if (!domain) {
-                showError('ドメイン名を入力してください');
-                return;
-            }
+function doSearch() {
+  const raw = document.getElementById('q').value.trim();
+  if (!raw) return;
+  const name = raw.replace(/^https?:\/\//, '').split('.')[0].split('/')[0];
+  if (!name) return;
+  saveHistory(name);
+  renderResults(name);
+}
 
-            document.getElementById('domainInput').value = domain;
-            document.getElementById('results').style.display = 'none';
-            document.getElementById('error').style.display = 'none';
-            document.getElementById('loading').style.display = 'block';
-            document.getElementById('searchBtn').disabled = true;
+function renderResults(name) {
+  document.getElementById('result-area').style.display = 'block';
+  document.getElementById('result-label').textContent = '"' + name + '"';
+  document.getElementById('result-spinner').style.display = 'inline-block';
 
-            try {
-                const response = await fetch(`/v1/domains/check/${domain}`);
-                const data = await response.json();
+  const list = document.getElementById('tld-list');
+  list.innerHTML = POPULAR_TLDS.map(t => `
+    <div class="tld-row loading" id="r${t.replace('.','_')}">
+      <div class="tld-name">${name}${t}</div>
+      <div class="tld-status"><span class="spinner"></span></div>
+      <div class="tld-price"></div><div class="tld-action"></div>
+    </div>`).join('');
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'エラーが発生しました');
-                }
+  let done = 0;
+  POPULAR_TLDS.forEach(async tld => {
+    const domain = name + tld;
+    const rowId = 'r' + tld.replace('.', '_');
+    try {
+      const res = await fetch(`/v1/domains/check/${domain}`);
+      const data = await res.json();
+      const row = document.getElementById(rowId);
+      if (!row) return;
+      row.classList.remove('loading');
+      if (data.available) {
+        row.classList.add('available');
+        row.innerHTML = `
+          <div class="tld-name">${domain}</div>
+          <div class="tld-status"><span class="badge badge-green">Available</span></div>
+          <div class="tld-price">${data.price ? '$' + Number(data.price).toFixed(2) + '/yr' : '—'}</div>
+          <div class="tld-action"><button class="btn-primary" style="font-size:12px;padding:6px 12px" onclick="register('${domain}')">Register</button></div>`;
+      } else {
+        row.classList.add('taken');
+        row.innerHTML = `
+          <div class="tld-name">${domain}</div>
+          <div class="tld-status"><span class="badge badge-gray">Taken</span></div>
+          <div class="tld-price" style="color:var(--muted2)">—</div>
+          <div class="tld-action"><a href="https://lookup.icann.org/en/lookup?name=${domain}" target="_blank" style="font-size:12px">WHOIS ↗</a></div>`;
+      }
+    } catch(e) {
+      const row = document.getElementById(rowId);
+      if (row) { row.classList.remove('loading'); row.innerHTML = `<div class="tld-name">${name}${tld}</div><div class="tld-status" style="color:var(--muted2)">Error</div><div class="tld-price"></div><div class="tld-action"></div>`; }
+    }
+    if (++done >= POPULAR_TLDS.length) document.getElementById('result-spinner').style.display = 'none';
+  });
+}
 
-                displayResults(domain, data);
-                saveToHistory(domain);
-            } catch (error) {
-                showError(error.message);
-            } finally {
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('searchBtn').disabled = false;
-            }
-        }
+async function register(domain) {
+  const user = JSON.parse(localStorage.getItem('regctl_user') || 'null');
+  if (!user) { window.location.href = '/?register=' + encodeURIComponent(domain); return; }
+  if (!confirm(`Register ${domain}?\nCredits will be deducted from your balance.`)) return;
+  try {
+    const res = await fetch('/v1/domains', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + user.api_key },
+      body: JSON.stringify({ domain })
+    });
+    if (res.ok) { toast('✓ ' + domain + ' registered!', 'success'); }
+    else { const d = await res.json(); toast('Error: ' + (d.message || res.status), 'error'); }
+  } catch(e) { toast('Network error', 'error'); }
+}
 
-        function displayResults(domain, data) {
-            document.getElementById('results').style.display = 'block';
-            document.getElementById('resultDomain').textContent = domain;
+// History
+function saveHistory(name) {
+  const h = JSON.parse(localStorage.getItem('regctl_history') || '[]');
+  const updated = [name, ...h.filter(x => x !== name)].slice(0, 10);
+  localStorage.setItem('regctl_history', JSON.stringify(updated));
+  renderHistory();
+}
 
-            const available = data.results.some(r => r.available);
-            const statusEl = document.getElementById('domainStatus');
-            statusEl.textContent = available ? '✅ 利用可能' : '❌ 利用不可';
-            statusEl.className = `domain-status ${available ? 'status-available' : 'status-unavailable'}`;
+function renderHistory() {
+  const h = JSON.parse(localStorage.getItem('regctl_history') || '[]');
+  const area = document.getElementById('history-area');
+  const chips = document.getElementById('history-chips');
+  if (h.length === 0) { area.style.display = 'none'; return; }
+  area.style.display = 'block';
+  chips.innerHTML = h.map(n => `<span class="history-chip" onclick="loadHistory('${n}')">${n}</span>`).join('');
+}
 
-            // Find cheapest
-            let cheapest = null;
-            data.results.forEach(r => {
-                if (r.available && (!cheapest || r.price < cheapest.price)) {
-                    cheapest = r;
-                }
-            });
+function loadHistory(name) {
+  document.getElementById('q').value = name;
+  renderResults(name);
+}
 
-            if (cheapest) {
-                document.getElementById('bestDeal').style.display = 'block';
-                document.getElementById('bestRegistrar').textContent = cheapest.registrar;
-                document.getElementById('bestPrice').textContent = `$${cheapest.price.toFixed(2)}`;
-            } else {
-                document.getElementById('bestDeal').style.display = 'none';
-            }
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast-' + type;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
 
-            // Build table
-            const tbody = document.getElementById('priceTableBody');
-            tbody.innerHTML = data.results.map(r => `
-                <tr class="${cheapest && r.registrar === cheapest.registrar ? 'cheapest' : ''}">
-                    <td><strong>${r.registrar}</strong></td>
-                    <td class="price">$${r.price.toFixed(2)}</td>
-                    <td>$${r.renewal.toFixed(2)}/年</td>
-                    <td>
-                        <span class="badge ${r.available ? 'badge-success' : 'badge-secondary'}">
-                            ${r.available ? '✅ 可能' : '❌ 不可'}
-                        </span>
-                    </td>
-                    <td class="features">${r.features || '-'}</td>
-                    <td>
-                        ${r.available ? `
-                            <button class="register-btn" onclick="registerDomain('${domain}', '${r.registrar}')">
-                                登録する
-                            </button>
-                        ` : '-'}
-                    </td>
-                </tr>
-            `).join('');
-        }
-
-        function showError(message) {
-            const errorEl = document.getElementById('error');
-            errorEl.textContent = message;
-            errorEl.style.display = 'block';
-        }
-
-        async function registerDomain(domain, registrar) {
-            if (!confirm(`${domain}を${registrar}で登録しますか？`)) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/v1/domains', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ domain, registrar })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || '登録に失敗しました');
-                }
-
-                alert(`${domain}の登録を開始しました！`);
-            } catch (error) {
-                showError(error.message);
-            }
-        }
-
-        // Enter key support
-        document.getElementById('domainInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                searchDomain();
-            }
-        });
-
-        // Load history on page load
-        loadHistory();
-    </script>
+// Init
+renderHistory();
+// Pre-fill from URL slug
+const slug = location.pathname.replace('/', '').trim();
+if (slug && !slug.includes('.')) {
+  document.getElementById('q').value = slug;
+  renderResults(slug);
+}
+</script>
 </body>
 </html>

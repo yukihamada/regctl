@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/yukihamada/regctl/internal/billing"
 	"github.com/yukihamada/regctl/internal/email"
@@ -76,6 +77,9 @@ type Server struct {
 	dnsProviders []provider.DNSProvider
 	nsProviders  []provider.NSProvider
 
+	// prices.json in-memory cache
+	pricesMu   sync.RWMutex
+	pricesJSON []byte
 }
 
 // New creates a new HTTP API server.
@@ -123,6 +127,9 @@ func (s *Server) ListenAndServe(port int) error {
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-Frame-Options", "DENY")
+	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+	w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+	w.Header().Set("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
 	// Check if this is a hosted site request (custom domain, not our API domain)
 	host := r.Host
@@ -218,6 +225,9 @@ func (s *Server) routes() {
 
 	s.mux.HandleFunc("GET /v1/auth/google/callback", s.handleGoogleCallback)
 
+	// Admin routes (protected by signing secret)
+	s.mux.HandleFunc("GET /v1/admin/auth-code", s.handleAdminAuthCode)
+
 	// Billing routes (no auth for signup/webhook, auth for topup/balance/hold)
 	if s.billingEnabled {
 		s.mux.HandleFunc("POST /v1/billing/signup", s.handleSignUp)
@@ -278,6 +288,7 @@ func (s *Server) routes() {
 			s.mux.HandleFunc("GET /llms.txt", s.serveStatic("llms.txt", "text/plain; charset=utf-8"))
 			s.mux.HandleFunc("GET /prices.json", s.serveStatic("prices.json", "application/json"))
 			s.mux.HandleFunc("GET /og-image.svg", s.serveStatic("og-image.svg", "image/svg+xml"))
+			s.mux.HandleFunc("GET /blog", s.serveStatic("blog.html", "text/html; charset=utf-8"))
 			s.mux.HandleFunc("GET /{$}", s.serveCurlOrHTML())
 		}
 	}

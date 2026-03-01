@@ -10,6 +10,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/yukihamada/regctl/internal/billing"
@@ -85,23 +86,41 @@ func (s *Server) hasProvider() bool {
 }
 
 // checkAvailMulti checks domain availability across all configured registrars.
-// Returns the cheapest available option. Available results always beat unavailable ones.
-// Results with price=0 are treated as "unsupported TLD" and deprioritized.
+// Selection logic (conservative — avoids false "available"):
+//   - Any "unavailable" result is authoritative (taken domains have no price to show).
+//   - "Available" is only trusted when the registrar has pricing for this TLD (RegPrice > 0),
+//     meaning it can actually register it.
+//   - Among available results with prices, pick the cheapest.
 func (s *Server) checkAvailMulti(domain string) (*provider.DomainAvailability, error) {
 	if len(s.registrars) == 0 {
 		return nil, fmt.Errorf("no registrar configured")
 	}
+
+	type outcome struct {
+		avail *provider.DomainAvailability
+		err   error
+		name  string
+	}
+	ch := make(chan outcome, len(s.registrars))
+	for _, reg := range s.registrars {
+		reg := reg
+		go func() {
+			avail, err := reg.CheckAvailability(domain)
+			ch <- outcome{avail, err, reg.Name()}
+		}()
+	}
+
 	var results []*provider.DomainAvailability
 	var lastErr error
-	for _, reg := range s.registrars {
-		avail, err := reg.CheckAvailability(domain)
-		if err != nil {
-			log.Printf("DEBUG: %s check %s: %v", reg.Name(), domain, err)
-			lastErr = err
+	for range s.registrars {
+		o := <-ch
+		if o.err != nil {
+			log.Printf("DEBUG: %s check %s: %v", o.name, domain, o.err)
+			lastErr = o.err
 			continue
 		}
-		log.Printf("DEBUG: %s check %s: available=%v price=%.2f", reg.Name(), domain, avail.Available, avail.RegPrice)
-		results = append(results, avail)
+		log.Printf("DEBUG: %s check %s: available=%v price=%.2f", o.name, domain, o.avail.Available, o.avail.RegPrice)
+		results = append(results, o.avail)
 	}
 	if len(results) == 0 {
 		if lastErr != nil {
@@ -110,33 +129,44 @@ func (s *Server) checkAvailMulti(domain string) (*provider.DomainAvailability, e
 		return nil, fmt.Errorf("no registrar could check this domain")
 	}
 
-	// Pick best result: available with price > available without > unavailable with price > unavailable without
-	var best *provider.DomainAvailability
+	// Three tiers of results:
+	//   authTaken  : Available=false, RegPrice>0  → registrar knows TLD, domain is taken (authoritative)
+	//   bestAvail  : Available=true,  RegPrice>0  → registrar knows TLD, domain is free (trusted)
+	//   weakTaken  : Available=false, RegPrice=0  → registrar may not support TLD, or taken with no price
+	//
+	// Priority: authTaken > bestAvail > weakTaken
+	// (A "weak taken" from an unsupported TLD must not override a priced "available")
+	var authTaken *provider.DomainAvailability
+	var bestAvail *provider.DomainAvailability
+	var weakTaken *provider.DomainAvailability
 	for _, avail := range results {
-		if best == nil {
-			best = avail
-			continue
-		}
-		// Available always beats unavailable
-		if avail.Available && !best.Available {
-			best = avail
-			continue
-		}
-		// Don't replace available with unavailable
-		if !avail.Available && best.Available {
-			continue
-		}
-		// Among same availability status, prefer one with valid price
-		if avail.RegPrice > 0 && best.RegPrice <= 0 {
-			best = avail
-			continue
-		}
-		// Among available with valid prices, prefer cheapest
-		if avail.Available && best.Available && avail.RegPrice > 0 && best.RegPrice > 0 && avail.RegPrice < best.RegPrice {
-			best = avail
+		if !avail.Available {
+			if avail.RegPrice > 0 {
+				// Authoritative: registrar supports this TLD and confirmed taken
+				if authTaken == nil {
+					authTaken = avail
+				}
+			} else if weakTaken == nil {
+				// Weak: taken signal but no price (TLD might be unsupported)
+				weakTaken = avail
+			}
+		} else if avail.RegPrice > 0 {
+			// Trusted available: registrar has pricing and says it's free
+			if bestAvail == nil || avail.RegPrice < bestAvail.RegPrice {
+				bestAvail = avail
+			}
 		}
 	}
-	return best, nil
+	if authTaken != nil {
+		return authTaken, nil
+	}
+	if bestAvail != nil {
+		return bestAvail, nil
+	}
+	if weakTaken != nil {
+		return weakTaken, nil
+	}
+	return nil, fmt.Errorf("no registrar supports this TLD")
 }
 
 // getRegistrar returns the registrar with the given name, or nil.
@@ -472,7 +502,7 @@ func (s *Server) handleRegisterDomain(w http.ResponseWriter, r *http.Request) {
 // dnsProviderFor returns the first DNS provider that can handle the domain,
 // looking up the registrar from the portfolio if available.
 func (s *Server) dnsProviderFor(domain string) provider.DNSProvider {
-	// Try to find the registrar from portfolio
+	// Require domain to be in portfolio — prevents unauthorized DNS modification
 	if s.store != nil {
 		if entry, _ := s.store.GetPortfolioEntry(domain); entry != nil {
 			for _, p := range s.dnsProviders {
@@ -480,16 +510,18 @@ func (s *Server) dnsProviderFor(domain string) provider.DNSProvider {
 					return p
 				}
 			}
+			// Domain is in portfolio but registrar-specific provider not found;
+			// fall back to any available DNS provider for this verified-owned domain
+			if len(s.dnsProviders) > 0 {
+				return s.dnsProviders[0]
+			}
 		}
 	}
-	// Fall back to first available
-	if len(s.dnsProviders) > 0 {
-		return s.dnsProviders[0]
-	}
+	// No portfolio entry = domain ownership not verified; deny
 	return nil
 }
 
-// nsProviderFor returns the first NS provider for a domain.
+// nsProviderFor returns the NS provider for a domain the caller owns.
 func (s *Server) nsProviderFor(domain string) provider.NSProvider {
 	if s.store != nil {
 		if entry, _ := s.store.GetPortfolioEntry(domain); entry != nil {
@@ -498,10 +530,10 @@ func (s *Server) nsProviderFor(domain string) provider.NSProvider {
 					return p
 				}
 			}
+			if len(s.nsProviders) > 0 {
+				return s.nsProviders[0]
+			}
 		}
-	}
-	if len(s.nsProviders) > 0 {
-		return s.nsProviders[0]
 	}
 	return nil
 }
@@ -829,37 +861,43 @@ func (s *Server) handleBulkCheck(w http.ResponseWriter, r *http.Request) {
 		Error     string  `json:"error,omitempty"`
 	}
 
-	results := make([]result, 0, len(req.Domains))
-	for _, domain := range req.Domains {
-		if len(s.registrars) > 0 {
-			avail, err := s.checkAvailMulti(domain)
-			if err != nil {
-				results = append(results, result{Domain: domain, Error: err.Error()})
-				continue
+	results := make([]result, len(req.Domains))
+	var wg sync.WaitGroup
+	for i, domain := range req.Domains {
+		wg.Add(1)
+		go func(i int, domain string) {
+			defer wg.Done()
+			if len(s.registrars) > 0 {
+				avail, err := s.checkAvailMulti(domain)
+				if err != nil {
+					results[i] = result{Domain: domain, Error: err.Error()}
+					return
+				}
+				results[i] = result{
+					Domain:    domain,
+					Available: avail.Available,
+					Premium:   avail.Premium,
+					Price:     avail.RegPrice,
+					Currency:  avail.Currency,
+					Registrar: avail.Registrar,
+				}
+			} else {
+				avail, err := s.client.CheckAvailability(domain)
+				if err != nil {
+					results[i] = result{Domain: domain, Error: err.Error()}
+					return
+				}
+				results[i] = result{
+					Domain:    domain,
+					Available: avail.Available,
+					Premium:   avail.Premium,
+					Price:     avail.Price,
+					Currency:  avail.Currency,
+				}
 			}
-			results = append(results, result{
-				Domain:    domain,
-				Available: avail.Available,
-				Premium:   avail.Premium,
-				Price:     avail.RegPrice,
-				Currency:  avail.Currency,
-				Registrar: avail.Registrar,
-			})
-		} else {
-			avail, err := s.client.CheckAvailability(domain)
-			if err != nil {
-				results = append(results, result{Domain: domain, Error: err.Error()})
-				continue
-			}
-			results = append(results, result{
-				Domain:    domain,
-				Available: avail.Available,
-				Premium:   avail.Premium,
-				Price:     avail.Price,
-				Currency:  avail.Currency,
-			})
-		}
+		}(i, domain)
 	}
+	wg.Wait()
 	writeJSON(w, http.StatusOK, map[string]interface{}{
 		"results": results,
 		"count":   len(results),
@@ -1051,11 +1089,21 @@ func (s *Server) handleRDAP(w http.ResponseWriter, r *http.Request) {
 // GET /v1/prices?tld=com → show registrar prices for .com
 // GET /v1/prices         → show top 20 cheapest TLDs
 func (s *Server) handlePricesText(w http.ResponseWriter, r *http.Request) {
-	// Load prices.json
-	data, err := os.ReadFile(s.staticDir + "/prices.json")
-	if err != nil {
-		http.Error(w, "prices data not available", http.StatusInternalServerError)
-		return
+	// Load prices.json with in-memory cache (file is ~120KB and only updated daily)
+	s.pricesMu.RLock()
+	data := s.pricesJSON
+	s.pricesMu.RUnlock()
+
+	if data == nil {
+		raw, err := os.ReadFile(s.staticDir + "/prices.json")
+		if err != nil {
+			http.Error(w, "prices data not available", http.StatusInternalServerError)
+			return
+		}
+		s.pricesMu.Lock()
+		s.pricesJSON = raw
+		s.pricesMu.Unlock()
+		data = raw
 	}
 
 	var pf struct {

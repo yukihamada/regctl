@@ -59,8 +59,8 @@ func (c *Client) CheckAvailability(domain string) (*DomainAvailability, error) {
 		return &avail, nil
 	}
 
-	// Default: assume available if not found in response
-	return &DomainAvailability{Available: true, Currency: "JPY"}, nil
+	// Not in response = TLD not supported or API returned no data
+	return nil, fmt.Errorf("valuedomain: no availability data for %s", domain)
 }
 
 // RegisterDomain registers a new domain.
