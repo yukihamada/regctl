@@ -9,6 +9,7 @@ import (
 	"github.com/yukihamada/regctl/internal/config"
 	cfprovider "github.com/yukihamada/regctl/internal/provider/cloudflare"
 	"github.com/yukihamada/regctl/internal/provider/namecheap"
+	"github.com/yukihamada/regctl/internal/provider/netim"
 	"github.com/yukihamada/regctl/internal/provider/porkbun"
 	"github.com/yukihamada/regctl/internal/provider/spaceship"
 	"github.com/yukihamada/regctl/internal/provider/valuedomain"
@@ -21,6 +22,7 @@ var (
 	cloudflareClient *cfprovider.Client
 	spaceshipClient  *spaceship.Client
 	namecheapClient  *namecheap.Client
+	netimClient      *netim.Client
 )
 
 // NewRootCmd creates the root command for regctl.
@@ -83,16 +85,15 @@ func NewRootCmd(version string) *cobra.Command {
 
 			if !cfg.HasAnyProvider() {
 				fmt.Println()
-				color.New(color.FgYellow, color.Bold).Println("  No registrar API keys configured.")
+				color.New(color.FgYellow, color.Bold).Println("  No API keys configured.")
 				fmt.Println()
-				fmt.Println("  Quick setup (interactive wizard):")
-				color.Cyan("    regctl init")
+				fmt.Println("  Quick setup:")
+				color.Cyan("    regctl config set api-key YOUR_KEY")
+				color.Cyan("    regctl config set email you@example.com")
 				fmt.Println()
-				fmt.Println("  Or set keys directly:")
-				color.Cyan("    regctl config set porkbun_api_key YOUR_KEY")
-				color.Cyan("    regctl config set porkbun_secret_key YOUR_SECRET")
+				fmt.Println("  Get your key at: https://regctl.sh")
 				fmt.Println()
-				fmt.Println("  Supported registrars:")
+				fmt.Println("  Or use an existing registrar:")
 				fmt.Println("    Porkbun      — porkbun_api_key + porkbun_secret_key")
 				fmt.Println("    Cloudflare   — cloudflare_token (or cloudflare_global_key + cloudflare_email)")
 				fmt.Println("    Namecheap    — namecheap_api_key + namecheap_api_user")
@@ -171,6 +172,9 @@ func initProviders(cfg *config.Config) {
 		if cfg.CloudflareAccountID != "" {
 			cloudflareClient.AccountID = cfg.CloudflareAccountID
 		}
+	}
+	if cfg.NetimLogin != "" && cfg.NetimPassword != "" {
+		netimClient = netim.NewClient(cfg.NetimLogin, cfg.NetimPassword)
 	}
 }
 

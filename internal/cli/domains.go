@@ -1,7 +1,9 @@
 package cli
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"sort"
 	"strings"
 	"sync"
@@ -40,6 +42,54 @@ Examples:
 	return cmd
 }
 
+// fetchRegctlDomains calls the regctl API to list domains registered via regctl.sh.
+func fetchRegctlDomains(apiURL, apiKey string) ([]provider.Domain, error) {
+	req, err := http.NewRequest("GET", apiURL+"/v1/domains", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, fmt.Errorf("invalid API key — get your key at https://regctl.sh")
+	}
+	if resp.StatusCode == http.StatusPaymentRequired {
+		return nil, fmt.Errorf("insufficient balance — top up at https://regctl.sh")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API error: %d", resp.StatusCode)
+	}
+	var result struct {
+		Data struct {
+			Domains []struct {
+				Domain    string `json:"domain"`
+				Registrar string `json:"registrar"`
+				Status    string `json:"status"`
+				Expires   string `json:"expires"`
+				AutoRenew bool   `json:"auto_renew"`
+			} `json:"domains"`
+		} `json:"data"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	var domains []provider.Domain
+	for _, d := range result.Data.Domains {
+		domains = append(domains, provider.Domain{
+			Name:      d.Domain,
+			Registrar: d.Registrar,
+			Status:    d.Status,
+			ExpiresAt: d.Expires,
+			AutoRenew: d.AutoRenew,
+		})
+	}
+	return domains, nil
+}
+
 func newDomainsListCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "list",
@@ -47,8 +97,27 @@ func newDomainsListCmd() *cobra.Command {
 		Example: `  regctl domains list
   regctl domains list --format json`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// Initialize providers if not already done (e.g. when called via billingCmds shortcut)
+			if cfg != nil {
+				initProviders(cfg)
+			}
+
 			var allDomains []provider.Domain
 			var errors []string
+
+			// Collect from regctl API (billing key)
+			if cfg != nil && cfg.RegctlBillingKey != "" {
+				apiURL := cfg.RegctlAPIURL
+				if apiURL == "" {
+					apiURL = "https://regctl-api.fly.dev"
+				}
+				domains, err := fetchRegctlDomains(apiURL, cfg.RegctlBillingKey)
+				if err != nil {
+					errors = append(errors, fmt.Sprintf("regctl: %v", err))
+				} else {
+					allDomains = append(allDomains, domains...)
+				}
+			}
 
 			// Collect from all providers
 			if porkbunClient != nil {

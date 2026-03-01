@@ -48,7 +48,7 @@ func CalculateCostCents(op OperationType, baseCostCents int64) int64 {
 	case OpDomainRegister:
 		return baseCostCents + (baseCostCents * MarkupPercent / 100)
 	case OpDomainList, OpDomainInfo, OpDNSList:
-		return ListFeeCents
+		return 0 // free: listing your own domains/DNS should never be gated by balance
 	case OpDNSAdd, OpDNSDelete, OpDomainRenew, OpNSUpdate, OpDNSUpdate:
 		return FixedFeeCents
 	case OpSiteCreate:

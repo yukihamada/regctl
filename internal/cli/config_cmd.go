@@ -14,6 +14,13 @@ var allConfigKeys = []string{
 	"spaceship_api_key", "spaceship_api_secret",
 	"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id",
 	"regctl_api_key", "regctl_billing_key", "regctl_api_url", "server_port",
+	"email",
+}
+
+// keyAliases maps user-friendly short keys to canonical config keys.
+var keyAliases = map[string]string{
+	"api-key": "regctl_billing_key",
+	"key":     "regctl_billing_key",
 }
 
 var secretKeys = map[string]bool{
@@ -60,6 +67,8 @@ func newConfigSetCmd() *cobra.Command {
 		Long: `Set a configuration value.
 
 Valid keys:
+  api-key               regctl API key (alias for regctl_billing_key)
+  email                 Your email address
   api_key               Value Domain API key
   porkbun_api_key       Porkbun API key
   porkbun_secret_key    Porkbun secret key
@@ -69,17 +78,21 @@ Valid keys:
   cloudflare_global_key Cloudflare Global API key
   cloudflare_email      Cloudflare account email
   cloudflare_account_id Cloudflare account ID
-  regctl_api_key        API key for the regctl HTTP server
   regctl_billing_key    Billing API key (rk_live_... or rk_test_...)
   regctl_api_url        API server URL (default: https://regctl-api.fly.dev)
   server_port           Port for the HTTP server (default: 8080)`,
-		Example: `  regctl config set porkbun_api_key pk1_xxxx
-  regctl config set porkbun_secret_key sk1_xxxx
-  regctl config set cloudflare_global_key xxxx
-  regctl config set cloudflare_email you@example.com`,
+		Example: `  regctl config set api-key rk_live_xxxx
+  regctl config set email you@example.com
+  regctl config set porkbun_api_key pk1_xxxx
+  regctl config set porkbun_secret_key sk1_xxxx`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			key, value := args[0], args[1]
+
+			// Resolve aliases (e.g. "api-key" → "regctl_billing_key")
+			if canonical, ok := keyAliases[key]; ok {
+				key = canonical
+			}
 
 			validKeys := make(map[string]bool)
 			for _, k := range allConfigKeys {
@@ -139,11 +152,12 @@ func newConfigShowCmd() *cobra.Command {
 				name string
 				keys []string
 			}{
+				{"regctl", []string{"regctl_billing_key", "email", "regctl_api_url"}},
 				{"Value Domain", []string{"api_key"}},
 				{"Porkbun", []string{"porkbun_api_key", "porkbun_secret_key"}},
 				{"Spaceship", []string{"spaceship_api_key", "spaceship_api_secret"}},
 				{"Cloudflare", []string{"cloudflare_token", "cloudflare_global_key", "cloudflare_email", "cloudflare_account_id"}},
-				{"General", []string{"regctl_api_key", "regctl_billing_key", "regctl_api_url", "server_port"}},
+				{"General", []string{"regctl_api_key", "server_port"}},
 			}
 
 			for _, s := range sections {
